@@ -32,7 +32,6 @@ class Producer(EnhancedEventEmitter):
         self._localId = localId
         self._rtpSender = rtpSender
         self._track = track
-        self._kind = track.kind
         self._rtpParameters = rtpParameters
         self._paused = track.enabled if disableTrackOnPause else False
         self._maxSpatialLayer: Optional[int] = None
@@ -59,7 +58,7 @@ class Producer(EnhancedEventEmitter):
     # Media kind.
     @property
     def kind(self) -> MediaStreamTrack.kind:
-        return self._kind
+        return self._track.kind
     
     # Associated RTCRtpSender.
     @property
@@ -134,7 +133,7 @@ class Producer(EnhancedEventEmitter):
 
         self.emit('transportclose')
 
-        self._observer.emit('transportclose')
+        self._observer.emit('close')
     
     # Get associated RTCRtpSender stats.
     async def getStats(self):

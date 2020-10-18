@@ -2,7 +2,7 @@ from typing import List, Optional, Any
 from aiortc import MediaStreamTrack
 from pydantic import BaseModel
 
-from .rtp_parameters import MediaKind, RtpCodecCapability, RtpParameters, RtpEncodingParameters
+from .rtp_parameters import RtpCodecCapability, RtpEncodingParameters
 
 
 # https://mediasoup.org/documentation/v3/mediasoup-client/api/#ProducerCodecOptions

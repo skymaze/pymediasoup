@@ -17,7 +17,7 @@ class Producer(EnhancedEventEmitter):
 
     def __init__(
         self,
-        producerId: str,
+        id: str,
         localId: str,
         track: MediaStreamTrack,
         rtpParameters: RtpParameters,
@@ -28,7 +28,7 @@ class Producer(EnhancedEventEmitter):
         rtpSender: Optional[RTCRtpSender] = None,
     ):
         super(Producer, self).__init__()
-        self._producerId = producerId
+        self._id = id
         self._localId = localId
         self._rtpSender = rtpSender
         self._track = track
@@ -43,8 +43,8 @@ class Producer(EnhancedEventEmitter):
 
     # Producer id.
     @property
-    def producerId(self) -> str:
-        return self._producerId
+    def id(self) -> str:
+        return self._id
     
     # Local id.
     @property

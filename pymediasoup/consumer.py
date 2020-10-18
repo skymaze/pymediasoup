@@ -8,7 +8,7 @@ from .models.consumer import ConsumerOptions
 from .models.rtp_parameters import RtpParameters
 
 
-class consumer(EnhancedEventEmitter):
+class Consumer(EnhancedEventEmitter):
     # Closed flag.
     _closed: bool = False
     # Observer instance.
@@ -17,7 +17,7 @@ class consumer(EnhancedEventEmitter):
         self,
         id: str,
         localId: str,
-        ConsumerId: str,
+        consumerId: str,
         track: MediaStreamTrack,
         rtpParameters: RtpParameters,
         rtpReceiver: Optional[RTCRtpReceiver] = None,
@@ -25,7 +25,7 @@ class consumer(EnhancedEventEmitter):
     ):
         self._id = id
         self._localId = localId
-        self._ConsumerId: ConsumerId
+        self._consumerId: consumerId
         self._track = track
         self._rtpParameters = rtpParameters
         self._rtpReceiver = rtpReceiver
@@ -45,8 +45,8 @@ class consumer(EnhancedEventEmitter):
 
     # Associated Consumer id.
     @property
-    def ConsumerId(self) -> str:
-        return self._ConsumerId
+    def consumerId(self) -> str:
+        return self._consumerId
     
     # Whether the Consumer is closed.
     @property

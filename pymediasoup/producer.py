@@ -24,8 +24,8 @@ class Producer(EnhancedEventEmitter):
         stopTracks: bool,
         disableTrackOnPause: bool,
         zeroRtpOnPause: bool,
-        appData: Any,
         rtpSender: Optional[RTCRtpSender] = None,
+        appData: Any = None
     ):
         super(Producer, self).__init__()
         self._id = id

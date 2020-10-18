@@ -21,8 +21,9 @@ class Consumer(EnhancedEventEmitter):
         track: MediaStreamTrack,
         rtpParameters: RtpParameters,
         rtpReceiver: Optional[RTCRtpReceiver] = None,
-        appData: Optional[Any] = None
+        appData: Any = None
     ):
+        super(Consumer, self).__init__()
         self._id = id
         self._localId = localId
         self._consumerId: consumerId

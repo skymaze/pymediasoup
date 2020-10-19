@@ -26,9 +26,10 @@ class DataProducer(EnhancedEventEmitter):
         self,
         id: str,
         dataChannel: RTCDataChannel,
-        appData: Any = None
+        appData: Any = None,
+        loop=None
     ):
-        super(DataProducer, self).__init__()
+        super(DataProducer, self).__init__(loop=loop)
         self._id = id
         self._dataChannel = dataChannel
         self._appData = appData

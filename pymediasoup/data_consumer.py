@@ -27,9 +27,10 @@ class DataConsumer(EnhancedEventEmitter):
         dataProducerId: str,
         dataChannel: RTCDataChannel,
         sctpStreamParameters: SctpStreamParameters,
-        appData: Any
+        appData: Any = None,
+        loop=None
     ):
-        super(DataConsumer, self).__init__()
+        super(DataConsumer, self).__init__(loop=loop)
 
         self._id = id
         self._dataProducerId = dataProducerId

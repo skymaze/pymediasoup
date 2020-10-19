@@ -46,9 +46,10 @@ class Producer(EnhancedEventEmitter):
         disableTrackOnPause: bool,
         zeroRtpOnPause: bool,
         rtpSender: Optional[RTCRtpSender] = None,
-        appData: Any = None
+        appData: Any = None,
+        loop=None
     ):
-        super(Producer, self).__init__()
+        super(Producer, self).__init__(loop=loop)
         self._id = id
         self._localId = localId
         self._rtpSender = rtpSender

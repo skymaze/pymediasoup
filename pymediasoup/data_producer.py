@@ -1,10 +1,20 @@
 import logging
-from typing import Optional, Any, Union
+from typing import Optional, Any, Union, Literal
 from pyee import AsyncIOEventEmitter
 from aiortc import RTCDataChannel
+from pydantic import BaseModel
 from .errors import InvalidStateError
 from .emitter import EnhancedEventEmitter
 
+
+class DataProducerOptions(BaseModel):
+    ordered: Optional[bool]
+    maxPacketLifeTime: Optional[int]
+    maxRetransmits: Optional[int]
+    priority: Optional[Literal['very-low','low','medium','high']]
+    label: Optional[str]
+    protocol: Optional[str]
+    appData: Optional[Any]
 
 class DataProducer(EnhancedEventEmitter):
     # Closed flag.

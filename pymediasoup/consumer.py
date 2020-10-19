@@ -2,11 +2,19 @@ import logging
 from typing import Optional, Any
 from aiortc import RTCRtpReceiver, MediaStreamTrack
 from pyee import AsyncIOEventEmitter
+from pydantic import BaseModel
 from .errors import InvalidStateError, UnsupportedError
 from .emitter import EnhancedEventEmitter
-from .models.consumer import ConsumerOptions
-from .models.rtp_parameters import RtpParameters
+from .consumer import ConsumerOptions
+from .rtp_parameters import MediaKind, RtpParameters
 
+
+class ConsumerOptions(BaseModel):
+    id: Optional[str]
+    producerId: Optional[str]
+    kind: MediaKind
+    rtpParameters: RtpParameters
+    appData: Optional[Any]
 
 class Consumer(EnhancedEventEmitter):
     # Closed flag.

@@ -3,18 +3,7 @@ from pydantic import BaseModel
 
 
 # Media kind ('audio' or 'video').
-class MediaKind(str):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not isinstance(v, str):
-            raise TypeError('string required')
-        if v.lower() not in ['audio', 'video']:
-            raise ValueError('invalid media kind')
-        return v.lower()
+MediaKind = Literal['audio', 'video']
 
 # Provides information on RTCP feedback messages for a specific codec. Those
 # messages can be transport layer feedback messages or codec-specific feedback

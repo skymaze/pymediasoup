@@ -1,22 +1,21 @@
 import logging
-from typing import Optional, Any, Union, Literal
+from typing import Optional, Any
+from pydantic import BaseModel
 from pyee import AsyncIOEventEmitter
 from aiortc import RTCDataChannel
-from pydantic import BaseModel
-from .errors import InvalidStateError
 from .emitter import EnhancedEventEmitter
+from .sctp_parameters import SctpStreamParameters
 
 
-class DataProducerOptions(BaseModel):
-    ordered: Optional[bool]
-    maxPacketLifeTime: Optional[int]
-    maxRetransmits: Optional[int]
-    priority: Optional[Literal['very-low','low','medium','high']]
+class DataConsumerOptions(BaseModel):
+    id: Optional[str]
+    dataProducerId: Optional[str]
+    sctpStreamParameters: SctpStreamParameters
     label: Optional[str]
     protocol: Optional[str]
-    appData: Optional[Any]
+    appData: Any
 
-class DataProducer(EnhancedEventEmitter):
+class DataConsumer(EnhancedEventEmitter):
     # Closed flag.
     _closed: bool = False
     # Observer instance.
@@ -25,22 +24,32 @@ class DataProducer(EnhancedEventEmitter):
     def __init__(
         self,
         id: str,
+        dataProducerId: str,
         dataChannel: RTCDataChannel,
-        appData: Any = None
+        sctpStreamParameters: SctpStreamParameters,
+        appData: Any
     ):
-        super(DataProducer, self).__init__()
+        super(DataConsumer, self).__init__()
+
         self._id = id
+        self._dataProducerId = dataProducerId
         self._dataChannel = dataChannel
+        self._sctpStreamParameters = sctpStreamParameters
         self._appData = appData
-        
+
         self._handleDataChannel()
     
-    # DataProducer id.
+    # DataConsumer id.
     @property
     def id(self) -> str:
         return self._id
-
-    # Whether the DataProducer is closed.
+    
+    # Associated DataProducer id.
+    @property
+    def dataProducerId(self) -> str:
+        return self._dataProducerId
+    
+    # Whether the DataConsumer is closed.
     @property
     def closed(self) -> bool:
         return self._closed
@@ -64,21 +73,15 @@ class DataProducer(EnhancedEventEmitter):
     @property
     def protocol(self) -> str:
         return self._dataChannel.protocol
-    
-    # DataChannel bufferedAmount.
+
+    # DataChannel binaryType.
     @property
-    def bufferedAmount(self) -> int:
-        return self._dataChannel.bufferedAmount
+    def binaryType(self) -> str:
+        return self._dataChannel.binaryType
     
-    # DataChannel bufferedAmountLowThreshold.
-    @property
-    def bufferedAmountLowThreshold(self) -> int:
-        return self._dataChannel.bufferedAmountLowThreshold
-    
-    # Set DataChannel bufferedAmountLowThreshold.
-    @bufferedAmountLowThreshold.setter
-    def bufferedAmountLowThreshold(self, bufferedAmountLowThreshold: int):
-        self._dataChannel.bufferedAmountLowThreshold = bufferedAmountLowThreshold
+    @binaryType.setter
+    def binaryType(self, binaryType: str):
+        self._dataChannel.binaryType = binaryType
     
     # App custom data.
     @property
@@ -95,12 +98,12 @@ class DataProducer(EnhancedEventEmitter):
     def observer(self) -> AsyncIOEventEmitter:
         return self._observer
     
-    # Closes the DataProducer.
+    # Closes the DataConsumer.
     def close(self):
         if self._closed:
             return
         
-        logging.debug('DataProducer close()')
+        logging.debug('DataConsumer close()')
 
         self._closed = True
 
@@ -116,7 +119,7 @@ class DataProducer(EnhancedEventEmitter):
         if self._closed:
             return
 
-        logging.debug('DataProducer transportClosed()')
+        logging.debug('DataConsumer transportClosed()')
 
         self._closed = True
 
@@ -125,15 +128,6 @@ class DataProducer(EnhancedEventEmitter):
         self.emit('transportclose')
 
         self._observer.emit('close')
-    
-    # Send a message.
-    def send(self, data: Union[bytes, str]):
-        logging.debug('DataProducer send()')
-
-        if self._closed:
-            raise InvalidStateError('closed')
-        
-        self._dataChannel.send(data)
     
     def onDataChannelOpen(self):
         if self._closed:
@@ -177,13 +171,7 @@ class DataProducer(EnhancedEventEmitter):
         if self._closed:
             return
         
-        logging.warning(f'DataChannel "message" event in a DataProducer, message discarded: {message}')
-    
-    def onDataChannelBufferedamountlow(self):
-        if self._closed:
-            return
-        
-        self.emit('bufferedamountlow')
+        self.emit('message', message)
     
     def _handleDataChannel(self):
         self._dataChannel.on('open', self.onDataChannelOpen)
@@ -191,4 +179,3 @@ class DataProducer(EnhancedEventEmitter):
         # self._dataChannel.on('error')
         self._dataChannel.on('close', self.onDataChannelClose)
         self._dataChannel.on('message', self.onDataChannelMessage)
-        self._dataChannel.on('bufferedamountlow')

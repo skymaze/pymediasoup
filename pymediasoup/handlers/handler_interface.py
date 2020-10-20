@@ -7,7 +7,7 @@ from ..sctp_parameters import SctpCapabilities, SctpParameters, SctpStreamParame
 from ..producer import ProducerCodecOptions
 
 
-HandlerFactory: Callable[..., HandlerInterface] = lambda: HandlerInterface
+HandlerFactory: Callable[..., HandlerInterface] = lambda: HandlerInterface()
 
 class HandlerRunOptions(BaseModel):
     direction: Literal['send', 'recv']

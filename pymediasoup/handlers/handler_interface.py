@@ -1,4 +1,5 @@
 from typing import Callable, Literal, List, Optional, Any
+from pydantic import BaseModel
 from aiortc import RTCIceServer, RTCIceTransportPolicy, RTCRtpSender, MediaStreamTrack, RTCRtpReceiver, RTCDataChannel
 from ..emitter import EnhancedEventEmitter
 from ..transport import IceCandidate, IceParameters, DtlsParameters
@@ -21,6 +22,12 @@ class HandlerRunOptions(BaseModel):
     proprietaryConstraints: Optional[Any]
     extendedRtpCapabilities: Any
 
+class HandlerSendOptions(BaseModel):
+    track: MediaStreamTrack
+    encodings: List[RtpEncodingParameters] = []
+    codecOptions: Optional[ProducerCodecOptions]
+    codec: Optional[RtpCodecCapability]
+
 class HandlerSendResult(BaseModel):
     localId: str
     rtpParameters: RtpParameters
@@ -36,7 +43,8 @@ class HandlerReceiveResult(BaseModel):
     track: MediaStreamTrack
     rtpReceiver: Optional[RTCRtpReceiver]
 
-HandlerSendDataChannelOptions = SctpStreamParameters
+class HandlerSendDataChannelOptions(SctpStreamParameters):
+    pass
 
 class HandlerSendDataChannelResult(BaseModel):
     dataChannel: RTCDataChannel

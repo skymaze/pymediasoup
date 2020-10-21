@@ -13,7 +13,7 @@ class DataConsumerOptions(BaseModel):
     sctpStreamParameters: SctpStreamParameters
     label: Optional[str]
     protocol: Optional[str]
-    appData: Any
+    appData: Optional[dict] = None
 
 class DataConsumer(EnhancedEventEmitter):
     # Closed flag.
@@ -27,7 +27,7 @@ class DataConsumer(EnhancedEventEmitter):
         dataProducerId: str,
         dataChannel: RTCDataChannel,
         sctpStreamParameters: SctpStreamParameters,
-        appData: Any = None,
+        appData: Optional[dict] = None,
         loop=None
     ):
         super(DataConsumer, self).__init__(loop=loop)
@@ -130,53 +130,35 @@ class DataConsumer(EnhancedEventEmitter):
 
         self._observer.emit('close')
     
-    def onDataChannelOpen(self):
-        if self._closed:
-            return
-        
-        logging.debug('DataProducer DataChannel "open" event')
-
-        self.emit('open')
-    
-    # NOTE: aiortc.RTCDataChannel won't emit error event
-    def onDataChannelError(self, event: dict):
-        if self._closed:
-            return
-        
-        error = event.get('error')
-
-        if not error:
-            logging.error('unknown DataChannel error')
-        
-        elif error.get('errorDetail') == 'sctp-failure':
-            logging.error(f"DataChannel SCTP error [sctpCauseCode:{error.get('sctpCauseCode')}]: {error.get('message')}")
-        
-        else:
-            logging.error(f'DataChannel "error" event: {error}')
-        
-        self.emit('error', error)
-    
-    def onDataChannelClose(self):
-        if self._closed:
-            return
-        
-        logging.warning('DataChannel "close" event')
-
-        self._closed = True
-
-        self.emit('@close')
-        
-        self._observer.emit('close')
-    
-    def onDataChannelMessage(self, message):
-        if self._closed:
-            return
-        
-        self.emit('message', message)
-    
     def _handleDataChannel(self):
-        self._dataChannel.on('open', self.onDataChannelOpen)
-        # NOTE: aiortc.RTCDataChannel won't emit error event
-        # self._dataChannel.on('error')
-        self._dataChannel.on('close', self.onDataChannelClose)
-        self._dataChannel.on('message', self.onDataChannelMessage)
+        @self._dataChannel.on('open')
+        def on_open():
+            if self._closed:
+                return
+            logging.debug('DataConsumer DataChannel "open" event')
+            self.emit('open')
+
+        # NOTE: aiortc.RTCDataChannel won't emit error event, here use pyee error event
+        @self._dataChannel.on('error')
+        def on_error(message):
+            if self._closed:
+                return
+
+            logging.error(f'DataConsumer DataChannel "error" event: {message}')
+            
+            self.emit('error', message)
+
+        @self._dataChannel.on('close')
+        def on_close():
+            if self._closed:
+                return
+            logging.warning('DataConsumer DataChannel "close" event')
+            self._closed = True
+            self.emit('@close')
+            self._observer.emit('close')
+
+        @self._dataChannel.on('message')
+        def on_message(message):
+            if self._closed:
+                return
+            self.emit('message', message)

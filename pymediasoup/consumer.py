@@ -14,7 +14,7 @@ class ConsumerOptions(BaseModel):
     producerId: Optional[str]
     kind: MediaKind
     rtpParameters: RtpParameters
-    appData: Optional[Any]
+    appData: Optional[dict] = None
 
 class Consumer(EnhancedEventEmitter):
     # Closed flag.
@@ -29,7 +29,7 @@ class Consumer(EnhancedEventEmitter):
         track: MediaStreamTrack,
         rtpParameters: RtpParameters,
         rtpReceiver: Optional[RTCRtpReceiver] = None,
-        appData: Any = None,
+        appData: Optional[dict] = None,
         loop=None
     ):
         super(Consumer, self).__init__(loop=loop)
@@ -180,16 +180,15 @@ class Consumer(EnhancedEventEmitter):
         
         self._observer.emit('resume')
     
-    def _onTrackEnded(self):
-        logging.debug('Consumer  track "ended" event')
-        self.emit('trackended')
-        self._observer.emit('trackended')
-    
     def _handleTrack(self):
         if not self._track:
             return
 
-        self._track.on('ended', self._onTrackEnded)
+        @self._track.on('ended')
+        def on_ended():
+            logging.debug('Consumer track "ended" event')
+            self.emit('trackended')
+            self._observer.emit('trackended')
     
     def _destroyTrack(self):
         if not self._track:

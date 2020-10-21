@@ -46,7 +46,7 @@ class Producer(EnhancedEventEmitter):
         disableTrackOnPause: bool,
         zeroRtpOnPause: bool,
         rtpSender: Optional[RTCRtpSender] = None,
-        appData: Any = None,
+        appData: Optional[dict] = None,
         loop=None
     ):
         super(Producer, self).__init__(loop=loop)
@@ -269,16 +269,15 @@ class Producer(EnhancedEventEmitter):
         
         await self.emit_for_results('@setrtpencodingparameters', params)
     
-    def _onTrackEnded(self):
-        logging.debug('Producer  track "ended" event')
-        self.emit('trackended')
-        self._observer.emit('trackended')
-    
     def _handleTrack(self):
         if not self._track:
             return
 
-        self._track.on('ended', self._onTrackEnded)
+        @self._track.on('ended')
+        def on_ended():
+            logging.debug('Producer track "ended" event')
+            self.emit('trackended')
+            self._observer.emit('trackended')
     
     def _destroyTrack(self):
         if not self._track:

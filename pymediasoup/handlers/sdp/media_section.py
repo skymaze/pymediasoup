@@ -1,4 +1,5 @@
 import re
+import logging
 from typing import List
 from dataclasses import dataclass
 from aiortc import RTCIceParameters, RTCIceCandidate, RTCDtlsParameters
@@ -72,6 +73,12 @@ class MediaSection:
         del self._mediaDict['simulcast_03']
         del self._mediaDict['rids']
         del self._mediaDict['extmapAllowMixed']
+    
+    def setDtlsRole(self, role: str):
+        logging.warning('MediaSection setDtlsRole() not implement')
+    
+    def planBStopReceiving(self, offerRtpParameters: RtpParameters):
+        logging.warning('MediaSection planBStopReceiving() not implement')
     
 class AnswerMediaSection(MediaSection):
     def __init__(

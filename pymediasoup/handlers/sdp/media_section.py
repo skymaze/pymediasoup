@@ -385,3 +385,11 @@ class OfferMediaSection(MediaSection):
                 'semantics': 'FID',
                 'ssrcs': f'{ssrc} {rtxSsrc}'
             })
+    
+    def planBStopReceiving(self, offerRtpParameters: RtpParameters):
+        encoding = offerRtpParameters.encodings[0]
+        ssrc = encoding.ssrc
+        rtxSsrc = encoding.rtx.ssrc if encoding.rtx and encoding.rtx.ssrc else None
+        self._mediaDict['ssrcs'] = [s for s in self.mediaDict['ssrcs'] if s['id'] != ssrc and s['id'] != rtxSsrc]
+        if rtxSsrc:
+            self._mediaDict['ssrcGroups'] = [group for group in self._mediaDict['ssrcGroups'] if group['ssrcs'] != f'{ssrc} {rtxSsrc}']

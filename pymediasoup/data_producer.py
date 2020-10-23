@@ -5,6 +5,7 @@ from aiortc import RTCDataChannel
 from pydantic import BaseModel
 from .errors import InvalidStateError
 from .emitter import EnhancedEventEmitter
+from .sctp_parameters import SctpStreamParameters
 
 
 class DataProducerOptions(BaseModel):
@@ -54,7 +55,7 @@ class DataProducer(EnhancedEventEmitter):
     
     # DataChannel readyState.
     @property
-    def readyState(self) -> RTCDataChannelState:
+    def readyState(self) -> Literal["closed", "closing", "connecting", "open"]:
         return self._dataChannel.readyState
     
     # DataChannel label.

@@ -20,7 +20,7 @@ class Codec(BaseModel):
     clockRate: int
     # The number of channels supported (e.g. two for stereo). Just for audio.
 	# Default 1.
-    channels: Optional[int]
+    channels: int = 1
     # Transport layer and codec-specific feedback messages for this codec.
     rtcpFeedback: List[RtcpFeedback] = []
 

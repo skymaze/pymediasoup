@@ -1,3 +1,4 @@
+from typing import List
 from aiortc.sdp import SessionDescription, MediaDescription
 
 from ...transport import DtlsParameters, DtlsRole
@@ -6,7 +7,7 @@ from ...rtp_parameters import RtpCapabilities, RtpCodecCapability, RtpHeaderExte
 
 def extractRtpCapabilities(sdpObject: SessionDescription) -> RtpCapabilities:
     # List of codec
-    codecs = [RtpCodecCapability]
+    codecs: List[RtpCodecCapability] = []
     # Array of RtpHeaderExtensions.
     headerExtensions: List[RtpHeaderExtension] = []
     # Whether a m=audio/video section has been already found.

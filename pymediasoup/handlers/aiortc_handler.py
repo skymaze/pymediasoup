@@ -1,11 +1,12 @@
 import logging
 from typing import Dict, Literal, List, Optional, Any
-from aiortc import RTCPeerConnection, RTCSessionDescription
+from aiortc import RTCPeerConnection, RTCSessionDescription, RTCRtpTransceiver
 from aiortc.sdp import SessionDescription
 from .sdp.remote_sdp import RemoteSdp
 from .sdp import common_utils
 from .handler_interface import HandlerInterface
-from ..rtp_parameters import RtpParameters
+from ..rtp_parameters import RtpParameters, RtpCapabilities
+from ..sctp_parameters import SctpCapabilities
 from ..ortc import getSendingRtpParameters, getSendingRemoteRtpParameters
 
 
@@ -13,7 +14,7 @@ SCTP_NUM_STREAMS = { 'OS': 1024, 'MIS': 1024 }
 
 class AiortcHandler(HandlerInterface):
     # Handler direction.
-    _direction: Optional[Literal['send' | 'recv']]
+    _direction: Optional[Literal['send', 'recv']]
     # Remote SDP handler.
     _remoteSdp: Optional[RemoteSdp]
     # Generic sending RTP parameters for audio and video.
@@ -60,11 +61,11 @@ class AiortcHandler(HandlerInterface):
 
         return nativeRtpCapabilities
     
-    async def getNativeSctpCapabilities(self) -> dict:
-        logging.debug(getNativeSctpCapabilities())
-        return {
+    async def getNativeSctpCapabilities(self) -> SctpCapabilities:
+        logging.debug('getNativeSctpCapabilities()')
+        return SctpCapabilities.parse_obj({
             'numStreams': SCTP_NUM_STREAMS
-        }
+        })
     
     def run(
         self,

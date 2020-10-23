@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import List, Optional, Literal, Dict
 from .media_section import MediaSection, AnswerMediaSection, OfferMediaSection
 from ...transport import IceCandidate, IceParameters, DtlsParameters, DtlsRole, PlainRtpParameters
 from ...producer import ProducerCodecOptions
@@ -24,7 +24,7 @@ class RemoteSdp:
         self._plainRtpParameters: Optional[PlainRtpParameters] = plainRtpParameters
         self._planB: bool = planB
         self._mediaSections: List[MediaSection] = []
-        self._midToIndex: dict = {}
+        self._midToIndex: Dict[str, int] = {}
         self._firstMid: Optional[str] = None
         self._sdpDict: dict = {
             'version': 0,
@@ -95,6 +95,7 @@ class RemoteSdp:
         extmapAllowMixed = False
     ):
         mediaSection = AnswerMediaSection(
+            sctpParameters=self._sctpParameters,
             iceParameters=self._iceParameters,
             iceCandidates=self._iceCandidates,
             dtlsParameters=self._dtlsParameters,

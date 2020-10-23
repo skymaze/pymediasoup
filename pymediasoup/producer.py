@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from aiortc import RTCRtpSender, MediaStreamTrack
 from .emitter import EnhancedEventEmitter
 from .errors import InvalidStateError, UnsupportedError
-from .producer import ProducerOptions, ProducerCodecOptions
 from .rtp_parameters import RtpParameters, RtpCodecCapability, RtpEncodingParameters
 
 

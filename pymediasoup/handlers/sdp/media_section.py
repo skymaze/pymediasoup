@@ -1,10 +1,10 @@
 import re
 import logging
-from typing import List
-from dataclasses import dataclass
+from typing import List, Optional, Literal
+from dataclasses import asdict
 from aiortc import RTCIceParameters, RTCIceCandidate, RTCDtlsParameters
 from ...producer import ProducerCodecOptions
-from ...rtp_parameters import RtpParameters, RtpCodecParameters
+from ...rtp_parameters import RtpParameters, RtpCodecParameters, RtpEncodingParameters
 from ...sctp_parameters import SctpParameters
 from ...transport import PlainRtpParameters
 
@@ -25,7 +25,7 @@ class MediaSection:
         dtlsParameters: Optional[RTCDtlsParameters]=None,
         planB:bool=False
     ):
-        self._mediaDict={}
+        self._mediaDict: dict={}
         self._planB=planB
         if iceParameters:
             self.setIceParameters(iceParameters)
@@ -33,7 +33,7 @@ class MediaSection:
             self._mediaDict['candidates'] = []
             for candidate in iceCandidates:
                 candidate.component = 1
-                self._mediaDict['candidates'].append(dataclass.asdict(candidate))
+                self._mediaDict['candidates'].append(asdict(candidate))
             self._mediaDict['endOfCandidates'] = 'end-of-candidates'
             self._mediaDict['iceOptions'] = 'renomination'
         if dtlsParameters:
@@ -167,7 +167,7 @@ class AnswerMediaSection(MediaSection):
                         'subtype': fb.parameter
                     })
             
-            self._mediaDict['payloads'] = ' '.join([codec.payloadType for codec in answerRtpParameters.codecs])
+            self._mediaDict['payloads'] = ' '.join([str(codec.payloadType) for codec in answerRtpParameters.codecs])
             self._mediaDict['ext'] = []
             for ext in answerRtpParameters.headerExtensions:
                 # Don't add a header extension if not present in the offer.
@@ -285,7 +285,7 @@ class OfferMediaSection(MediaSection):
                 }
                 if codec.channels > 1:
                     rtp['encoding'] = codec.channels
-                self._mediaDice['rtp'].append(rtp)
+                self._mediaDict['rtp'].append(rtp)
                 fmtp = {
                     'payload': codec.payloadType,
                     'config': ';'.join([f'{key}={value}' for key, value in codec.parameters.items()])
@@ -299,7 +299,7 @@ class OfferMediaSection(MediaSection):
                         'subtype': fb.parameter
                     })
             
-            self._mediaDict['payloads'] = ' '.join([codec.payloadType for codec in offerRtpParameters.codecs])
+            self._mediaDict['payloads'] = ' '.join([str(codec.payloadType) for codec in offerRtpParameters.codecs])
             self._mediaDict['ext'] = []
             for ext in offerRtpParameters.headerExtensions:
                 self._mediaDict['ext'].append({
@@ -397,6 +397,6 @@ class OfferMediaSection(MediaSection):
         encoding = offerRtpParameters.encodings[0]
         ssrc = encoding.ssrc
         rtxSsrc = encoding.rtx.ssrc if encoding.rtx and encoding.rtx.ssrc else None
-        self._mediaDict['ssrcs'] = [s for s in self.mediaDict['ssrcs'] if s['id'] != ssrc and s['id'] != rtxSsrc]
+        self._mediaDict['ssrcs'] = [s for s in self._mediaDict['ssrcs'] if s['id'] != ssrc and s['id'] != rtxSsrc]
         if rtxSsrc:
             self._mediaDict['ssrcGroups'] = [group for group in self._mediaDict['ssrcGroups'] if group['ssrcs'] != f'{ssrc} {rtxSsrc}']

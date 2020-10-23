@@ -56,10 +56,9 @@ class DtlsParameters(BaseModel):
 
 ConnectionState = Literal['new', 'connecting', 'connected', 'failed', 'disconnected', 'closed']
 
-
 class IpVersion(IntEnum):
-    ipv4: 4
-    ipv6: 6
+    ipv4 = 4
+    ipv6 = 6
 
 class PlainRtpParameters(BaseModel):
     ip: str
@@ -85,21 +84,15 @@ class InternalTransportOptions(TransportOptions):
     canProduceByKind: Dict[str, bool]
 
 class Transport(EnhancedEventEmitter):
-    # Id.
-    id: str
     # Closed flag.
     _closed: bool = False
-    # Direction.
-    _direction =  Literal['send', 'recv']
-    # Extended RTP capabilities.
-    _extendedRtpCapabilities = Any
     # Whether we can produce audio/video based on computed extended RTP
     # capabilities.
     _canProduceByKind: Dict[str, bool]
     # App custom data.
     _appData: Optional[dict]
     # Transport connection state.
-    _connectionState = ConnectionState = 'new'
+    _connectionState: ConnectionState = 'new'
     # Producers indexed by id
     _producers: Dict[str, Producer] = {}
     # Consumers indexed by id.
@@ -121,9 +114,11 @@ class Transport(EnhancedEventEmitter):
         super(Transport, self).__init__(loop=loop)
 
         logging.debug(f'constructor() [id:{options.id}, direction:{options.direction}]')
-
+        # Id.
         self._id: str = options.id
+        # Direction.
         self._direction: Literal['send', 'recv'] = options.direction
+        # Extended RTP capabilities.
         self._extendedRtpCapabilities: Any = options.extendedRtpCapabilities,
         self._canProduceByKind: Dict[str, bool] = options.canProduceByKind
         self._maxSctpMessageSize = options.sctpParameters.maxMessageSize if options.sctpParameters else None
@@ -304,7 +299,7 @@ class Transport(EnhancedEventEmitter):
             raise UnsupportedError('cannot consume this Producer')
 
         handlerReceiveOptions: HandlerReceiveOptions = HandlerReceiveOptions(trackId=options.id, kind=options.kind, rtpParameters=options.rtpParameters)
-        handlerReceiveResult: HandlerReceiveResult = self._handler.receive(handlerReceiveOptions)
+        handlerReceiveResult: HandlerReceiveResult = await self._handler.receive(handlerReceiveOptions)
 
         consumer: Consumer = Consumer(
             id=options.id,
@@ -322,12 +317,13 @@ class Transport(EnhancedEventEmitter):
         # has not yet been created, create it now.
         if not self._probatorConsumerCreated and options.kind == 'video':
             probatorRtpParameters = generateProbatorRtpParameters(consumer.rtpParameters)
-            handlerReceiveOptions: HandlerReceiveOptions = HandlerReceiveOptions(
-                trackId='probator',
-                kind='video',
-                rtpParameters=probatorRtpParameters
+            await self._handler.receive(
+                HandlerReceiveOptions(
+                    trackId='probator',
+                    kind='video',
+                    rtpParameters=probatorRtpParameters
+                )
             )
-            await self._handler.receive(handlerReceiveOptions)
 
             logging.debug('Transport consume() | Consumer for RTP probation created')
 

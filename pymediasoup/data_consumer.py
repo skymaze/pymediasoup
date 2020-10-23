@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Any
+from typing import Optional, Any, Literal
 from pydantic import BaseModel
 from pyee import AsyncIOEventEmitter
 from aiortc import RTCDataChannel
@@ -8,8 +8,8 @@ from .sctp_parameters import SctpStreamParameters
 
 
 class DataConsumerOptions(BaseModel):
-    id: Optional[str]
-    dataProducerId: Optional[str]
+    id: str
+    dataProducerId: str
     sctpStreamParameters: SctpStreamParameters
     label: Optional[str]
     protocol: Optional[str]
@@ -62,7 +62,7 @@ class DataConsumer(EnhancedEventEmitter):
     
     # DataChannel readyState.
     @property
-    def readyState(self) -> RTCDataChannelState:
+    def readyState(self) -> Literal["closed", "closing", "connecting", "open"]:
         return self._dataChannel.readyState
     
     # DataChannel label.

@@ -81,7 +81,7 @@ class HandlerInterface(EnhancedEventEmitter):
     async def getNativeSctpCapabilities(self) -> SctpCapabilities:
         pass
 
-    def run(self, oprtions: HandlerRunOptions):
+    def run(self, options: HandlerRunOptions):
         pass
 
     async def updateIceServers(self, iceServers: List[RTCIceServer]):
@@ -90,7 +90,7 @@ class HandlerInterface(EnhancedEventEmitter):
     async def restartIce(self, iceParameters: IceParameters):
         pass
 
-    async def getTransportStats(self) -> RTCStatsReport:
+    async def getTransportStats(self) -> Any:
         pass
     
     async def send(self, options: HandlerSendOptions) -> HandlerSendResult:
@@ -108,7 +108,7 @@ class HandlerInterface(EnhancedEventEmitter):
     async def setRtpEncodingParameters(self, localId: str, params: Any):
         pass
 
-    async def getSenderStats(self, localId: str) -> RTCStatsReport:
+    async def getSenderStats(self, localId: str) -> Any:
         pass
 
     async def sendDataChannel(self, options: HandlerSendDataChannelOptions) -> HandlerSendDataChannelResult:

@@ -5,13 +5,12 @@ from pyee import AsyncIOEventEmitter
 from pydantic import BaseModel
 from .errors import InvalidStateError, UnsupportedError
 from .emitter import EnhancedEventEmitter
-from .consumer import ConsumerOptions
 from .rtp_parameters import MediaKind, RtpParameters
 
 
 class ConsumerOptions(BaseModel):
-    id: Optional[str]
-    producerId: Optional[str]
+    id: str
+    producerId: str
     kind: MediaKind
     rtpParameters: RtpParameters
     appData: Optional[dict] = None
@@ -25,7 +24,7 @@ class Consumer(EnhancedEventEmitter):
         self,
         id: str,
         localId: str,
-        consumerId: str,
+        producerId: str,
         track: MediaStreamTrack,
         rtpParameters: RtpParameters,
         rtpReceiver: Optional[RTCRtpReceiver] = None,
@@ -35,7 +34,7 @@ class Consumer(EnhancedEventEmitter):
         super(Consumer, self).__init__(loop=loop)
         self._id = id
         self._localId = localId
-        self._consumerId: consumerId
+        self._producerId = producerId
         self._track = track
         self._rtpParameters = rtpParameters
         self._rtpReceiver = rtpReceiver
@@ -53,10 +52,10 @@ class Consumer(EnhancedEventEmitter):
     def localId(self) -> str:
         return self._localId
 
-    # Associated Consumer id.
+    # Associated Producer id.
     @property
-    def consumerId(self) -> str:
-        return self._consumerId
+    def producerId(self) -> str:
+        return self._producerId
     
     # Whether the Consumer is closed.
     @property

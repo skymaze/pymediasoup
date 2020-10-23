@@ -65,8 +65,8 @@ class HandlerInterface(EnhancedEventEmitter):
 	#     errback: Function
 	#   )
 	# @emits @connectionstatechange - (connectionState: ConnectionState)
-    def __init__(self):
-        super(HandlerInterface, self).__init__()
+    def __init__(self, loop=None):
+        super(HandlerInterface, self).__init__(loop=loop)
 
     @property
     def name(self) -> str:

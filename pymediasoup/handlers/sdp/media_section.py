@@ -83,11 +83,11 @@ class MediaSection:
 class AnswerMediaSection(MediaSection):
     def __init__(
         self,
-        sctpParameters: SctpParameters,
+        sctpParameters: Optional[SctpParameters],
         offerMediaDict: dict,
-        offerRtpParameters: RtpParameters,
-        answerRtpParameters: RtpParameters,
-        codecOptions: ProducerCodecOptions,
+        offerRtpParameters: Optional[RtpParameters],
+        answerRtpParameters: Optional[RtpParameters],
+        codecOptions: Optional[ProducerCodecOptions],
         iceParameters: Optional[RTCIceParameters]=None,
         iceCandidates: List[RTCIceCandidate]=[],
         dtlsParameters: Optional[RTCDtlsParameters]=None,
@@ -118,76 +118,81 @@ class AnswerMediaSection(MediaSection):
             self._mediaDict['rtp'] = []
             self._mediaDict['rtcpFb'] = []
             self._mediaDict['fmtp'] = []
-            for codec in answerRtpParameters.codecs:
-                rtp = {
-                    'payload': codec.payloadType,
-                    'codec': getCodecName(codec),
-                    'rate': codec.clockRate
-                }
-                if (codec.channels > 1):
-                    rtp['encoding'] = codec.channels
-                self._mediaDict['rtp'].append(rtp)
-                codecParameters = codec.parameters
-                if codecOptions:
-                    offerCodecs = [offerRtpCodec for offerRtpCodec in offerRtpParameters.codecs if offerRtpCodec.payloadType == codec.payloadType]
-                    if offerCodecs:
-                        offerCodec:RtpCodecParameters = offerCodecs[0]
-                        if codec.mimeType.lower() == 'audio/opus':
-                            if codecOptions.opusStereo != None:
-                                offerCodec.parameters['sprop-stereo'] = 1 if codecOptions.opusStereo else 0
-                                codecParameters['stereo'] = 1 if codecOptions.opusStereo else 0
-                            if codecOptions.opusFec != None:
-                                offerCodec.parameters['useinbandfec'] = 1 if codecOptions.opusFec else 0
-                                codecParameters['useinbandfec'] = 1 if codecOptions.opusFec else 0
-                            if codecOptions.opusDtx != None:
-                                offerCodec.parameters['usedtx'] = 1 if codecOptions.opusDtx else 0
-                                codecParameters['usedtx'] = 1 if codecOptions.opusDtx else 0
-                            if codecOptions.opusMaxPlaybackRate != None:
-                                codecParameters['maxplaybackrate'] = codecOptions.opusMaxPlaybackRate
-                            if codecOptions.opusPtime != None:
-                                offerCodec.parameters['ptime'] = codecOptions.opusPtime
-                                codecParameters['ptime'] = codecOptions.opusPtime
-                        elif codec.mimeType.lower() in ['video/vp8', 'video/vp9', 'video/h264', 'video/h265']:
-                            if codecOptions.videoGoogleStartBitrate != None:
-                                codecParameters['x-google-start-bitrate'] = codecOptions.videoGoogleStartBitrate
-                            if codecOptions.videoGoogleMaxBitrate != None:
-                                codecParameters['x-google-max-bitrate'] = codecOptions.videoGoogleMaxBitrate
-                            if codecOptions.videoGoogleMinBitrate != None:
-                                codecParameters['x-google-min-bitrate'] = codecOptions.videoGoogleMinBitrate
-                fmtp = {
-                    'payload': codec.payloadType,
-                    'config': ';'.join([f'{key}={value}' for key, value in codecParameters.items()])
-                }
-                if fmtp['config']:
-                    self._mediaDict['fmtp'].append(fmtp)
-                for fb in codec.rtcpFeedback:
-                    self._mediaDict['rtcpFb'].append({
+            if answerRtpParameters:
+                for codec in answerRtpParameters.codecs:
+                    rtp = {
                         'payload': codec.payloadType,
-                        'type': fb.type,
-                        'subtype': fb.parameter
-                    })
-            
-            self._mediaDict['payloads'] = ' '.join([str(codec.payloadType) for codec in answerRtpParameters.codecs])
-            self._mediaDict['ext'] = []
-            for ext in answerRtpParameters.headerExtensions:
-                # Don't add a header extension if not present in the offer.
-                if ext.uri in [localExt['uri'] for localExt in offerMediaDict['ext']]:
-                    self._mediaDict['ext'].append({
-                        'uri': ext.uri,
-                        'value': ext.id
-                    })
+                        'codec': getCodecName(codec),
+                        'rate': codec.clockRate
+                    }
+                    if (codec.channels > 1):
+                        rtp['encoding'] = codec.channels
+                    self._mediaDict['rtp'].append(rtp)
+                    codecParameters = codec.parameters
+                    if codecOptions:
+                        if offerRtpParameters:
+                            offerCodecs = [offerRtpCodec for offerRtpCodec in offerRtpParameters.codecs if offerRtpCodec.payloadType == codec.payloadType]
+                            if offerCodecs:
+                                offerCodec:RtpCodecParameters = offerCodecs[0]
+                                if codec.mimeType.lower() == 'audio/opus':
+                                    if codecOptions.opusStereo != None:
+                                        offerCodec.parameters['sprop-stereo'] = 1 if codecOptions.opusStereo else 0
+                                        codecParameters['stereo'] = 1 if codecOptions.opusStereo else 0
+                                    if codecOptions.opusFec != None:
+                                        offerCodec.parameters['useinbandfec'] = 1 if codecOptions.opusFec else 0
+                                        codecParameters['useinbandfec'] = 1 if codecOptions.opusFec else 0
+                                    if codecOptions.opusDtx != None:
+                                        offerCodec.parameters['usedtx'] = 1 if codecOptions.opusDtx else 0
+                                        codecParameters['usedtx'] = 1 if codecOptions.opusDtx else 0
+                                    if codecOptions.opusMaxPlaybackRate != None:
+                                        codecParameters['maxplaybackrate'] = codecOptions.opusMaxPlaybackRate
+                                    if codecOptions.opusPtime != None:
+                                        offerCodec.parameters['ptime'] = codecOptions.opusPtime
+                                        codecParameters['ptime'] = codecOptions.opusPtime
+                                elif codec.mimeType.lower() in ['video/vp8', 'video/vp9', 'video/h264', 'video/h265']:
+                                    if codecOptions.videoGoogleStartBitrate != None:
+                                        codecParameters['x-google-start-bitrate'] = codecOptions.videoGoogleStartBitrate
+                                    if codecOptions.videoGoogleMaxBitrate != None:
+                                        codecParameters['x-google-max-bitrate'] = codecOptions.videoGoogleMaxBitrate
+                                    if codecOptions.videoGoogleMinBitrate != None:
+                                        codecParameters['x-google-min-bitrate'] = codecOptions.videoGoogleMinBitrate
+                        
+                    fmtp = {
+                        'payload': codec.payloadType,
+                        'config': ';'.join([f'{key}={value}' for key, value in codecParameters.items()])
+                    }
+                    if fmtp['config']:
+                        self._mediaDict['fmtp'].append(fmtp)
+                    for fb in codec.rtcpFeedback:
+                        self._mediaDict['rtcpFb'].append({
+                            'payload': codec.payloadType,
+                            'type': fb.type,
+                            'subtype': fb.parameter
+                        })
+                
+                self._mediaDict['payloads'] = ' '.join([str(codec.payloadType) for codec in answerRtpParameters.codecs])
+                self._mediaDict['ext'] = []
+                for ext in answerRtpParameters.headerExtensions:
+                    # Don't add a header extension if not present in the offer.
+                    if ext.uri in [localExt['uri'] for localExt in offerMediaDict['ext']]:
+                        self._mediaDict['ext'].append({
+                            'uri': ext.uri,
+                            'value': ext.id
+                        })
             # Allow both 1 byte and 2 bytes length header extensions.
             if extmapAllowMixed and offerMediaDict.get('extmapAllowMixed') == 'extmap-allow-mixed':
                 self._mediaDict['extmapAllowMixed'] = 'extmap-allow-mixed'
             # Simulcast.
             if offerMediaDict.get('simulcast'):
+                simulcast: dict = offerMediaDict.get('simulcast', {})
                 self._mediaDict['simulcast'] = {
                     'dir1': 'recv',
-                    'list1': offerMediaDict.get('simulcast').get('list1')
+                    'list1': simulcast.get('list1')
                 }
                 self._mediaDict['rids'] = []
                 if offerMediaDict.get('rids'):
-                    for rid in offerMediaDict.get('rids'):
+                    rids: list = offerMediaDict.get('rids', [])
+                    for rid in rids:
                         if rid.get('direction') == 'send':
                             self._mediaDict['rids'].append({
                                 'id': rid.get('id'),
@@ -195,12 +200,14 @@ class AnswerMediaSection(MediaSection):
                             })
             # Simulcast (draft version 03).
             elif offerMediaDict.get('simulcast_03'):
+                simulcast_03: dict = offerMediaDict.get('simulcast_03', {})
                 self._mediaDict['simulcast_03'] = {
-                    'value': offerMediaDict.get('simulcast_03').get('value').replace('send', 'recv')
+                    'value': simulcast_03.get('value', '').replace('send', 'recv')
                 }
                 self._mediaDict['rids'] = []
                 if offerMediaDict.get('rids'):
-                    for rid in offerMediaDict.get('rids'):
+                    rids_03: list = offerMediaDict.get('rids', [])
+                    for rid in rids_03:
                         if rid.get('direction') == 'send':
                             self._mediaDict['rids'].append({
                                 'id': rid.get('id'),
@@ -213,18 +220,19 @@ class AnswerMediaSection(MediaSection):
             
         elif offerMediaDict.get('type') == 'application':
             # New spec.
-            if offerMediaDict.get('sctpPort'):
-                self._mediaDict['payloads'] = 'webrtc-datachannel'
-                self._mediaDict['sctpPort'] = sctpParameters.port
-                self._mediaDict['maxMessageSize'] = sctpParameters.maxMessageSize
-            # Old spec.
-            elif offerMediaDict.get('sctpmap'):
-                self._mediaDict['payloads'] = SctpParameters.port
-                self._mediaDict['sctpmap'] = {
-                    'app': 'webrtc-datachannel',
-                    'sctpmapNumber': sctpParameters.port,
-                    'maxMessageSize': sctpParameters.maxMessageSize
-                }
+            if sctpParameters:
+                if offerMediaDict.get('sctpPort'):
+                    self._mediaDict['payloads'] = 'webrtc-datachannel'
+                    self._mediaDict['sctpPort'] = sctpParameters.port
+                    self._mediaDict['maxMessageSize'] = sctpParameters.maxMessageSize
+                # Old spec.
+                elif offerMediaDict.get('sctpmap'):
+                    self._mediaDict['payloads'] = SctpParameters.port
+                    self._mediaDict['sctpmap'] = {
+                        'app': 'webrtc-datachannel',
+                        'sctpmapNumber': sctpParameters.port,
+                        'maxMessageSize': sctpParameters.maxMessageSize
+                    }
     def setDtlsRole(self, role: str):
         if role == 'client':
             self._mediaDict['setup'] = 'active'
@@ -236,8 +244,8 @@ class AnswerMediaSection(MediaSection):
 class OfferMediaSection(MediaSection):
     def __init__(
         self,
-        sctpParameters: SctpParameters,
-        offerRtpParameters: RtpParameters,
+        sctpParameters: Optional[SctpParameters],
+        offerRtpParameters: Optional[RtpParameters],
         mid: str,
         kind: Literal['audio', 'video', 'application'],
         streamId: Optional[str]=None,
@@ -277,86 +285,92 @@ class OfferMediaSection(MediaSection):
             self._mediaDict['fmtp'] = []
             if not self._planB:
                 self._mediaDict['msid'] = f"{streamId if streamId else '-'} {trackId}"
-            for codec in offerRtpParameters.codecs:
-                rtp = {
-                    'payload': codec.payloadType,
-                    'codec': getCodecName(codec),
-                    'rate': codec.clockRate
-                }
-                if codec.channels > 1:
-                    rtp['encoding'] = codec.channels
-                self._mediaDict['rtp'].append(rtp)
-                fmtp = {
-                    'payload': codec.payloadType,
-                    'config': ';'.join([f'{key}={value}' for key, value in codec.parameters.items()])
-                }
-                if fmtp['config']:
-                    self._mediaDict['fmtp'].append(fmtp)
-                for fb in codec.rtcpFeedback:
-                    self._mediaDict['rtcpFb'].append({
+            if offerRtpParameters:
+                for codec in offerRtpParameters.codecs:
+                    rtp = {
                         'payload': codec.payloadType,
-                        'type': fb.type,
-                        'subtype': fb.parameter
+                        'codec': getCodecName(codec),
+                        'rate': codec.clockRate
+                    }
+                    if codec.channels > 1:
+                        rtp['encoding'] = codec.channels
+                    self._mediaDict['rtp'].append(rtp)
+                    fmtp = {
+                        'payload': codec.payloadType,
+                        'config': ';'.join([f'{key}={value}' for key, value in codec.parameters.items()])
+                    }
+                    if fmtp['config']:
+                        self._mediaDict['fmtp'].append(fmtp)
+                    for fb in codec.rtcpFeedback:
+                        self._mediaDict['rtcpFb'].append({
+                            'payload': codec.payloadType,
+                            'type': fb.type,
+                            'subtype': fb.parameter
+                        })
+                
+                self._mediaDict['payloads'] = ' '.join([str(codec.payloadType) for codec in offerRtpParameters.codecs])
+                self._mediaDict['ext'] = []
+                for ext in offerRtpParameters.headerExtensions:
+                    self._mediaDict['ext'].append({
+                        'uri': ext.uri,
+                        'value': ext.id
                     })
-            
-            self._mediaDict['payloads'] = ' '.join([str(codec.payloadType) for codec in offerRtpParameters.codecs])
-            self._mediaDict['ext'] = []
-            for ext in offerRtpParameters.headerExtensions:
-                self._mediaDict['ext'].append({
-                    'uri': ext.uri,
-                    'value': ext.id
-                })
-            
-            self._mediaDict['rtcpMux'] = 'rtcp-mux'
-            self._mediaDict['rtcpRsize'] = 'rtcp-rsize'
-            encoding: RtpEncodingParameters = offerRtpParameters.encodings[0]
-            ssrc = encoding.ssrc
-            rtxSsrc = encoding.rtx.ssrc if encoding.rtx and encoding.rtx.ssrc else None
-            self._mediaDict['ssrcs'] = []
-            self._mediaDict['ssrcGroups'] = []
-            if offerRtpParameters.rtcp.cname:
-                self._mediaDict['ssrcs'].append({
-                    'id': ssrc,
-                    'attribute': 'cname',
-                    'value': offerRtpParameters.rtcp.cname
-                })
-            if self._planB:
-                self._mediaDict['ssrcs'].append({
-                    'id': ssrc,
-                    'attribute': 'msid',
-                    'value': f"{streamId if streamId else '-'} {trackId}"
-                })
-            if rtxSsrc:
-                if offerRtpParameters.rtcp.cname:
+                
+                self._mediaDict['rtcpMux'] = 'rtcp-mux'
+                self._mediaDict['rtcpRsize'] = 'rtcp-rsize'
+                encoding: RtpEncodingParameters = offerRtpParameters.encodings[0]
+                ssrc = encoding.ssrc
+                rtxSsrc = encoding.rtx.ssrc if encoding.rtx and encoding.rtx.ssrc else None
+                self._mediaDict['ssrcs'] = []
+                self._mediaDict['ssrcGroups'] = []
+                cname = None
+                if offerRtpParameters.rtcp:
+                    if offerRtpParameters.rtcp.cname:
+                        cname = offerRtpParameters.rtcp.cname
+                if cname:
                     self._mediaDict['ssrcs'].append({
-                        'id': rtxSsrc,
+                        'id': ssrc,
                         'attribute': 'cname',
-                        'value': offerRtpParameters.rtcp.cname
+                        'value': cname
                     })
                 if self._planB:
                     self._mediaDict['ssrcs'].append({
-                        'id': rtxSsrc,
+                        'id': ssrc,
                         'attribute': 'msid',
                         'value': f"{streamId if streamId else '-'} {trackId}"
                     })
-                self._mediaDict['ssrcGroups'].append({
-                    'semantics': 'FID',
-                    'ssrcs': f'{ssrc} {rtxSsrc}'
-                })
+                if rtxSsrc:
+                    if cname:
+                        self._mediaDict['ssrcs'].append({
+                            'id': rtxSsrc,
+                            'attribute': 'cname',
+                            'value': cname
+                        })
+                    if self._planB:
+                        self._mediaDict['ssrcs'].append({
+                            'id': rtxSsrc,
+                            'attribute': 'msid',
+                            'value': f"{streamId if streamId else '-'} {trackId}"
+                        })
+                    self._mediaDict['ssrcGroups'].append({
+                        'semantics': 'FID',
+                        'ssrcs': f'{ssrc} {rtxSsrc}'
+                    })
         elif kind == 'application':
-            # New spec.
-            if not oldDataChannelSpec:
-                self._mediaDict['payloads'] = 'webrtc-datachannel'
-                self._mediaDict['sctpPort'] = sctpParameters.port
-                self._mediaDict['maxMessageSize'] = sctpParameters.maxMessageSize
-            # Old spec.
-            else:
-                self._mediaDict['payloads'] = sctpParameters.port
-                self._mediaDict['sctpmap'] = {
-                    'app': 'webrtc-datachannel',
-                    'sctpmapNumber': sctpParameters.port,
-                    'maxMessageSize': sctpParameters.maxMessageSize
-                }
+            if sctpParameters:
+                # New spec.
+                if not oldDataChannelSpec:
+                    self._mediaDict['payloads'] = 'webrtc-datachannel'
+                    self._mediaDict['sctpPort'] = sctpParameters.port
+                    self._mediaDict['maxMessageSize'] = sctpParameters.maxMessageSize
+                # Old spec.
+                else:
+                    self._mediaDict['payloads'] = sctpParameters.port
+                    self._mediaDict['sctpmap'] = {
+                        'app': 'webrtc-datachannel',
+                        'sctpmapNumber': sctpParameters.port,
+                        'maxMessageSize': sctpParameters.maxMessageSize
+                    }
     def setDtlsRole(self, _):
         # Always 'actpass'.
         self._mediaObject.setup = 'actpass'
@@ -365,11 +379,14 @@ class OfferMediaSection(MediaSection):
         encoding = offerRtpParameters.encodings[0]
         ssrc = encoding.ssrc
         rtxSsrc = encoding.rtx.ssrc if encoding.rtx and encoding.rtx.ssrc else None
-        if offerRtpParameters.rtcp.cname:
+        if offerRtpParameters.rtcp:
+            if offerRtpParameters.rtcp.cname:
+                cname = offerRtpParameters.rtcp.cname
+        if cname:
             self._mediaDict['ssrcs'].append({
                 'id': ssrc,
                 'attribute': 'cname',
-                'value': offerRtpParameters.rtcp.cname
+                'value': cname
             })
         self._mediaDict['ssrcs'].append({
             'id': ssrc,
@@ -377,11 +394,11 @@ class OfferMediaSection(MediaSection):
             'value': f"{streamId if streamId else '-'} {trackId}"
         })
         if rtxSsrc:
-            if offerRtpParameters.rtcp.cname:
+            if cname:
                 self._mediaDict['ssrcs'].append({
                     'id': rtxSsrc,
                     'attribute': 'cname',
-                    'value': offerRtpParameters.rtcp.cname
+                    'value': cname
                 })
             self._mediaDict['ssrcs'].append({
                 'id': rtxSsrc,

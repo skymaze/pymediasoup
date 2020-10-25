@@ -204,7 +204,7 @@ class RtpParameters(BaseModel):
     # RTP header extensions in use.
     headerExtensions: List[RtpHeaderExtensionParameters] = []
     # Transmitted RTP streams and their settings.
-    encodings: Optional[List[RtpEncodingParameters]] = []
+    encodings: List[RtpEncodingParameters] = []
     # Parameters used for RTCP.
     rtcp: Optional[RtcpParameters]
     

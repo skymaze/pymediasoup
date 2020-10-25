@@ -76,6 +76,9 @@ class MediaSection:
     
     def setDtlsRole(self, role: str):
         logging.warning('MediaSection setDtlsRole() not implement')
+
+    def planBReceive(self, offerRtpParameters: RtpParameters, streamId: str, trackId: str):
+        logging.warning('MediaSection planBReceive() not implement')
     
     def planBStopReceiving(self, offerRtpParameters: RtpParameters):
         logging.warning('MediaSection planBStopReceiving() not implement')
@@ -83,11 +86,11 @@ class MediaSection:
 class AnswerMediaSection(MediaSection):
     def __init__(
         self,
-        sctpParameters: Optional[SctpParameters],
         offerMediaDict: dict,
-        offerRtpParameters: Optional[RtpParameters],
-        answerRtpParameters: Optional[RtpParameters],
-        codecOptions: Optional[ProducerCodecOptions],
+        sctpParameters: Optional[SctpParameters]=None,
+        offerRtpParameters: Optional[RtpParameters]=None,
+        answerRtpParameters: Optional[RtpParameters]=None,
+        codecOptions: Optional[ProducerCodecOptions]=None,
         iceParameters: Optional[RTCIceParameters]=None,
         iceCandidates: List[RTCIceCandidate]=[],
         dtlsParameters: Optional[RTCDtlsParameters]=None,
@@ -244,13 +247,13 @@ class AnswerMediaSection(MediaSection):
 class OfferMediaSection(MediaSection):
     def __init__(
         self,
-        sctpParameters: Optional[SctpParameters],
-        offerRtpParameters: Optional[RtpParameters],
         mid: str,
         kind: Literal['audio', 'video', 'application'],
         streamId: Optional[str]=None,
         trackId: Optional[str]=None,
         oldDataChannelSpec: Optional[bool]=False,
+        sctpParameters: Optional[SctpParameters]=None,
+        offerRtpParameters: Optional[RtpParameters]=None,
         iceParameters: Optional[RTCIceParameters]=None,
         iceCandidates: List[RTCIceCandidate]=[],
         dtlsParameters: Optional[RTCDtlsParameters]=None,

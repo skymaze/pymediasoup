@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional, Literal, Dict
 from .media_section import MediaSection, AnswerMediaSection, OfferMediaSection
-from ...transport import IceCandidate, IceParameters, DtlsParameters, DtlsRole, PlainRtpParameters
+from ...transport import IceCandidate, IceParameters, DtlsParameters, DtlsRole, PlainRtpParameters, DtlsRole
 from ...producer import ProducerCodecOptions
 from ...rtp_parameters import MediaKind, RtpParameters
 from ...sctp_parameters import SctpParameters
@@ -13,7 +13,7 @@ class RemoteSdp:
         iceParameters: Optional[IceParameters] = None,
         iceCandidates: List[IceCandidate] = [],
         dtlsParameters: Optional[DtlsParameters] = None,
-        sctpParameters: Optional[SctpParameters] = None,
+        sctpParameters: SctpParameters = None,
         plainRtpParameters: Optional[PlainRtpParameters] = None,
         planB: bool = False
     ):
@@ -66,11 +66,12 @@ class RemoteSdp:
         self._iceParameters = iceParameters
         self._sdpDict['icelite'] = 'ice-lite' if iceParameters.iceLite else None
     
-    def updateDtlsRole(self, role: str):
+    def updateDtlsRole(self, role: DtlsRole):
         logging.debug(f'updateDtlsRole() [role:{role}]')
-        self._dtlsParameters.role = role
-        for mediaSection in self._mediaSections:
-            mediaSection.setDtlsRole(role)
+        if self._dtlsParameters:
+            self._dtlsParameters.role = role
+            for mediaSection in self._mediaSections:
+                mediaSection.setDtlsRole(role)
         
     def getNextMediaSectionIdx(self):
         # If a closed media section is found, return its index.
@@ -135,7 +136,7 @@ class RemoteSdp:
         else:
             mediaSection = OfferMediaSection(
                 iceParameters=self._iceParameters,
-                iceCandidate=self._iceCandidates,
+                iceCandidates=self._iceCandidates,
                 dtlsParameters=self._dtlsParameters,
                 plainRtpParameters=self._plainRtpParameters,
                 planB=self._planB,

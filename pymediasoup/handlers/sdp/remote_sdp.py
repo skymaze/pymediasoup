@@ -1,5 +1,6 @@
 import logging
 from typing import List, Optional, Literal, Dict
+from .sdp_transform import write
 from .media_section import MediaSection, AnswerMediaSection, OfferMediaSection
 from ...transport import IceCandidate, IceParameters, DtlsParameters, DtlsRole, PlainRtpParameters, DtlsRole
 from ...producer import ProducerCodecOptions
@@ -208,12 +209,12 @@ class RemoteSdp:
         )
         self._addMediaSection(mediaSection)
     
-    def getSdp(self):
+    def getSdp(self) -> str:
         # Increase SDP version.
         self._sdpDict['origin']['sessionVersion'] += 1
         # TODO: sdpTransform
         # return sdpTransform.write(self._sdpObject)
-        return None
+        return write(self._sdpDict)
     
     def _addMediaSection(self, newMediaSection: MediaSection):
         if self._firstMid == None:

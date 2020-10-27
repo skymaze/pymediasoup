@@ -38,8 +38,13 @@ class AiortcHandler(HandlerInterface):
     # Got transport local and remote parameters.
     _transportReady = False
 
-    def __init__(self, loop=None):
+    def __init__(self, tracks: List[MediaStreamTrack]=[], loop=None):
         super(AiortcHandler, self).__init__(loop=loop)
+        self._tracks = tracks
+
+    @classmethod
+    def createFactory(cls, tracks: List[MediaStreamTrack]=[], loop=None):
+        return lambda: cls(tracks, loop)
 
     @property
     def name(self) -> str:
@@ -102,6 +107,9 @@ class AiortcHandler(HandlerInterface):
             'video': getSendingRemoteRtpParameters('video', extendedRtpCapabilities)
         }
         self._pc = RTCPeerConnection()
+        for track in self._tracks:
+            self._pc.addTrack(track)
+
         @self._pc.on('iceconnectionstatechange')
         def on_iceconnectionstatechange():
             if self._pc.iceConnectionState == 'checking':
@@ -116,7 +124,7 @@ class AiortcHandler(HandlerInterface):
                 self.emit('@connectionstatechange', 'closed')
         
     async def updateIceServers(self, iceServers):
-        logging.debug('updateIceServers() passed')
+        logging.warning('updateIceServers() not implemented')
         # TODO: aiortc can not update iceServers
     
     async def restartIce(self, iceParameters):
@@ -125,7 +133,7 @@ class AiortcHandler(HandlerInterface):
         if not self._transportReady:
             return
         if self._direction == 'send':
-            # NOTE: aiortc RTCPeerConnection createOffer do not have iceRestart
+            # NOTE: aiortc RTCPeerConnection createOffer do not have iceRestart options
             offer = await self._pc.createOffer()
             logging.debug(f'restartIce() | calling pc.setLocalDescription() [offer:{offer}]')
             await self._pc.setLocalDescription(offer)
@@ -453,4 +461,3 @@ class AiortcHandler(HandlerInterface):
     def _assertRecvDirection(self):
         if self._direction != 'recv':
             raise Exception('method can just be called for handlers with "recv" direction')
-        

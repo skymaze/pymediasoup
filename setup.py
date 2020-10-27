@@ -25,6 +25,7 @@ REQUIRED = [
     'pydantic>=1.6.1',
     'aiortc>=1.0.0',
     'pyee>=8.0.0',
+    'h264-profile-level-id>=1.0.0'
 ]
 
 # What packages are optional?

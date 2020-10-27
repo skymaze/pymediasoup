@@ -102,7 +102,7 @@ grammar = {
             'push': 'ext',
             'reg': "^extmap:(\d+)(?:\/(\w+))?(?: (urn:ietf:params:rtp-hdrext:encrypt))? (\S*)(?: (\S*))?",
             'names': ['value', 'direction', 'encrypt-uri', 'uri', 'config'],
-            'format': lambda o: 'extmap:%d' + ('/%s' if o.get('.direction') else '') + (' %s' if o.get('encrypt-uri') else '') + (' %s' if o.get('config') else '')
+            'format': lambda o: 'extmap:%d' + ('/%s' if o.get('direction') else '') + (' %s' if o.get('encrypt-uri') else '') + ' %s' + (' %s' if o.get('config') else '')
         },
         {
             # a=extmap-allow-mixed
@@ -497,7 +497,7 @@ def parse(sdp: str) -> dict:
 
 
 def makeLine(field, obj, location):
-    string = field + '=' + obj['format']((location if obj.get('push') else location[obj.get('name')])) if callable(obj['format']) else obj['format']
+    string = field + '=' + (obj['format']((location if obj.get('push') else location[obj.get('name')])) if callable(obj['format']) else obj['format'])
     args = []
     if obj.get('names'):
         for name in obj.get('names'):
@@ -520,7 +520,9 @@ defaultOuterOrder = [
   'b', 't', 'r', 'z', 'a'
 ]
 
-def write(session: dict, outerOrder: list=defaultOuterOrder, innerOrder:list=defaultOuterOrder):
+defaultInnerOrder = ['i', 'c', 'b', 'a']
+
+def write(session: dict, outerOrder: list=defaultOuterOrder, innerOrder:list=defaultInnerOrder):
     if session.get('version') == None:
         session['version'] = 0 # 'v=0' must be there (only defined version atm)
     if session.get('name') == None:

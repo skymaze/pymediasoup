@@ -80,7 +80,7 @@ class TransportOptions(BaseModel):
 class InternalTransportOptions(TransportOptions):
     direction: Literal['send', 'recv']
     handlerFactory: Callable[..., HandlerInterface]
-    extendedRtpCapabilities: Any = None
+    extendedRtpCapabilities: ExtendedRtpCapabilities = None
     canProduceByKind: Dict[str, bool]
 
 class Transport(EnhancedEventEmitter):
@@ -119,7 +119,7 @@ class Transport(EnhancedEventEmitter):
         # Direction.
         self._direction: Literal['send', 'recv'] = options.direction
         # Extended RTP capabilities.
-        self._extendedRtpCapabilities: Any = options.extendedRtpCapabilities,
+        self._extendedRtpCapabilities: ExtendedRtpCapabilities = options.extendedRtpCapabilities,
         self._canProduceByKind: Dict[str, bool] = options.canProduceByKind
         self._maxSctpMessageSize = options.sctpParameters.maxMessageSize if options.sctpParameters else None
 

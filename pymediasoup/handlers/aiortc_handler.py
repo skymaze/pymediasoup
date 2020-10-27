@@ -5,7 +5,7 @@ from .sdp.remote_sdp import RemoteSdp
 from .sdp import common_utils
 from .sdp.sdp_transform import parse as sdpParse
 from .sdp.sdp_transform import write as sdpWrite
-from .handler_interface import HandlerInterface, HandlerSendOptions, HandlerSendResult, HandlerSendDataChannelResult, HandlerReceiveOptions, HandlerReceiveResult, HandlerReceiveDataChannelOptions
+from .handler_interface import HandlerInterface, HandlerRunOptions, HandlerSendOptions, HandlerSendResult, HandlerSendDataChannelResult, HandlerReceiveOptions, HandlerReceiveResult, HandlerReceiveDataChannelOptions
 from ..rtp_parameters import RtpParameters, RtpCapabilities, RtpEncodingParameters
 from ..sctp_parameters import SctpCapabilities, SctpStreamParameters
 from ..ortc import getSendingRtpParameters, getSendingRemoteRtpParameters, reduceCodecs
@@ -79,32 +79,23 @@ class AiortcHandler(HandlerInterface):
     
     def run(
         self,
-        direction,
-        iceParameters,
-        iceCandidates,
-        dtlsParameters,
-        sctpParameters,
-        iceServers,
-        iceTransportPolicy,
-        additionalSettings,
-        proprietaryConstraints,
-        extendedRtpCapabilities
+        options: HandlerRunOptions
     ):
         logging.debug('run()')
-        self._direction = direction
+        self._direction = options.direction
         self._remoteSdp = RemoteSdp(
-            iceParameters=iceParameters,
-            iceCandidates=iceCandidates,
-            dtlsParameters=dtlsParameters,
-            sctpParameters=sctpParameters
+            iceParameters=options.iceParameters,
+            iceCandidates=options.iceCandidates,
+            dtlsParameters=options.dtlsParameters,
+            sctpParameters=options.sctpParameters
         )
         self._sendingRtpParametersByKind = {
-            'audio': getSendingRtpParameters('audio', extendedRtpCapabilities),
-            'video': getSendingRtpParameters('video', extendedRtpCapabilities)
+            'audio': getSendingRtpParameters('audio', options.extendedRtpCapabilities),
+            'video': getSendingRtpParameters('video', options.extendedRtpCapabilities)
         }
         self._sendingRemoteRtpParametersByKind = {
-            'audio': getSendingRemoteRtpParameters('audio', extendedRtpCapabilities),
-            'video': getSendingRemoteRtpParameters('video', extendedRtpCapabilities)
+            'audio': getSendingRemoteRtpParameters('audio', options.extendedRtpCapabilities),
+            'video': getSendingRemoteRtpParameters('video', options.extendedRtpCapabilities)
         }
         self._pc = RTCPeerConnection()
         for track in self._tracks:

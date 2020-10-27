@@ -40,7 +40,7 @@ class MediaSection:
             self.setDtlsRole(dtlsParameters.role)
     
     @property
-    def mid(self):
+    def mid(self) -> Optional[str]:
         return self._mediaDict.get('mid')
     
     @property

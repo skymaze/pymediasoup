@@ -1,4 +1,5 @@
 import re
+from functools import reduce
 
 grammar = {
     'v': [{
@@ -495,6 +496,16 @@ def parse(sdp: str) -> dict:
     session['media'] = media
     return session
 
+def paramReducer(acc, expr):
+    s = expr.split('=')
+    if len(s) == 2:
+        acc[s[0]] = toIntIfInt(s[1])
+    elif len(s) == 1 and len(expr) > 1:
+        acc[s[0]] = None
+    return acc
+
+def parseParams(string: str):
+    return reduce(paramReducer, re.split(r';\s?', string), {})
 
 def makeLine(field, obj, location):
     string = field + '=' + (obj['format']((location if obj.get('push') else location[obj.get('name')])) if callable(obj['format']) else obj['format'])

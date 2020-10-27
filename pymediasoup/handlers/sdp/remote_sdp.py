@@ -8,6 +8,10 @@ from ...rtp_parameters import MediaKind, RtpParameters
 from ...sctp_parameters import SctpParameters
 
 
+class MediaSectionIdx(BaseModel):
+    idx: int
+    reuseMid: Optional[str]
+
 class RemoteSdp:
     def __init__(
         self,
@@ -76,24 +80,19 @@ class RemoteSdp:
         
     def getNextMediaSectionIdx(self):
         # If a closed media section is found, return its index.
-        for idx,mediaSection in self._mediaSections:
+        for idx, mediaSection in self._mediaSections:
             if mediaSection.closed:
-                return {
-                    'idx': idx,
-                    'reuseMid': mediaSection.mid
-                }
+                return MediaSectionIdx(idx=idx, reuseMid=mediaSection.mid)
         # If no closed media section is found, return next one.
-        return {
-            'idx': len(self._mediaSections)
-        }
+        return MediaSectionIdx(idx=len(self._mediaSections))
     
     def send(
         self,
         offerMediaDict: dict,
-        reuseMid: str,
         offerRtpParameters: RtpParameters,
         answerRtpParameters: RtpParameters,
         codecOptions: ProducerCodecOptions,
+        reuseMid: Optional[str]=None,
         extmapAllowMixed = False
     ):
         mediaSection = AnswerMediaSection(

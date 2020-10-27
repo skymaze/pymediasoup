@@ -3,7 +3,7 @@ from typing import List
 from ...rtp_parameters import RtpEncodingParameters, RTX
 
 
-def getRtpEncodinga(offerMediaDict: dict) -> List[RtpEncodingParameters]:
+def getRtpEncodings(offerMediaDict: dict) -> List[RtpEncodingParameters]:
     ssrcs = set()
     for line in offerMediaDict.get('ssrcs', []):
         ssrc = line.get('id')

@@ -43,9 +43,6 @@ class HandlerReceiveResult(BaseModel):
     track: MediaStreamTrack
     rtpReceiver: Optional[RTCRtpReceiver]
 
-class HandlerSendDataChannelOptions(SctpStreamParameters):
-    pass
-
 class HandlerSendDataChannelResult(BaseModel):
     dataChannel: RTCDataChannel
     sctpStreamParameters: SctpStreamParameters
@@ -111,7 +108,7 @@ class HandlerInterface(EnhancedEventEmitter):
     async def getSenderStats(self, localId: str) -> Any:
         pass
 
-    async def sendDataChannel(self, options: HandlerSendDataChannelOptions) -> HandlerSendDataChannelResult:
+    async def sendDataChannel(self, options: SctpStreamParameters) -> HandlerSendDataChannelResult:
         pass
 
     async def receive(self, options: HandlerReceiveOptions) -> HandlerReceiveResult:

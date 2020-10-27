@@ -1,6 +1,7 @@
 from typing import List
 
 from .sdp_transform import parseParams
+from .sdp_transform import parseParams
 from ...transport import DtlsParameters, DtlsRole, DtlsFingerprint
 from ...rtp_parameters import RtpCapabilities, RtpCodecCapability, RtpHeaderExtension, RtpParameters, RtcpFeedback
 
@@ -115,3 +116,37 @@ def getCname(offerMediaDict: dict):
     if not ssrcCnameLines:
         return ''
     return ssrcCnameLines[0].get('value', '')
+
+def applyCodecParameters(offerRtpParameters: RtpParameters, answerMediaDict: Optional[dict] = {}):
+    for codec in offerRtpParameters.codecs:
+        mimeType = codec.mimeType.lower()
+        if mimeType != 'audio/opus':
+            continue
+
+        rtps = [r for r in answerMediaDict.get('rtp', []) if r.get('payload') == codec.payloadType]
+        if not rtps:
+            continue
+        rtp = rtps[0]
+        
+        fmtps = [f for f in answerMediaDict.get('rmtp', []) if f.get('payload') == codec.payloadType]
+        if not fmtps:
+            fmtp = {
+                'payload': codec.payloadType,
+                'config': ''
+            }
+            if answerMediaDict.get('rmtp') != None:
+                answerMediaDict['fmtp'].append(fmtp)
+            else:
+                answerMediaDict['fmtp'] = [fmtp]
+        else:
+            fmtp = fmtps[0]
+        
+        parameters = parseParams(fmtp.get('config', ''))
+        
+        if mimeType == 'audio/opus':
+            spropStereo = codec.parameters.get('sprop-stereo')
+            if spropStereo != None:
+                parameters['stereo'] = 1 if spropStereo else 0
+
+        # Write the codec fmtp.config back.
+        fmtp['config'] = ';'.join([f'{key}={value}' for key, value in parameters.items()])

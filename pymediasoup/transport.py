@@ -8,7 +8,7 @@ from .ortc import canReceive, generateProbatorRtpParameters
 from .errors import InvalidStateError, UnsupportedError
 from .emitter import EnhancedEventEmitter
 from .sctp_parameters import SctpParameters
-from .handlers.handler_interface import HandlerInterface, HandlerRunOptions, HandlerReceiveOptions, HandlerSendOptions, HandlerSendResult, HandlerReceiveResult, HandlerSendDataChannelOptions, HandlerSendDataChannelResult, HandlerReceiveDataChannelOptions, HandlerReceiveDataChannelResult
+from .handlers.handler_interface import HandlerInterface, HandlerRunOptions, HandlerReceiveOptions, HandlerSendOptions, HandlerSendResult, HandlerReceiveResult, SctpStreamParameters, HandlerSendDataChannelResult, HandlerReceiveDataChannelOptions, HandlerReceiveDataChannelResult
 from .consumer import Consumer, ConsumerOptions
 from .producer import Producer, ProducerOptions
 from .data_consumer import DataConsumer, DataConsumerOptions
@@ -124,15 +124,27 @@ class Transport(EnhancedEventEmitter):
         self._maxSctpMessageSize = options.sctpParameters.maxMessageSize if options.sctpParameters else None
 
         if options.additionalSettings:
-            del options.additionalSettings['iceServers']
-            del options.additionalSettings['iceTransportPolicy']
-            del options.additionalSettings['bundlePolicy']
-            del options.additionalSettings['rtcpMuxPolicy']
-            del options.additionalSettings['sdpSemantics']
+            additionalSettings = options.additionalSettings.copy()
+            del additionalSettings['iceServers']
+            del additionalSettings['iceTransportPolicy']
+            del additionalSettings['bundlePolicy']
+            del additionalSettings['rtcpMuxPolicy']
+            del additionalSettings['sdpSemantics']
 
         self._handler: HandlerInterface = options.handlerFactory()
 
-        handlerRunOptions = HandlerRunOptions(**options.dict())
+        handlerRunOptions: HandlerRunOptions = HandlerRunOptions(
+            direction=options.direction,
+            iceParameters=options.iceParameters,
+            iceCandidates=options.iceCandidates,
+            dtlsParameters=options.dtlsParameters,
+            sctpParameters=options.sctpParameters,
+            iceServers=options.iceServers,
+            iceTransportPolicy=options.iceTransportPolicy,
+            additionalSettings=additionalSettings,
+            proprietaryConstraints=options.proprietaryConstraints,
+            extendedRtpCapabilities=options.extendedRtpCapabilities
+        )
 
         self._handler.run(options=handlerRunOptions)
 
@@ -352,7 +364,7 @@ class Transport(EnhancedEventEmitter):
             options.ordered = False
         
         # NOTE: Mediasoup client enqueue command here.
-        handlerSendDataChannelOptions: HandlerSendDataChannelOptions = HandlerSendDataChannelOptions(
+        SctpStreamParameters: SctpStreamParameters = SctpStreamParameters(
             ordered=options.ordered,
             maxPacketLifeTime=options.maxPacketLifeTime,
             maxRetransmits=options.maxRetransmits,
@@ -360,7 +372,7 @@ class Transport(EnhancedEventEmitter):
             label=options.label,
             protocol=options.protocol
         )
-        handlerSendDataChannelResult: HandlerSendDataChannelResult = await self._handler.sendDataChannel(handlerSendDataChannelOptions)
+        handlerSendDataChannelResult: HandlerSendDataChannelResult = await self._handler.sendDataChannel(SctpStreamParameters)
 
         ids = await self.emit_for_results(
             'producedata',

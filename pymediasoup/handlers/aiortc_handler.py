@@ -1,10 +1,9 @@
 import logging
 from typing import Dict, Literal, List, Optional, Any
 from aiortc import RTCPeerConnection, RTCSessionDescription, RTCRtpTransceiver
+import sdp_transform
 from .sdp.remote_sdp import RemoteSdp
 from .sdp import common_utils
-from .sdp.sdp_transform import parse as sdpParse
-from .sdp.sdp_transform import write as sdpWrite
 from .handler_interface import HandlerInterface, HandlerRunOptions, HandlerSendOptions, HandlerSendResult, HandlerSendDataChannelResult, HandlerReceiveOptions, HandlerReceiveResult, HandlerReceiveDataChannelOptions
 from ..rtp_parameters import RtpParameters, RtpCapabilities, RtpEncodingParameters
 from ..sctp_parameters import SctpCapabilities, SctpStreamParameters
@@ -66,7 +65,7 @@ class AiortcHandler(HandlerInterface):
         offer: RTCSessionDescription = await pc.createOffer()
         await pc.close()
 
-        sdpDict: dict = sdpParse(offer.sdp)
+        sdpDict: dict = sdp_transform.parse(offer.sdp)
         nativeRtpCapabilities:RtpCapabilities = common_utils.extractRtpCapabilities(sdpDict)
 
         return nativeRtpCapabilities
@@ -164,7 +163,7 @@ class AiortcHandler(HandlerInterface):
         transceiver = self._pc.addTransceiver(options.track, direction='sendonly')
 
         offer = self._pc.createOffer()
-        localSdpDict = sdpParse(offer.sdp)
+        localSdpDict = sdp_transform.parse(offer.sdp)
         if not self._transportReady:
             await self._setupTransport(localDtlsRole='server', localSdpDict=localSdpDict)
         # Special case for VP9 with SVC.
@@ -173,12 +172,12 @@ class AiortcHandler(HandlerInterface):
         if len(options.encodings) == 1 and layers.spatialLayers > 1 and sendingRtpParameters.codecs[0].mimeType.lower() == 'video/vp9':
             logging.debug('send() | enabling legacy simulcast for VP9 SVC')
             hackVp9Svc = True
-            localSdpDict = sdpParse
+            localSdpDict = sdp_transform.parse
             offerMediaDict = localSdpDict['media'][mediaSectionIdx['idx']]
             addLegacySimulcast(offerMediaDict=offerMediaDict, numStreams=layers.spatialLayers)
             offer: RTCSessionDescription = RTCSessionDescription(
                 type='offer',
-                sdp=sdpWrite(localSdpDict)
+                sdp=sdp_transform.write(localSdpDict)
             )
         
         logging.debug(f'send() | calling pc.setLocalDescription() [offer:{offer}]')
@@ -188,7 +187,7 @@ class AiortcHandler(HandlerInterface):
         localId = transceiver.mid
         # Set MID.
         sendingRtpParameters.mid = localId
-        localSdpDict = sdpParse(self._pc.localDescription.sdp)
+        localSdpDict = sdp_transform.parse(self._pc.localDescription.sdp)
         offerMediaDict = localSdpDict['media'][mediaSectionIdx['idx']]
         # Set RTCP CNAME.
         sendingRtpParameters.rtcp.cname = common_utils.getCname(offerMediaDict)
@@ -306,7 +305,7 @@ class AiortcHandler(HandlerInterface):
         # m=application section.
         if not self._hasDataChannelMediaSection:
             offer: RTCSessionDescription = await self._pc.createOffer()
-            localSdpDict = sdpParse(offer.sdp)
+            localSdpDict = sdp_transform.parse(offer.sdp)
             offerMediaDicts = [m for m in localSdpDict.get('media') if m.get('type') == 'application']
             if not offerMediaDicts:
                 raise Exception('No datachannel')
@@ -350,14 +349,14 @@ class AiortcHandler(HandlerInterface):
         logging.debug(f'receive() | calling pc.setRemoteDescription() [offer:{offer}]')
         await self._pc.setRemoteDescription(offer)
         answer = await self._pc.createAnswer()
-        localSdpDict = sdpParse(answer.sdp)
+        localSdpDict = sdp_transform.parse(answer.sdp)
         answerMediaDict = [m for m in localSdpDict.get('media') if m.get('mid') == localId][0]
         # May need to modify codec parameters in the answer based on codec
         # parameters in the offer.
         applyCodecParameters(offerRtpParameters=options.rtpParameters, answerMediaDict=answerMediaDict)
         answer: RTCSessionDescription = RTCSessionDescription(
             type='answer',
-            sdp=sdpWrite(localSdpDict)
+            sdp=sdp_transform.write(localSdpDict)
         )
         if not self._transportReady:
             await self._setupTransport(localDtlsRole='client', localSdpDict=localSdpDict)
@@ -425,7 +424,7 @@ class AiortcHandler(HandlerInterface):
             await self._pc.setRemoteDescription(offer)
             answer = await self._pc.createAnswer()
             if not self._transportReady:
-                localSdpDict = sdpParse(answer.sdp)
+                localSdpDict = sdp_transform.parse(answer.sdp)
                 await self._setupTransport(localDtlsRole='client', localSdpDict=localSdpDict)
             logging.debug(f'receiveDataChannel() | calling pc.setRemoteDescription() [answer:{answer}]')
             await self._pc.setLocalDescription(answer)
@@ -434,7 +433,7 @@ class AiortcHandler(HandlerInterface):
     
     async def _setupTransport(self, localDtlsRole: str, localSdpDict: Optional[dict]=None):
         if not localSdpDict:
-            localSdpDict = sdpParse(self._pc.localDescription.sdp)
+            localSdpDict = sdp_transform.parse(self._pc.localDescription.sdp)
         # Get our local DTLS parameters.
         dtlsParameters: DtlsParameters = extractDtlsParameters(localSdpDict)
         # Set our DTLS role.

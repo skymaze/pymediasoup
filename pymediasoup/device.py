@@ -102,9 +102,40 @@ class Device:
             raise TypeError(f'invalid kind {kind}')
         return self._canProduceByKind[kind]
     
+    # Creates a Transport for sending media.
+    # @raise {InvalidStateError} if not loaded.
+    # @raise {TypeError} if wrong arguments.
+    def createSendTransport(
+        self,
+        id: str,
+        iceParameters: IceParameters,
+        iceCandidates: List[IceCandidate],
+        dtlsParameters: DtlsParameters,
+        sctpParameters: Optional[SctpParameters],
+        iceServers: List[RTCIceServer],
+        iceTransportPolicy: Literal['all', 'relay'],
+        additionalSettings: Optional[dict] = None,
+        proprietaryConstraints: Any = None,
+        appData: Optional[dict] = None
+    ):
+        logging.debug('createSendTransport()')
+        return self._createTransport(
+            direction='send',
+            id=id,
+            iceParameters=iceParameters,
+            iceCandidates=iceCandidates,
+            dtlsParameters=dtlsParameters,
+            sctpParameters=sctpParameters,
+            iceServers=iceServers,
+            iceTransportPolicy=iceTransportPolicy,
+            additionalSettings=additionalSettings,
+            proprietaryConstraints=proprietaryConstraints,
+            appData=appData
+        )
+    
     # Creates a Transport for receiving media.
-    # raise {InvalidStateError} if not loaded.
-    # raise {TypeError} if wrong arguments.
+    # @raise {InvalidStateError} if not loaded.
+    # @raise {TypeError} if wrong arguments.
     def createRecvTransport(
         self,
         id: str,

@@ -1,87 +1,18 @@
 import logging
 from typing import Optional, Literal, List, Any, Callable, Dict
-from enum import IntEnum
 from pyee import AsyncIOEventEmitter
-from pydantic import BaseModel
-from aiortc import RTCIceServer, RTCIceTransportPolicy
-from .ortc import canReceive, generateProbatorRtpParameters
+from aiortc import RTCIceServer
+from .ortc import canReceive, generateProbatorRtpParameters, ExtendedRtpCapabilities
 from .errors import InvalidStateError, UnsupportedError
 from .emitter import EnhancedEventEmitter
-from .sctp_parameters import SctpParameters
-from .handlers.handler_interface import HandlerInterface, HandlerRunOptions, HandlerReceiveOptions, HandlerSendOptions, HandlerSendResult, HandlerReceiveResult, SctpStreamParameters, HandlerSendDataChannelResult, HandlerReceiveDataChannelOptions, HandlerReceiveDataChannelResult
+from .handlers.handler_interface import HandlerInterface
+from .models.handler_interface import HandlerRunOptions, HandlerReceiveOptions, HandlerSendOptions, HandlerSendResult, HandlerReceiveResult, SctpStreamParameters, HandlerSendDataChannelResult, HandlerReceiveDataChannelOptions, HandlerReceiveDataChannelResult
+from .models.transport import ConnectionState, IceParameters, InternalTransportOptions
 from .consumer import Consumer, ConsumerOptions
 from .producer import Producer, ProducerOptions
 from .data_consumer import DataConsumer, DataConsumerOptions
 from .data_producer import DataProducer, DataProducerOptions
 
-class IceParameters(BaseModel):
-    # ICE username fragment.
-    usernameFragment: str
-    # ICE password.
-    password: str
-    # ICE Lite.
-    iceLite: Optional[bool]
-
-class IceCandidate(BaseModel):
-    # Unique identifier that allows ICE to correlate candidates that appear on
-    # multiple transports.
-    foundation: str
-    # The assigned priority of the candidate.
-    priority: int
-    # The IP address of the candidate.
-    ip: str
-    # The protocol of the candidate.
-    protocol: Literal['udp', 'tcp']
-    # The port for the candidate.
-    port: int
-    # The type of candidate..
-    type: Literal['host', 'srflx', 'prflx', 'relay']
-    # The type of TCP candidate.
-    tcpType: Literal['active', 'passive', 'so']
-
-# The hash function algorithm (as defined in the "Hash function Textual Names"
-# registry initially specified in RFC 4572 Section 8) and its corresponding
-# certificate fingerprint value (in lowercase hex string as expressed utilizing
-# the syntax of "fingerprint" in RFC 4572 Section 5).
-class DtlsFingerprint(BaseModel):
-    algorithm: str
-    value: str
-
-DtlsRole = Literal['auto', 'client', 'server']
-
-class DtlsParameters(BaseModel):
-    # DTLS role. Default 'auto'.
-    role: DtlsRole = 'auto'
-    fingerprints: List[DtlsFingerprint]
-
-ConnectionState = Literal['new', 'connecting', 'connected', 'failed', 'disconnected', 'closed']
-
-class IpVersion(IntEnum):
-    ipv4 = 4
-    ipv6 = 6
-
-class PlainRtpParameters(BaseModel):
-    ip: str
-    ipVersion: IpVersion
-    port: int
-
-class TransportOptions(BaseModel):
-    id: str
-    iceParameters: IceParameters
-    iceCandidates: List[IceCandidate]
-    dtlsParameters: DtlsParameters
-    sctpParameters: Optional[SctpParameters]
-    iceServers: List[RTCIceServer]
-    iceTransportPolicy: RTCIceTransportPolicy
-    additionalSettings: Optional[dict] = None
-    proprietaryConstraints: Any = None
-    appData: Optional[dict] = None
-
-class InternalTransportOptions(TransportOptions):
-    direction: Literal['send', 'recv']
-    handlerFactory: Callable[..., HandlerInterface]
-    extendedRtpCapabilities: ExtendedRtpCapabilities = None
-    canProduceByKind: Dict[str, bool]
 
 class Transport(EnhancedEventEmitter):
     # Closed flag.

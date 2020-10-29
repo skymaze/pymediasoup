@@ -1,8 +1,9 @@
 import logging
 from typing import List, Optional, Literal, Dict
+from pydantic import BaseModel
 import sdp_transform
 from .media_section import MediaSection, AnswerMediaSection, OfferMediaSection
-from ...transport import IceCandidate, IceParameters, DtlsParameters, DtlsRole, PlainRtpParameters, DtlsRole
+from ...models.transport import IceCandidate, IceParameters, DtlsParameters, DtlsRole, PlainRtpParameters, DtlsRole
 from ...producer import ProducerCodecOptions
 from ...rtp_parameters import MediaKind, RtpParameters
 from ...sctp_parameters import SctpParameters

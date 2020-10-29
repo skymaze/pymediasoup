@@ -29,6 +29,9 @@ class ProducerOptions(BaseModel):
     zeroRtpOnPause: Optional[bool]
     appData: Optional[Any]
 
+    class Config:
+        arbitrary_types_allowed=True
+
 class Producer(EnhancedEventEmitter):
     # Closed flag.
     _closed: bool = False

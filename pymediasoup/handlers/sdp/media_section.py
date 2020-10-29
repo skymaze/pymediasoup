@@ -6,7 +6,7 @@ from aiortc import RTCIceParameters, RTCIceCandidate, RTCDtlsParameters
 from ...producer import ProducerCodecOptions
 from ...rtp_parameters import RtpParameters, RtpCodecParameters, RtpEncodingParameters
 from ...sctp_parameters import SctpParameters
-from ...transport import PlainRtpParameters
+from ...models.transport import PlainRtpParameters
 
 
 def getCodecName(codec: RtpCodecParameters):

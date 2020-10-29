@@ -1,7 +1,7 @@
-from typing import List
+from typing import List, Optional
 
 from sdp_transform import parseParams
-from ...transport import DtlsParameters, DtlsRole, DtlsFingerprint
+from ...models.transport import DtlsParameters, DtlsRole, DtlsFingerprint
 from ...rtp_parameters import RtpCapabilities, RtpCodecCapability, RtpHeaderExtension, RtpParameters, RtcpFeedback
 
 

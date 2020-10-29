@@ -1,12 +1,14 @@
 import logging
-from typing import Optional, Dict, Callable, Literal
+from typing import Optional, Dict, Callable, Literal, List, Any
 from pyee import AsyncIOEventEmitter
+from aiortc import RTCIceServer
 from .handlers.handler_interface import HandlerInterface
 from .ortc import ExtendedRtpCapabilities, getExtendedRtpCapabilities, canSend, getRecvRtpCapabilities
 from .rtp_parameters import RtpCapabilities
-from .sctp_parameters import SctpCapabilities
+from .sctp_parameters import SctpCapabilities, SctpParameters
 from .errors import InvalidStateError
 from .transport import InternalTransportOptions, Transport
+from .models.transport import IceParameters, IceCandidate, DtlsParameters
 
 class Device:
     def __init__(self, handlerFactory):
@@ -15,10 +17,6 @@ class Device:
         self._handlerFactory: Callable[..., HandlerInterface] = handlerFactory
         # Loaded flag.
         self._loaded: bool = False
-        # Create a temporal handler to get its name.
-        handler: HandlerInterface = self._handlerFactory()
-        self._handlerName = handler.name
-        handler.close()
 
         # Extended RTP capabilities.
         self._extendedRtpCapabilities: Optional[ExtendedRtpCapabilities] = None
@@ -35,6 +33,8 @@ class Device:
     # The RTC handler name.
     @property
     def handlerName(self) -> str:
+        if not self._loaded:
+            raise InvalidStateError('not loaded')
         return self._handlerName
     
     # Whether the Device is loaded.
@@ -89,7 +89,8 @@ class Device:
         logging.debug(f'load() | got native SCTP capabilities:{self._sctpCapabilities}')
         logging.debug('load() succeeded')
         self._loaded = True
-        handler.close()
+        self._handlerName = handler.name
+        await handler.close()
 
     # Whether we can produce audio/video.
     # @raise {InvalidStateError} if not loaded.
@@ -112,7 +113,7 @@ class Device:
         dtlsParameters: DtlsParameters,
         sctpParameters: Optional[SctpParameters],
         iceServers: List[RTCIceServer],
-        iceTransportPolicy: RTCIceTransportPolicy,
+        iceTransportPolicy: Literal['all', 'relay'],
         additionalSettings: Optional[dict] = None,
         proprietaryConstraints: Any = None,
         appData: Optional[dict] = None
@@ -141,7 +142,7 @@ class Device:
         dtlsParameters: DtlsParameters,
         sctpParameters: Optional[SctpParameters],
         iceServers: List[RTCIceServer],
-        iceTransportPolicy: RTCIceTransportPolicy,
+        iceTransportPolicy: Literal['all', 'relay'],
         additionalSettings: Optional[dict] = None,
         proprietaryConstraints: Any = None,
         appData: Optional[dict] = None

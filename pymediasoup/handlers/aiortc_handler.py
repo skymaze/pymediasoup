@@ -1,17 +1,18 @@
 import logging
 from typing import Dict, Literal, List, Optional, Any
-from aiortc import RTCPeerConnection, RTCSessionDescription, RTCRtpTransceiver
+from aiortc import RTCPeerConnection, RTCSessionDescription, RTCRtpTransceiver, MediaStreamTrack
 import sdp_transform
 from .sdp.remote_sdp import RemoteSdp
 from .sdp import common_utils
-from .handler_interface import HandlerInterface, HandlerRunOptions, HandlerSendOptions, HandlerSendResult, HandlerSendDataChannelResult, HandlerReceiveOptions, HandlerReceiveResult, HandlerReceiveDataChannelOptions
+from .handler_interface import HandlerInterface
+from ..models.handler_interface import HandlerRunOptions, HandlerSendOptions, HandlerSendResult, HandlerSendDataChannelResult, HandlerReceiveDataChannelResult, HandlerReceiveOptions, HandlerReceiveResult, HandlerReceiveDataChannelOptions
 from ..rtp_parameters import RtpParameters, RtpCapabilities, RtpEncodingParameters
 from ..sctp_parameters import SctpCapabilities, SctpStreamParameters
 from ..ortc import getSendingRtpParameters, getSendingRemoteRtpParameters, reduceCodecs
 from ..scalability_modes import parse as smParse
 from .sdp.unified_plan_utils import addLegacySimulcast, getRtpEncodings
 from .sdp.common_utils import applyCodecParameters, extractDtlsParameters
-from ..transport import DtlsParameters
+from ..models.transport import DtlsParameters
 
 
 SCTP_NUM_STREAMS = { 'OS': 1024, 'MIS': 1024 }

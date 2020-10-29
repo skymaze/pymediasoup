@@ -1,60 +1,12 @@
 from typing import Callable, Literal, List, Optional, Any
 from pydantic import BaseModel
-from aiortc import RTCIceServer, RTCIceTransportPolicy, RTCRtpSender, MediaStreamTrack, RTCRtpReceiver, RTCDataChannel
-from ..ortc import ExtendedRtpCapabilities
+from aiortc import RTCIceServer, MediaStreamTrack
 from ..emitter import EnhancedEventEmitter
-from ..transport import IceCandidate, IceParameters, DtlsParameters
-from ..rtp_parameters import RtpCapabilities, RtpCodecCapability, RtpParameters, RtpEncodingParameters, MediaKind
-from ..sctp_parameters import SctpCapabilities, SctpParameters, SctpStreamParameters
-from ..producer import ProducerCodecOptions
+from ..models.transport import IceParameters
+from ..models.handler_interface import HandlerRunOptions, HandlerReceiveOptions, HandlerSendOptions, HandlerSendResult, HandlerReceiveResult, SctpStreamParameters, HandlerSendDataChannelResult, HandlerReceiveDataChannelOptions, HandlerReceiveDataChannelResult
+from ..rtp_parameters import RtpCapabilities
+from ..sctp_parameters import SctpCapabilities, SctpStreamParameters
 
-
-HandlerFactory: Callable[..., HandlerInterface] = lambda: HandlerInterface()
-
-class HandlerRunOptions(BaseModel):
-    direction: Literal['send', 'recv']
-    iceParameters: IceParameters
-    iceCandidates: List[IceCandidate]
-    dtlsParameters: DtlsParameters
-    sctpParameters: Optional[SctpParameters]
-    iceServers: Optional[RTCIceServer]
-    iceTransportPolicy: Optional[RTCIceTransportPolicy]
-    additionalSettings: Optional[Any]
-    proprietaryConstraints: Optional[Any]
-    extendedRtpCapabilities: ExtendedRtpCapabilities
-
-class HandlerSendOptions(BaseModel):
-    track: MediaStreamTrack
-    encodings: List[RtpEncodingParameters] = []
-    codecOptions: Optional[ProducerCodecOptions]
-    codec: Optional[RtpCodecCapability]
-
-class HandlerSendResult(BaseModel):
-    localId: str
-    rtpParameters: RtpParameters
-    rtpSender: Optional[RTCRtpSender]
-
-class HandlerReceiveOptions(BaseModel):
-    trackId: str
-    kind: MediaKind
-    rtpParameters: RtpParameters
-
-class HandlerReceiveResult(BaseModel):
-    localId: str
-    track: MediaStreamTrack
-    rtpReceiver: Optional[RTCRtpReceiver]
-
-class HandlerSendDataChannelResult(BaseModel):
-    dataChannel: RTCDataChannel
-    sctpStreamParameters: SctpStreamParameters
-
-class HandlerReceiveDataChannelOptions(BaseModel):
-    sctpStreamParameters: SctpStreamParameters
-    label: Optional[str]
-    protocol: Optional[str]
-
-class HandlerReceiveDataChannelResult(BaseModel):
-    dataChannel: RTCDataChannel
 
 class HandlerInterface(EnhancedEventEmitter):
     # @emits @connect - (

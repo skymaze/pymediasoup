@@ -18,28 +18,28 @@ from ..models.transport import DtlsParameters
 SCTP_NUM_STREAMS = { 'OS': 1024, 'MIS': 1024 }
 
 class AiortcHandler(HandlerInterface):
-    # Handler direction.
-    _direction: Optional[Literal['send', 'recv']]
-    # Remote SDP handler.
-    _remoteSdp: Optional[RemoteSdp]
-    # Generic sending RTP parameters for audio and video.
-    _sendingRtpParametersByKind: Optional[Dict[str, RtpParameters]]
-    # Generic sending RTP parameters for audio and video suitable for the SDP
-    # remote answer.
-    _sendingRemoteRtpParametersByKind: Optional[Dict[str, RtpParameters]]
-    # RTCPeerConnection instance.
-    _pc: RTCPeerConnection
-    # Map of RTCTransceivers indexed by MID.
-    _mapMidTransceiver: Dict[str, RTCRtpTransceiver] = {}
-    # Whether a DataChannel m=application section has been created.
-    _hasDataChannelMediaSection = False
-    # Sending DataChannel id value counter. Incremented for each new DataChannel.
-    _nextSendSctpStreamId = 0
-    # Got transport local and remote parameters.
-    _transportReady = False
 
     def __init__(self, tracks: List[MediaStreamTrack]=[], loop=None):
         super(AiortcHandler, self).__init__(loop=loop)
+        # Handler direction.
+        self._direction: Optional[Literal['send', 'recv']] = None
+        # Remote SDP handler.
+        self._remoteSdp: Optional[RemoteSdp] = None
+        # Generic sending RTP parameters for audio and video.
+        self._sendingRtpParametersByKind: Optional[Dict[str, RtpParameters]] = None
+        # Generic sending RTP parameters for audio and video suitable for the SDP
+        # remote answer.
+        self._sendingRemoteRtpParametersByKind: Optional[Dict[str, RtpParameters]] = None
+        # RTCPeerConnection instance.
+        self._pc: Optional[RTCPeerConnection] = None
+        # Map of RTCTransceivers indexed by MID.
+        self._mapMidTransceiver: Dict[str, RTCRtpTransceiver] = {}
+        # Whether a DataChannel m=application section has been created.
+        self._hasDataChannelMediaSection = False
+        # Sending DataChannel id value counter. Incremented for each new DataChannel.
+        self._nextSendSctpStreamId = 0
+        # Got transport local and remote parameters.
+        _transportReady = False
         self._tracks = tracks
 
     @classmethod
@@ -60,6 +60,8 @@ class AiortcHandler(HandlerInterface):
         logging.debug('getNativeRtpCapabilities()')
 
         pc = RTCPeerConnection()
+        for track in self._tracks:
+            pc.addTrack(track)
         pc.addTransceiver('audio')
         pc.addTransceiver('video')
 

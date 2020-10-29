@@ -20,7 +20,7 @@ class Codec(BaseModel):
     clockRate: int
     # The number of channels supported (e.g. two for stereo). Just for audio.
 	# Default 1.
-    channels: int = 1
+    channels: Optional[int] = None
     # Transport layer and codec-specific feedback messages for this codec.
     rtcpFeedback: List[RtcpFeedback] = []
 
@@ -58,7 +58,7 @@ class RtpCodecCapability(RtpCodec):
     # Media kind.
     kind: MediaKind
     # The preferred RTP payload type.
-    preferredPayloadType: int
+    preferredPayloadType: Optional[int]
 
 # Provides information on codec settings within the RTP parameters. The list
 # of media codecs supported by mediasoup and their settings is defined in the
@@ -108,7 +108,7 @@ class RtpCapabilities(BaseModel):
     # Supported RTP header extensions.
     headerExtensions: List[RtpHeaderExtension] = []
     # Supported FEC mechanisms.
-    fecMechanisms: List[str]
+    fecMechanisms: List[str] = []
 
 class RTX(BaseModel):
     ssrc: int

@@ -7,7 +7,7 @@ from ...rtp_parameters import RtpCapabilities, RtpCodecCapability, RtpHeaderExte
 
 def extractRtpCapabilities(sdpDict: dict) -> RtpCapabilities:
     # Map of RtpCodecParameters indexed by payload type.
-    codecsMap: {}
+    codecsMap:dict = {}
     # Array of RtpHeaderExtensions.
     headerExtensions: List[RtpHeaderExtension] = []
     # Whether a m=audio/video section has been already found.
@@ -20,15 +20,11 @@ def extractRtpCapabilities(sdpDict: dict) -> RtpCapabilities:
         if kind == 'audio':
             if gotAudio:
                 continue
-
             gotAudio = True
-            break
         elif kind == 'video':
             if gotVideo:
                 continue
             getVideo = True
-            break
-    
         # Get codecs.
         rtp: dict
         for rtp in m.get('rtp', []):
@@ -59,13 +55,11 @@ def extractRtpCapabilities(sdpDict: dict) -> RtpCapabilities:
         for fb in m.get('rtcpFb', []):
             codec = codecsMap.get(fb.get('payload'))
             if not codec:
-                continue
-            feedback = {
-                'type': fb.get('type'),
-                'parameter': fb.get('subtype')
-            }
-            if not feedback.get('parameter'):
-                del feedback['parameter']
+                continue 
+            feedback = RtcpFeedback(
+                type=fb.get('type'),
+                parameter=fb.get('subtype')
+            )
             codec.rtcpFeedback.append(feedback)
 
         # Get RTP header extensions.

@@ -1,6 +1,7 @@
 import logging
 from typing import List, Optional, Literal, Dict
 from pydantic import BaseModel
+from aiortc import RTCIceCandidate
 import sdp_transform
 from .media_section import MediaSection, AnswerMediaSection, OfferMediaSection
 from ...models.transport import IceCandidate, IceParameters, DtlsParameters, DtlsRole, PlainRtpParameters, DtlsRole
@@ -24,7 +25,7 @@ class RemoteSdp:
         planB: bool = False
     ):
         self._iceParameters: Optional[IceParameters] = iceParameters
-        self._iceCandidates: List[IceCandidate] = iceCandidates
+        self._iceCandidates: List[RTCIceCandidate] = iceCandidates
         self._dtlsParameters: Optional[DtlsParameters] = dtlsParameters
         self._sctpParameters: Optional[SctpParameters] = sctpParameters
         self._plainRtpParameters: Optional[PlainRtpParameters] = plainRtpParameters
@@ -254,4 +255,4 @@ class RemoteSdp:
     def _regenerateBundleMids(self):
         if not self._dtlsParameters:
             return
-        self._sdpDict['groups'][0].mids = ' '.join([ms.mid for ms in self._mediaSections if not ms.closed])
+        self._sdpDict['groups'][0]['mids'] = ' '.join([ms.mid for ms in self._mediaSections if not ms.closed])

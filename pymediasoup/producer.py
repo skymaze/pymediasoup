@@ -20,14 +20,14 @@ class ProducerCodecOptions(BaseModel):
     videoGoogleMinBitrate: Optional[int]
 
 class ProducerOptions(BaseModel):
-    track: Optional[MediaStreamTrack]
-    encodings: Optional[List[RtpEncodingParameters]]
-    codecOptions: Optional[ProducerCodecOptions]
-    codec: Optional[RtpCodecCapability]
-    stopTracks: Optional[bool]
-    disableTrackOnPause: Optional[bool]
-    zeroRtpOnPause: Optional[bool]
-    appData: Optional[Any]
+    track: Optional[MediaStreamTrack] = None
+    encodings: Optional[List[RtpEncodingParameters]] = []
+    codecOptions: Optional[ProducerCodecOptions] = None
+    codec: Optional[RtpCodecCapability] = None
+    stopTracks: Optional[bool] = None
+    disableTrackOnPause: Optional[bool] = None
+    zeroRtpOnPause: Optional[bool] = None
+    appData: Optional[Any] = {}
 
     class Config:
         arbitrary_types_allowed=True

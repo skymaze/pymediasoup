@@ -96,7 +96,7 @@ def extractDtlsParameters(sdpDict: dict) -> DtlsParameters:
     
     dtlsParameters = DtlsParameters(
         role=role,
-        fingerprint=[DtlsFingerprint(
+        fingerprints=[DtlsFingerprint(
             algorithm=fingerprint.get('type'),
             value=fingerprint.get('hash')
         )]

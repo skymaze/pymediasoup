@@ -370,14 +370,14 @@ class Transport(EnhancedEventEmitter):
         handler = self._handler
 
         @handler.on('@connect')
-        async def on_connect(self, dtlsParameters: DtlsParameters):
+        async def on_connect(dtlsParameters: DtlsParameters):
             if self._closed:
                 raise InvalidStateError('closed')
             else:
                 self.emit('connect', dtlsParameters)
 
         @handler.on('@connectionstatechange')
-        def on_connectionstatechange(self, connectionState: ConnectionState):
+        def on_connectionstatechange(connectionState: ConnectionState):
             self._connectionState = connectionState
             if not self._closed:
                 self.emit('connectionstatechange', connectionState)

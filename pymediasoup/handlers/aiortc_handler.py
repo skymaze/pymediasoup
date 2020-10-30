@@ -6,7 +6,7 @@ from .sdp.remote_sdp import RemoteSdp
 from .sdp import common_utils
 from .handler_interface import HandlerInterface
 from ..models.handler_interface import HandlerRunOptions, HandlerSendOptions, HandlerSendResult, HandlerSendDataChannelResult, HandlerReceiveDataChannelResult, HandlerReceiveOptions, HandlerReceiveResult, HandlerReceiveDataChannelOptions
-from ..rtp_parameters import RtpParameters, RtpCapabilities, RtpEncodingParameters
+from ..rtp_parameters import RtpParameters, RtpCapabilities, RtpEncodingParameters, RtcpParameters
 from ..sctp_parameters import SctpCapabilities, SctpStreamParameters
 from ..ortc import getSendingRtpParameters, getSendingRemoteRtpParameters, reduceCodecs
 from ..scalability_modes import parse as smParse
@@ -39,7 +39,7 @@ class AiortcHandler(HandlerInterface):
         # Sending DataChannel id value counter. Incremented for each new DataChannel.
         self._nextSendSctpStreamId = 0
         # Got transport local and remote parameters.
-        _transportReady = False
+        self._transportReady = False
         self._tracks = tracks
 
     @classmethod
@@ -165,18 +165,21 @@ class AiortcHandler(HandlerInterface):
         mediaSectionIdx = self._remoteSdp.getNextMediaSectionIdx()
         transceiver = self._pc.addTransceiver(options.track, direction='sendonly')
 
-        offer = self._pc.createOffer()
+        offer = await self._pc.createOffer()
         localSdpDict = sdp_transform.parse(offer.sdp)
         if not self._transportReady:
             await self._setupTransport(localDtlsRole='server', localSdpDict=localSdpDict)
         # Special case for VP9 with SVC.
         hackVp9Svc = False
-        layers=smParse(options.encodings[0].scalabilityMode)
+        if options.encodings:
+            layers=smParse(options.encodings[0].scalabilityMode)
+        else:
+            layers=smParse('')
         if len(options.encodings) == 1 and layers.spatialLayers > 1 and sendingRtpParameters.codecs[0].mimeType.lower() == 'video/vp9':
             logging.debug('send() | enabling legacy simulcast for VP9 SVC')
             hackVp9Svc = True
             localSdpDict = sdp_transform.parse
-            offerMediaDict = localSdpDict['media'][mediaSectionIdx['idx']]
+            offerMediaDict = localSdpDict['media'][mediaSectionIdx.idx]
             addLegacySimulcast(offerMediaDict=offerMediaDict, numStreams=layers.spatialLayers)
             offer: RTCSessionDescription = RTCSessionDescription(
                 type='offer',
@@ -191,8 +194,10 @@ class AiortcHandler(HandlerInterface):
         # Set MID.
         sendingRtpParameters.mid = localId
         localSdpDict = sdp_transform.parse(self._pc.localDescription.sdp)
-        offerMediaDict = localSdpDict['media'][mediaSectionIdx['idx']]
+        offerMediaDict = localSdpDict['media'][mediaSectionIdx.idx]
         # Set RTCP CNAME.
+        if sendingRtpParameters.rtcp == None:
+            sendingRtpParameters.rtcp = RtcpParameters()
         sendingRtpParameters.rtcp.cname = common_utils.getCname(offerMediaDict)
         # Set RTP encodings by parsing the SDP offer if no encodings are given.
         if not options.encodings:

@@ -9,7 +9,7 @@ def getRtpEncodings(offerMediaDict: dict) -> List[RtpEncodingParameters]:
         ssrc = line.get('id')
         ssrcs.add(ssrc)
     
-    if ssrcs.get('size') == 0:
+    if len(ssrcs) == 0:
         raise Exception('no a=ssrc lines found')
 
     ssrcToRtxSsrc = {}

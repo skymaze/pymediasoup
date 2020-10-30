@@ -1,12 +1,11 @@
 import re
 import logging
 from typing import List, Optional, Literal
-from dataclasses import asdict
 from aiortc import RTCIceParameters, RTCIceCandidate, RTCDtlsParameters
 from ...producer import ProducerCodecOptions
 from ...rtp_parameters import RtpParameters, RtpCodecParameters, RtpEncodingParameters
 from ...sctp_parameters import SctpParameters
-from ...models.transport import PlainRtpParameters
+from ...models.transport import PlainRtpParameters, IceCandidate
 
 
 def getCodecName(codec: RtpCodecParameters):
@@ -21,7 +20,7 @@ class MediaSection:
     def __init__(
         self,
         iceParameters: Optional[RTCIceParameters]=None,
-        iceCandidates: List[RTCIceCandidate]=[],
+        iceCandidates: List[IceCandidate]=[],
         dtlsParameters: Optional[RTCDtlsParameters]=None,
         planB:bool=False
     ):
@@ -32,8 +31,9 @@ class MediaSection:
         if iceCandidates:
             self._mediaDict['candidates'] = []
             for candidate in iceCandidates:
-                candidate.component = 1
-                self._mediaDict['candidates'].append(asdict(candidate))
+                c_dict = candidate.dict()
+                c_dict['component'] = 1
+                self._mediaDict['candidates'].append(c_dict)
             self._mediaDict['endOfCandidates'] = 'end-of-candidates'
             self._mediaDict['iceOptions'] = 'renomination'
         if dtlsParameters:
@@ -41,7 +41,7 @@ class MediaSection:
     
     @property
     def mid(self) -> Optional[str]:
-        return self._mediaDict.get('mid')
+        return str(self._mediaDict.get('mid'))
     
     @property
     def closed(self):

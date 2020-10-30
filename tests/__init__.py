@@ -1,12 +1,15 @@
 import unittest
-from aiortc import VideoStreamTrack, AudioStreamTrack
+from aiortc import VideoStreamTrack
+from aiortc.mediastreams import AudioStreamTrack
 import cv2
 
 from pymediasoup import Device
 from pymediasoup import AiortcHandler
-from pymediasoup.rtp_parameters import RtpCapabilities
+from pymediasoup.rtp_parameters import RtpCapabilities, RtpParameters
 from pymediasoup.sctp_parameters import SctpCapabilities
 from pymediasoup.transport import Transport
+from pymediasoup.models.transport import DtlsParameters
+from pymediasoup.producer import ProducerOptions
 
 from .fake_parameters import generateRouterRtpCapabilities, generateTransportRemoteParameters
 
@@ -82,3 +85,57 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(isinstance(recvTransport.handler, AiortcHandler))
         self.assertEqual(recvTransport.connectionState, 'new')
         self.assertDictEqual(recvTransport.appData, {})
+    
+    async def test_produce(self):
+        audioTrack = AudioStreamTrack()
+        videoTrack = VideoStreamTrack()
+
+        audioProducerId = None
+        videoProducerId = None
+        connectEventNumTimesCalled = 0
+
+        device = Device(handlerFactory=AiortcHandler.createFactory(tracks=TRACKS))
+        await device.load(generateRouterRtpCapabilities())
+        id,iceParameters,iceCandidates,dtlsParameters,sctpParameters = generateTransportRemoteParameters()
+        sendTransport = device.createSendTransport(
+            id=id,
+            iceParameters=iceParameters,
+            iceCandidates=iceCandidates,
+            dtlsParameters=dtlsParameters,
+            sctpParameters=sctpParameters
+        )
+
+        @sendTransport.on('connect')
+        def on_connect(dtlsParameters):
+            nonlocal connectEventNumTimesCalled
+            connectEventNumTimesCalled += 1
+
+            self.assertTrue(isinstance(dtlsParameters, DtlsParameters))
+        
+        @sendTransport.on('produce')
+        def on_produce(kind, rtpParameters, appData):
+            nonlocal connectEventNumTimesCalled
+            connectEventNumTimesCalled += 1
+
+            self.assertTrue(isinstance(kind, str))
+            self.assertTrue(isinstance(rtpParameters, RtpParameters))
+            
+            id = None
+            if kind == 'audio':
+                self.assertDictEqual(appData, {'foo': 'FOO'})
+                id , _, _, _, _ = generateTransportRemoteParameters()
+                audioProducerId = id
+            elif kind == 'video':
+                self.assertDictEqual(appData, {})
+                id , _, _, _, _ = generateTransportRemoteParameters()
+                videoProducerId = id
+            
+            return id
+
+        producerOptions = ProducerOptions(
+            track=audioTrack,
+            stopTracks=False,
+            appData={'foo': 'FOO'}
+        )
+
+        audioProducer = await sendTransport.produce(producerOptions)

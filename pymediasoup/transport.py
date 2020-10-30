@@ -7,7 +7,7 @@ from .errors import InvalidStateError, UnsupportedError
 from .emitter import EnhancedEventEmitter
 from .handlers.handler_interface import HandlerInterface
 from .models.handler_interface import HandlerRunOptions, HandlerReceiveOptions, HandlerSendOptions, HandlerSendResult, HandlerReceiveResult, SctpStreamParameters, HandlerSendDataChannelResult, HandlerReceiveDataChannelOptions, HandlerReceiveDataChannelResult
-from .models.transport import ConnectionState, IceParameters, InternalTransportOptions
+from .models.transport import ConnectionState, IceParameters, InternalTransportOptions, DtlsParameters
 from .consumer import Consumer, ConsumerOptions
 from .producer import Producer, ProducerOptions
 from .data_consumer import DataConsumer, DataConsumerOptions
@@ -61,6 +61,8 @@ class Transport(EnhancedEventEmitter):
             del additionalSettings['bundlePolicy']
             del additionalSettings['rtcpMuxPolicy']
             del additionalSettings['sdpSemantics']
+        else:
+            additionalSettings = None
 
         self._handler: HandlerInterface = options.handlerFactory()
 

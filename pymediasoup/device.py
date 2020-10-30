@@ -112,11 +112,11 @@ class Device:
         iceCandidates: List[IceCandidate],
         dtlsParameters: DtlsParameters,
         sctpParameters: Optional[SctpParameters],
-        iceServers: List[RTCIceServer],
-        iceTransportPolicy: Literal['all', 'relay'],
+        iceServers: Optional[List[RTCIceServer]] = None,
+        iceTransportPolicy: Optional[Literal['all', 'relay']] = None,
         additionalSettings: Optional[dict] = None,
         proprietaryConstraints: Any = None,
-        appData: Optional[dict] = None
+        appData: Optional[dict] = {}
     ):
         logging.debug('createSendTransport()')
         return self._createTransport(
@@ -143,11 +143,11 @@ class Device:
         iceCandidates: List[IceCandidate],
         dtlsParameters: DtlsParameters,
         sctpParameters: Optional[SctpParameters],
-        iceServers: List[RTCIceServer],
-        iceTransportPolicy: Literal['all', 'relay'],
+        iceServers: Optional[List[RTCIceServer]] = None,
+        iceTransportPolicy: Optional[Literal['all', 'relay']] = None,
         additionalSettings: Optional[dict] = None,
         proprietaryConstraints: Any = None,
-        appData: Optional[dict] = None
+        appData: Optional[dict] = {}
     ):
         logging.debug('createRecvTransport()')
         return self._createTransport(
@@ -172,16 +172,16 @@ class Device:
         iceCandidates: List[IceCandidate],
         dtlsParameters: DtlsParameters,
         sctpParameters: Optional[SctpParameters],
-        iceServers: List[RTCIceServer],
-        iceTransportPolicy: Literal['all', 'relay'],
+        iceServers: Optional[List[RTCIceServer]] = None,
+        iceTransportPolicy: Optional[Literal['all', 'relay']] = None,
         additionalSettings: Optional[dict] = None,
         proprietaryConstraints: Any = None,
-        appData: Optional[dict] = None
+        appData: Optional[dict] = {}
     ):
         if not self._loaded:
             raise InvalidStateError('not loaded')
         transport = Transport(options=InternalTransportOptions(
-            direction='recv',
+            direction=direction,
             handlerFactory=self._handlerFactory,
             extendedRtpCapabilities=self._extendedRtpCapabilities,
             canProduceByKind=self._canProduceByKind,
@@ -196,3 +196,5 @@ class Device:
             proprietaryConstraints=proprietaryConstraints,
             appData=appData
         ))
+    
+        return transport

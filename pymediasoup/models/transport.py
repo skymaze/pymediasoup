@@ -29,7 +29,7 @@ class IceCandidate(BaseModel):
     # The type of candidate..
     type: Literal['host', 'srflx', 'prflx', 'relay']
     # The type of TCP candidate.
-    tcpType: Literal['active', 'passive', 'so']
+    tcpType: Optional[Literal['active', 'passive', 'so']]
 
 # The hash function algorithm (as defined in the "Hash function Textual Names"
 # registry initially specified in RFC 4572 Section 8) and its corresponding
@@ -63,11 +63,11 @@ class TransportOptions(BaseModel):
     iceCandidates: List[IceCandidate]
     dtlsParameters: DtlsParameters
     sctpParameters: Optional[SctpParameters]
-    iceServers: List[RTCIceServer]
-    iceTransportPolicy: Literal['all', 'relay']
+    iceServers: Optional[List[RTCIceServer]]
+    iceTransportPolicy: Optional[Literal['all', 'relay']]
     additionalSettings: Optional[dict] = None
     proprietaryConstraints: Any = None
-    appData: Optional[dict] = None
+    appData: Optional[dict] = {}
 
     class Config:
         arbitrary_types_allowed=True

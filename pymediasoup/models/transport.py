@@ -75,5 +75,5 @@ class TransportOptions(BaseModel):
 class InternalTransportOptions(TransportOptions):
     direction: Literal['send', 'recv']
     handlerFactory: Callable
-    extendedRtpCapabilities: ExtendedRtpCapabilities = None
+    extendedRtpCapabilities: Optional[ExtendedRtpCapabilities] = None
     canProduceByKind: Dict[str, bool]

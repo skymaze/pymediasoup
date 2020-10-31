@@ -40,8 +40,8 @@ class MediaSection:
             self.setDtlsRole(dtlsParameters.role)
     
     @property
-    def mid(self) -> Optional[str]:
-        return str(self._mediaDict.get('mid'))
+    def mid(self) -> str:
+        return str(self._mediaDict.get('mid', ''))
     
     @property
     def closed(self):
@@ -128,8 +128,9 @@ class AnswerMediaSection(MediaSection):
                         'codec': getCodecName(codec),
                         'rate': codec.clockRate
                     }
-                    if (codec.channels > 1):
-                        rtp['encoding'] = codec.channels
+                    if codec.channels:
+                        if (codec.channels > 1):
+                            rtp['encoding'] = codec.channels
                     self._mediaDict['rtp'].append(rtp)
                     codecParameters = codec.parameters
                     if codecOptions:
@@ -295,8 +296,9 @@ class OfferMediaSection(MediaSection):
                         'codec': getCodecName(codec),
                         'rate': codec.clockRate
                     }
-                    if codec.channels > 1:
-                        rtp['encoding'] = codec.channels
+                    if codec.channels:
+                        if codec.channels > 1:
+                            rtp['encoding'] = codec.channels
                     self._mediaDict['rtp'].append(rtp)
                     fmtp = {
                         'payload': codec.payloadType,

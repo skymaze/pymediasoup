@@ -93,7 +93,7 @@ class RemoteSdp:
         offerMediaDict: dict,
         offerRtpParameters: RtpParameters,
         answerRtpParameters: RtpParameters,
-        codecOptions: ProducerCodecOptions,
+        codecOptions: Optional[ProducerCodecOptions]=None,
         reuseMid: Optional[str]=None,
         extmapAllowMixed = False
     ):
@@ -128,8 +128,8 @@ class RemoteSdp:
         streamId: str,
         trackId: str
     ):
-        idx = self._midToIndex.get(mid)
-        if idx != None:
+        idx: int = self._midToIndex.get(mid, -1)
+        if idx != -1:
             mediaSection = self._mediaSections[idx]
             # Plan-B.
             mediaSection.planBReceive(offerRtpParameters, streamId, trackId)
@@ -157,15 +157,15 @@ class RemoteSdp:
                 self._addMediaSection(mediaSection)
             
     def disableMediaSection(self, mid: str):
-        idx = self._midToIndex.get(mid)
-        if idx == None:
+        idx: int = self._midToIndex.get(mid, -1)
+        if idx != -1:
             raise Exception(f"no media section found with mid '{mid}'")
         mediaSection = self._mediaSections[idx]
         mediaSection.disable()
     
     def closeMediaSection(self, mid: str):
-        idx = self._midToIndex.get(mid)
-        if idx == None:
+        idx: int = self._midToIndex.get(mid, -1)
+        if idx != -1:
             raise Exception(f"no media section found with mid '{mid}'")
         mediaSection = self._mediaSections[idx]
         # NOTE: Closing the first m section is a pain since it invalidates the
@@ -179,8 +179,8 @@ class RemoteSdp:
         self._regenerateBundleMids()
     
     def planBStopReceiving(self, mid: str, offerRtpParameters: RtpParameters):
-        idx = self._midToIndex.get(mid)
-        if idx == None:
+        idx: int = self._midToIndex.get(mid, -1)
+        if idx != -1:
             raise Exception(f"no media section found with mid '{mid}'")
         mediaSection = self._mediaSections[idx]
         mediaSection.planBStopReceiving(offerRtpParameters)
@@ -230,8 +230,8 @@ class RemoteSdp:
     def _replaceMediaSection(self, newMediaSection: MediaSection, reuseMid: Optional[str]=None):
         # Store it in the map.
         if reuseMid:
-            idx = self._midToIndex.get(reuseMid)
-            if idx == None:
+            idx = self._midToIndex.get(reuseMid, -1)
+            if idx == -1:
                 raise Exception(f"no media section found with mid '{reuseMid}'")
             oldMediaSection = self._mediaSections[idx]
             # Replace the index in the vector with the new media section.
@@ -244,8 +244,8 @@ class RemoteSdp:
             # Regenerate BUNDLE mids.
             self._regenerateBundleMids()
         else:
-            idx = self._midToIndex.get(newMediaSection.mid)
-            if idx == None:
+            idx = self._midToIndex.get(newMediaSection.mid, -1)
+            if idx == -1:
                 raise Exception(f"no media section found with mid '{newMediaSection.mid}'")
             # Replace the index in the vector with the new media section.
             self._mediaSections[idx] = newMediaSection

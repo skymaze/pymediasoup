@@ -95,6 +95,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         audioProducerId = None
         videoProducerId = None
         connectEventNumTimesCalled = 0
+        produceEventNumTimesCalled = 0
 
         device = Device(handlerFactory=AiortcHandler.createFactory(tracks=[]))
         await device.load(generateRouterRtpCapabilities())
@@ -108,24 +109,24 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         )
 
         @sendTransport.on('connect')
-        def on_connect(dtlsParameters):
+        async def on_connect(dtlsParameters):
             nonlocal connectEventNumTimesCalled
             connectEventNumTimesCalled += 1
 
             self.assertTrue(isinstance(dtlsParameters, DtlsParameters))
         
         @sendTransport.on('produce')
-        def on_produce(args: dict) -> str:
+        async def on_produce(args: dict) -> str:
             kind: str = args['kind']
             rtpParameters: RtpParameters = args['rtpParameters']
             appData: dict = args['appData']
-            nonlocal connectEventNumTimesCalled
-            connectEventNumTimesCalled += 1
+            nonlocal produceEventNumTimesCalled
+            produceEventNumTimesCalled += 1
 
             self.assertTrue(isinstance(kind, str))
             self.assertTrue(isinstance(rtpParameters, RtpParameters))
             
-            id: str = None
+            id: str = ''
             if kind == 'audio':
                 self.assertDictEqual(appData, {'foo': 'FOO'})
                 id , _, _, _, _ = generateTransportRemoteParameters()
@@ -144,3 +145,6 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         )
 
         audioProducer = await sendTransport.produce(producerOptions)
+
+        self.assertEqual(connectEventNumTimesCalled, 1)
+        self.assertEqual(produceEventNumTimesCalled, 1)

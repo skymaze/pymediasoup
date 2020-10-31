@@ -9,10 +9,7 @@ class EnhancedEventEmitter(AsyncIOEventEmitter):
         results = []
         for f in list(self._events[event].values()):
             try:
-                if inspect.isawaitable(f):
-                    result = await f(*args, **kwargs)
-                else:
-                    result = f(*args, **kwargs)
+                result = await f(*args, **kwargs)
             except Exception as exc:
                 self.emit('error', exc)
             else:

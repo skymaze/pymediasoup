@@ -1,3 +1,4 @@
+import inspect
 from pyee import AsyncIOEventEmitter
 
 class EnhancedEventEmitter(AsyncIOEventEmitter):
@@ -8,7 +9,10 @@ class EnhancedEventEmitter(AsyncIOEventEmitter):
         results = []
         for f in list(self._events[event].values()):
             try:
-                result = await f(*args, **kwargs)
+                if inspect.isawaitable(f):
+                    result = await f(*args, **kwargs)
+                else:
+                    result = f(*args, **kwargs)
             except Exception as exc:
                 self.emit('error', exc)
             else:

@@ -82,10 +82,12 @@ class RemoteSdp:
         
     def getNextMediaSectionIdx(self):
         # If a closed media section is found, return its index.
-        for idx, mediaSection in self._mediaSections:
+        for idx, mediaSection in enumerate(self._mediaSections):
             if mediaSection.closed:
+                logging.debug(f'remoteSdp | getNextMediaSectionIdx() Closed media sections found { mediaSection}')
                 return MediaSectionIdx(idx=idx, reuseMid=mediaSection.mid)
         # If no closed media section is found, return next one.
+        logging.debug(f'remoteSdp | getNextMediaSectionIdx() No closed media sections found, return next {len(self._mediaSections)}')
         return MediaSectionIdx(idx=len(self._mediaSections))
     
     def send(
@@ -97,6 +99,7 @@ class RemoteSdp:
         reuseMid: Optional[str]=None,
         extmapAllowMixed = False
     ):
+        logging.debug(f'remoteSdp | send() offerMediaDict {offerMediaDict}')
         mediaSection = AnswerMediaSection(
             sctpParameters=self._sctpParameters,
             iceParameters=self._iceParameters,

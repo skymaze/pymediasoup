@@ -1,3 +1,4 @@
+import logging
 import unittest
 from aiortc import VideoStreamTrack
 from aiortc.mediastreams import AudioStreamTrack
@@ -13,8 +14,11 @@ from pymediasoup.producer import ProducerOptions
 
 from .fake_parameters import generateRouterRtpCapabilities, generateTransportRemoteParameters
 
+logging.basicConfig(level=logging.DEBUG)
 
-TRACKS = [VideoStreamTrack(), AudioStreamTrack()]
+audioTrack = AudioStreamTrack()
+videoTrack = VideoStreamTrack()
+TRACKS = [videoTrack, audioTrack]
 
 class TestMethods(unittest.IsolatedAsyncioTestCase):
     def test_create_device(self):
@@ -87,14 +91,12 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         self.assertDictEqual(recvTransport.appData, {})
     
     async def test_produce(self):
-        audioTrack = AudioStreamTrack()
-        videoTrack = VideoStreamTrack()
 
         audioProducerId = None
         videoProducerId = None
         connectEventNumTimesCalled = 0
 
-        device = Device(handlerFactory=AiortcHandler.createFactory(tracks=TRACKS))
+        device = Device(handlerFactory=AiortcHandler.createFactory(tracks=[]))
         await device.load(generateRouterRtpCapabilities())
         id,iceParameters,iceCandidates,dtlsParameters,sctpParameters = generateTransportRemoteParameters()
         sendTransport = device.createSendTransport(
@@ -113,14 +115,17 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(isinstance(dtlsParameters, DtlsParameters))
         
         @sendTransport.on('produce')
-        def on_produce(kind, rtpParameters, appData):
+        def on_produce(args: dict) -> str:
+            kind: str = args['kind']
+            rtpParameters: RtpParameters = args['rtpParameters']
+            appData: dict = args['appData']
             nonlocal connectEventNumTimesCalled
             connectEventNumTimesCalled += 1
 
             self.assertTrue(isinstance(kind, str))
             self.assertTrue(isinstance(rtpParameters, RtpParameters))
             
-            id = None
+            id: str = None
             if kind == 'audio':
                 self.assertDictEqual(appData, {'foo': 'FOO'})
                 id , _, _, _, _ = generateTransportRemoteParameters()
@@ -133,7 +138,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             return id
 
         producerOptions = ProducerOptions(
-            track=audioTrack,
+            track=AudioStreamTrack(),
             stopTracks=False,
             appData={'foo': 'FOO'}
         )

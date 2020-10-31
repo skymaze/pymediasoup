@@ -114,8 +114,6 @@ class AiortcHandler(HandlerInterface):
             'video': getSendingRemoteRtpParameters('video', options.extendedRtpCapabilities)
         }
         self._pc = RTCPeerConnection()
-        for track in self._tracks:
-            self._pc.addTrack(track)
 
         @self._pc.on('iceconnectionstatechange')
         def on_iceconnectionstatechange():
@@ -170,16 +168,18 @@ class AiortcHandler(HandlerInterface):
         if options.encodings:
             for idx in range(len(options.encodings)):
                 options.encodings[idx].rid = f'r{idx}'
-        sendingRtpParameters: RtpParameters = self._sendingRtpParametersByKind[options.track.kind]
+        # NOTE: Get a copy of RtpParameters
+        sendingRtpParameters: RtpParameters = RtpParameters(**self._sendingRtpParametersByKind[options.track.kind].dict())
         sendingRtpParameters.codecs = reduceCodecs(sendingRtpParameters.codecs, options.codec)
-
-        sendingRemoteRtpParameters: RtpParameters = self._sendingRemoteRtpParametersByKind[options.track.kind]
+        # NOTE: Get a copy of RtpParameters
+        sendingRemoteRtpParameters: RtpParameters = RtpParameters(**self._sendingRemoteRtpParametersByKind[options.track.kind].dict())
         sendingRemoteRtpParameters.codecs = reduceCodecs(sendingRemoteRtpParameters.codecs, options.codec)
 
         mediaSectionIdx = self.remoteSdp.getNextMediaSectionIdx()
         transceiver = self.pc.addTransceiver(options.track, direction='sendonly')
 
         offer: RTCSessionDescription  = await self.pc.createOffer()
+        offerMediaDict: dict
         localSdpDict = sdp_transform.parse(offer.sdp)
         if not self._transportReady:
             await self._setupTransport(localDtlsRole='server', localSdpDict=localSdpDict)
@@ -208,7 +208,10 @@ class AiortcHandler(HandlerInterface):
         # Set MID.
         sendingRtpParameters.mid = localId
         localSdpDict = sdp_transform.parse(self.pc.localDescription.sdp)
+
         offerMediaDict = localSdpDict['media'][mediaSectionIdx.idx]
+
+        logging.debug(f"send() | get offerMediaDict {offerMediaDict} \n from localSdpDict {localSdpDict['media']} index {mediaSectionIdx.idx}")
         # Set RTCP CNAME.
         if sendingRtpParameters.rtcp == None:
             sendingRtpParameters.rtcp = RtcpParameters()

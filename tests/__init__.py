@@ -10,7 +10,7 @@ from pymediasoup.rtp_parameters import RtpCapabilities, RtpParameters
 from pymediasoup.sctp_parameters import SctpCapabilities
 from pymediasoup.transport import Transport
 from pymediasoup.models.transport import DtlsParameters
-from pymediasoup.producer import ProducerOptions
+from pymediasoup.producer import ProducerOptions, Producer
 
 from .fake_parameters import generateRouterRtpCapabilities, generateTransportRemoteParameters
 
@@ -97,7 +97,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         connectEventNumTimesCalled = 0
         produceEventNumTimesCalled = 0
 
-        device = Device(handlerFactory=AiortcHandler.createFactory(tracks=[]))
+        device = Device(handlerFactory=AiortcHandler.createFactory(tracks=TRACKS))
         await device.load(generateRouterRtpCapabilities())
         id,iceParameters,iceCandidates,dtlsParameters,sctpParameters = generateTransportRemoteParameters()
         sendTransport = device.createSendTransport(
@@ -130,16 +130,18 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             if kind == 'audio':
                 self.assertDictEqual(appData, {'foo': 'FOO'})
                 id , _, _, _, _ = generateTransportRemoteParameters()
+                nonlocal audioProducerId
                 audioProducerId = id
             elif kind == 'video':
                 self.assertDictEqual(appData, {})
                 id , _, _, _, _ = generateTransportRemoteParameters()
+                nonlocal videoProducerId
                 videoProducerId = id
             
             return id
 
         producerOptions = ProducerOptions(
-            track=AudioStreamTrack(),
+            track=audioTrack,
             stopTracks=False,
             appData={'foo': 'FOO'}
         )
@@ -148,3 +150,10 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(connectEventNumTimesCalled, 1)
         self.assertEqual(produceEventNumTimesCalled, 1)
+        self.assertTrue(isinstance(audioProducer, Producer))
+        self.assertEqual(audioProducer.id, audioProducerId)
+        self.assertFalse(audioProducer.closed)
+        self.assertEqual(audioProducer.kind, 'audio')
+        self.assertEqual(audioProducer.track, audioTrack)
+        self.assertTrue(isinstance(audioProducer.rtpParameters, RtpParameters))
+        self.assertEqual(len(audioProducer.rtpParameters.codecs), 1)

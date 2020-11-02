@@ -66,7 +66,7 @@ class Device:
     
     # Initialize the Device.
     async def load(self, routerRtpCapabilities: RtpCapabilities):
-        logging.debug(f'load() [routerRtpCapabilities:{routerRtpCapabilities}]')
+        logging.debug(f'Device load() [routerRtpCapabilities:{routerRtpCapabilities}]')
         routerRtpCapabilities = RtpCapabilities(**routerRtpCapabilities.dict())
         # Temporal handler to get its capabilities.
         if self._loaded:
@@ -74,20 +74,20 @@ class Device:
             return
         handler: HandlerInterface = self._handlerFactory()
         nativeRtpCapabilities = await handler.getNativeRtpCapabilities()
-        logging.debug(f'load() | got native RTP capabilities:{nativeRtpCapabilities}')
+        logging.debug(f'Device load() | got native RTP capabilities:{nativeRtpCapabilities}')
         # Get extended RTP capabilities.
         self._extendedRtpCapabilities = getExtendedRtpCapabilities(nativeRtpCapabilities, routerRtpCapabilities)
-        logging.debug(f'load() | got extended RTP capabilities:{self._extendedRtpCapabilities}')
+        logging.debug(f'Device load() | got extended RTP capabilities:{self._extendedRtpCapabilities}')
         # Check whether we can produce audio/video.
         self._canProduceByKind['audio'] = canSend('audio', self._extendedRtpCapabilities)
         self._canProduceByKind['video'] = canSend('video', self._extendedRtpCapabilities)
         # Generate our receiving RTP capabilities for receiving media.
         self._recvRtpCapabilities = getRecvRtpCapabilities(self._extendedRtpCapabilities)
-        logging.debug(f'load() | got receiving RTP capabilities:{self._recvRtpCapabilities}')
+        logging.debug(f'Device load() | got receiving RTP capabilities:{self._recvRtpCapabilities}')
         # Generate our SCTP capabilities.
         self._sctpCapabilities = await handler.getNativeSctpCapabilities()
-        logging.debug(f'load() | got native SCTP capabilities:{self._sctpCapabilities}')
-        logging.debug('load() succeeded')
+        logging.debug(f'Device load() | got native SCTP capabilities:{self._sctpCapabilities}')
+        logging.debug('Device load() succeeded')
         self._loaded = True
         self._handlerName = handler.name
         await handler.close()

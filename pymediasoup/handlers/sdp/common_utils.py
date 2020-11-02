@@ -58,7 +58,7 @@ def extractRtpCapabilities(sdpDict: dict) -> RtpCapabilities:
                 continue 
             feedback = RtcpFeedback(
                 type=fb.get('type'),
-                parameter=fb.get('subtype')
+                parameter=fb.get('subtype', '')
             )
             codec.rtcpFeedback.append(feedback)
 

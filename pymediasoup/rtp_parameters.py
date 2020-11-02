@@ -11,7 +11,7 @@ MediaKind = Literal['audio', 'video']
 # supportedRtpCapabilities.ts file.
 class RtcpFeedback(BaseModel):
     type: str
-    parameter: Optional[str]
+    parameter: str = ''
 
 class Codec(BaseModel):
     # The codec MIME media type/subtype (e.g. 'audio/opus', 'video/VP8').

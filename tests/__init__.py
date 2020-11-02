@@ -13,6 +13,7 @@ from pymediasoup.models.transport import DtlsParameters
 from pymediasoup.producer import ProducerOptions, Producer
 
 from .fake_parameters import generateRouterRtpCapabilities, generateTransportRemoteParameters
+from .fake_handler import FakeHandler
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -97,7 +98,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         connectEventNumTimesCalled = 0
         produceEventNumTimesCalled = 0
 
-        device = Device(handlerFactory=AiortcHandler.createFactory(tracks=TRACKS))
+        device = Device(handlerFactory=FakeHandler.createFactory(tracks=TRACKS))
         await device.load(generateRouterRtpCapabilities())
         id,iceParameters,iceCandidates,dtlsParameters,sctpParameters = generateTransportRemoteParameters()
         sendTransport = device.createSendTransport(
@@ -157,3 +158,34 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(audioProducer.track, audioTrack)
         self.assertTrue(isinstance(audioProducer.rtpParameters, RtpParameters))
         self.assertEqual(len(audioProducer.rtpParameters.codecs), 1)
+
+        codecs = audioProducer.rtpParameters.codecs
+        self.assertDictEqual(codecs[0].dict(), {
+            'mimeType'     : 'audio/opus',
+            'payloadType'  : 111,
+            'clockRate'    : 48000,
+            'channels'     : 2,
+            'rtcpFeedback' :
+            [
+                { 'type': 'transport-cc', 'parameter': '' }
+            ],
+            'parameters' :
+            {
+                'minptime'     : 10,
+                'useinbandfec' : 1
+            }
+        })
+
+        headerExtensions = audioProducer.rtpParameters.headerExtensions
+        self.assertDictEqual(headerExtensions[0].dict(), {
+            'uri'        : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+            'id'         : 1,
+            'encrypt'    : False,
+            'parameters' : {}
+        })
+        self.assertDictEqual(headerExtensions[1].dict(), {
+            'uri'        : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+            'id'         : 10,
+            'encrypt'    : False,
+            'parameters' : {}
+        })

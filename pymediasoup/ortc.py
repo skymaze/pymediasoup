@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional
 from .rtp_parameters import RtpCodec, RtcpFeedback, RtpHeaderExtension, RtpCapabilities, ExtendedRtpCapabilities, ExtendedCodec, ExtendedHeaderExtension, RtpCodecCapability, RtpHeaderExtension, MediaKind, RtpParameters, RtpCodecParameters, RtpHeaderExtensionParameters, RtpEncodingParameters, RtcpParameters
 import h264_profile_level_id as h264
@@ -58,12 +59,16 @@ def isRtxCodec(codec: RtpCodec) -> bool:
 
 
 def reduceRtcpFeedback(codecA: RtpCodec, codecB: RtpCodec) -> List[RtcpFeedback]:
+    logging.debug(f'reduceRtcpFeedback() codecA {codecA}')
+    logging.debug(f'reduceRtcpFeedback() codecB {codecB}')
     reducedRtcpFeedback: List[RtcpFeedback] = []
     for aFb in codecA.rtcpFeedback:
         matchingBFbs = [bFb for bFb in codecB.rtcpFeedback if bFb.type == aFb.type and (
             bFb.parameter == aFb.parameter or (not bFb.parameter and not aFb.parameter))]
         if matchingBFbs:
             reducedRtcpFeedback.append(matchingBFbs[0])
+
+    logging.debug(f'reduceRtcpFeedback() Result {reducedRtcpFeedback}')
 
     return reducedRtcpFeedback
 
@@ -113,7 +118,7 @@ def getExtendedRtpCapabilities(localCaps: RtpCapabilities, remoteCaps: RtpCapabi
         matchingRemoteRtxCodecs = [remoteCodec for remoteCodec in remoteCaps.codecs if isRtxCodec(
             remoteCodec) and remoteCodec.parameters.get('apt') == extendedCodec.remotePayloadType]
         if matchingLocalRtxCodecs and matchingRemoteRtxCodecs:
-            extendedCodec.localRtxPayloadType = matchingLocalCodecs[0].preferredPayloadType
+            extendedCodec.localRtxPayloadType = matchingLocalRtxCodecs[0].preferredPayloadType
             extendedCodec.remoteRtxPayloadType = matchingRemoteRtxCodecs[0].preferredPayloadType
 
     # Match header extensions.

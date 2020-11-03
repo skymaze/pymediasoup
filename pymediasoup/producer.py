@@ -24,9 +24,9 @@ class ProducerOptions(BaseModel):
     encodings: Optional[List[RtpEncodingParameters]] = []
     codecOptions: Optional[ProducerCodecOptions] = None
     codec: Optional[RtpCodecCapability] = None
-    stopTracks: Optional[bool] = None
-    disableTrackOnPause: Optional[bool] = None
-    zeroRtpOnPause: Optional[bool] = None
+    stopTracks: bool = True
+    disableTrackOnPause: bool = True
+    zeroRtpOnPause: bool = False
     appData: Optional[Any] = {}
 
     class Config:
@@ -57,7 +57,9 @@ class Producer(EnhancedEventEmitter):
         self._rtpSender = rtpSender
         self._track = track
         self._rtpParameters = rtpParameters
-        self._paused = track.enabled if disableTrackOnPause else False
+        # NOTE: 'AudioStreamTrack' object has no attribute 'enabled'
+        # self._paused = (not track.enabled) if disableTrackOnPause else False
+        self._paused = False if disableTrackOnPause else False
         self._maxSpatialLayer: Optional[int] = None
         self._stopTracks = stopTracks
         self._disableTrackOnPause = disableTrackOnPause
@@ -168,6 +170,7 @@ class Producer(EnhancedEventEmitter):
     
     # Pauses sending media.
     def pause(self):
+        logging.warning("Producer pause() | 'AudioStreamTrack' object has no attribute 'enabled' pause() won't work")
         logging.debug('Producer pause()')
 
         if self._closed:
@@ -188,6 +191,7 @@ class Producer(EnhancedEventEmitter):
     
     # Resumes sending media.
     def resume(self):
+        logging.warning("Producer pause() | 'AudioStreamTrack' object has no attribute 'enabled' resume() may not work")
         logging.debug('Producer resume()')
 
         if self._closed:

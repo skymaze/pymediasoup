@@ -59,16 +59,12 @@ def isRtxCodec(codec: RtpCodec) -> bool:
 
 
 def reduceRtcpFeedback(codecA: RtpCodec, codecB: RtpCodec) -> List[RtcpFeedback]:
-    logging.debug(f'reduceRtcpFeedback() codecA {codecA}')
-    logging.debug(f'reduceRtcpFeedback() codecB {codecB}')
     reducedRtcpFeedback: List[RtcpFeedback] = []
     for aFb in codecA.rtcpFeedback:
         matchingBFbs = [bFb for bFb in codecB.rtcpFeedback if bFb.type == aFb.type and (
             bFb.parameter == aFb.parameter or (not bFb.parameter and not aFb.parameter))]
         if matchingBFbs:
             reducedRtcpFeedback.append(matchingBFbs[0])
-
-    logging.debug(f'reduceRtcpFeedback() Result {reducedRtcpFeedback}')
 
     return reducedRtcpFeedback
 
@@ -321,6 +317,10 @@ def reduceCodecs(codecs: List[RtpCodecParameters], capCodec: Optional[RtpCodecCa
     # If no capability codec is given, take the first one (and RTX).
     if not capCodec:
         filteredCodecs.append(codecs[0])
+        if len(codecs) >=2:
+            if isRtxCodec(codecs[1]):
+                filteredCodecs.append(codecs[1])
+
     # Otherwise look for a compatible set of codecs.
     else:
         for idx in range(len(codecs)):

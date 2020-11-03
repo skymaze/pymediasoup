@@ -234,7 +234,6 @@ class AiortcHandler(HandlerInterface):
         # Otherwise if more than 1 encoding are given use them verbatim.
         else:
             sendingRtpParameters.encodings = options.encodings
-        
         # If VP8 or H264 and there is effective simulcast, add scalabilityMode to
         # each encoding.
         if len(sendingRtpParameters.encodings) > 1 and (sendingRtpParameters.codecs[0].mimeType.lower() == 'video/vp8' or sendingRtpParameters.codecs[0].mimeType.lower() == 'video/h264'):

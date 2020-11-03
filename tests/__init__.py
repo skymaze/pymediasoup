@@ -141,13 +141,16 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             
             return id
 
-        producerOptions = ProducerOptions(
+        audioProducerOptions = ProducerOptions(
             track=audioTrack,
             stopTracks=False,
             appData={'foo': 'FOO'}
         )
 
-        audioProducer = await sendTransport.produce(producerOptions)
+        # NOTE: 'AudioStreamTrack' object has no attribute 'enabled'
+        # audioTrack.enabled = False
+
+        audioProducer = await sendTransport.produce(audioProducerOptions)
 
         self.assertEqual(connectEventNumTimesCalled, 1)
         self.assertEqual(produceEventNumTimesCalled, 1)
@@ -189,3 +192,113 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             'encrypt'    : False,
             'parameters' : {}
         })
+
+        encodings = audioProducer.rtpParameters.encodings
+
+        self.assertEqual(len(encodings), 1)
+
+        # NOTE: 'AudioStreamTrack' object has no attribute 'enabled', So paused == False
+        self.assertFalse(audioProducer.paused)
+        self.assertEqual(audioProducer.maxSpatialLayer, None)
+        self.assertDictEqual(audioProducer.appData, {'foo': 'FOO'})
+
+        # Reset the audio paused state.
+        audioProducer.resume()
+
+        videoProducerOptions: ProducerOptions = ProducerOptions(
+            track=videoTrack,
+            encodings=[{'maxBitrate': 100000}, {'maxBitrate': 500000}],
+            disableTrackOnPause=False,
+            zeroRtpOnPause=True
+        )
+        videoProducer: Producer = await sendTransport.produce(videoProducerOptions)
+
+        self.assertEqual(connectEventNumTimesCalled, 1)
+        self.assertEqual(produceEventNumTimesCalled, 2)
+        self.assertEqual(videoProducer.id, videoProducerId)
+        self.assertFalse(videoProducer.closed)
+        self.assertEqual(videoProducer.kind, 'video')
+        self.assertEqual(videoProducer.track, videoTrack)
+        self.assertTrue(isinstance(videoProducer.rtpParameters.mid, str))
+        self.assertEqual(len(videoProducer.rtpParameters.codecs), 2)
+
+        codecs = videoProducer.rtpParameters.codecs
+
+        self.assertDictEqual(codecs[0].dict(exclude_none=True), {
+            'mimeType'     : 'video/VP8',
+            'payloadType'  : 96,
+            'clockRate'    : 90000,
+            'rtcpFeedback' :
+            [
+                { 'type': 'goog-remb', 'parameter': '' },
+                { 'type': 'transport-cc', 'parameter': '' },
+                { 'type': 'ccm', 'parameter': 'fir' },
+                { 'type': 'nack', 'parameter': '' },
+                { 'type': 'nack', 'parameter': 'pli' }
+            ],
+            'parameters' :
+            {
+                'baz' : '1234abcd'
+            }
+        })
+
+        self.assertDictEqual(codecs[1].dict(exclude_none=True), {
+            'mimeType'     : 'video/rtx',
+            'payloadType'  : 97,
+            'clockRate'    : 90000,
+            'rtcpFeedback' : [],
+            'parameters'   :
+            {
+                'apt' : 96
+            }
+        })
+
+        headerExtensions = videoProducer.rtpParameters.dict()['headerExtensions']
+
+        self.assertDictEqual(headerExtensions[0], {
+            'uri'        : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+            'id'         : 1,
+            'encrypt'    : False,
+            'parameters' : {}
+        })
+
+        self.assertDictEqual(headerExtensions[1], {
+            'uri'        : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+            'id'         : 3,
+            'encrypt'    : False,
+            'parameters' : {}
+        })
+
+        self.assertDictEqual(headerExtensions[2], {
+            'uri'        : 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+            'id'         : 5,
+            'encrypt'    : False,
+            'parameters' : {}
+        })
+
+        self.assertDictEqual(headerExtensions[3], {
+            'uri'        : 'urn:3gpp:video-orientation',
+            'id'         : 4,
+            'encrypt'    : False,
+            'parameters' : {}
+        })
+
+        self.assertDictEqual(headerExtensions[4], {
+            'uri'        : 'urn:ietf:params:rtp-hdrext:toffset',
+            'id'         : 2,
+            'encrypt'    : False,
+            'parameters' : {}
+        })
+
+        encodings = videoProducer.rtpParameters.encodings
+
+        self.assertEqual(len(encodings), 2)
+        
+        self.assertFalse(videoProducer.paused)
+
+        self.assertEqual(videoProducer.maxSpatialLayer, None)
+
+        self.assertDictEqual(videoProducer.appData, {})
+
+        sendTransport.remove_all_listeners('connect')
+        sendTransport.remove_all_listeners('produce')

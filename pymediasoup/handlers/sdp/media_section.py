@@ -378,7 +378,7 @@ class OfferMediaSection(MediaSection):
                     }
     def setDtlsRole(self, _):
         # Always 'actpass'.
-        self._mediaObject.setup = 'actpass'
+        self._mediaDict['setup'] = 'actpass'
     
     def planBReceive(self, offerRtpParameters: RtpParameters, streamId: str, trackId: str):
         encoding = offerRtpParameters.encodings[0]

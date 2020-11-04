@@ -1,5 +1,5 @@
 from uuid import uuid4
-from typing import List
+from typing import List, Optional
 from pymediasoup.rtp_parameters import RtpCapabilities
 from pymediasoup.models.transport import IceParameters, IceCandidate, DtlsParameters, DtlsFingerprint, SctpParameters
 
@@ -236,3 +236,185 @@ def generateTransportRemoteParameters():
     })
     
     return id, iceParameters, iceCandidates, dtlsParameters, sctpParameters
+
+def generateConsumerRemoteParameters(codecMimeType: str, id: Optional[str]=None):
+    if codecMimeType == 'audio/opus':
+        return {
+            'id'            : id or str(uuid4()),
+            'producerId'    : str(uuid4()),
+            'kind'          : 'audio',
+            'rtpParameters' :
+            {
+                'codecs' :
+                [
+                    {
+                        'mimeType'     : 'audio/opus',
+                        'payloadType'  : 100,
+                        'clockRate'    : 48000,
+                        'channels'     : 2,
+                        'rtcpFeedback' :
+                        [
+                            { 'type': 'transport-cc' }
+                        ],
+                        'parameters' :
+                        {
+                            'useinbandfec' : 1,
+                            'foo'          : 'bar'
+                        }
+                    }
+                ],
+                'encodings' :
+                [
+                    {
+                        'ssrc' : 46687003
+                    }
+                ],
+                'headerExtensions' :
+                [
+                    {
+                        'uri' : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+                        'id'  : 1
+                    },
+                    {
+                        'uri' : 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+                        'id'  : 5
+                    },
+                    {
+                        'uri' : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+                        'id'  : 10
+                    }
+                ],
+                'rtcp' :
+                {
+                    'cname'       : 'wB4Ql4lrsxYLjzuN',
+                    'reducedSize' : True,
+                    'mux'         : True
+                }
+            }
+        }
+    elif codecMimeType == 'audio/ISAC':
+        return {
+            'id'            : id or str(uuid4()),
+            'producerId'    : str(uuid4()),
+            'kind'          : 'audio',
+            'rtpParameters' :
+            {
+                'codecs' :
+                [
+                    {
+                        'mimeType'     : 'audio/ISAC',
+                        'payloadType'  : 111,
+                        'clockRate'    : 16000,
+                        'channels'     : 1,
+                        'rtcpFeedback' :
+                        [
+                            { 'type': 'transport-cc' }
+                        ],
+                        'parameters' : {}
+                    }
+                ],
+                'encodings' :
+                [
+                    {
+                        'ssrc' : 46687004
+                    }
+                ],
+                'headerExtensions' :
+                [
+                    {
+                        'uri' : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+                        id  : 1
+                    },
+                    {
+                        'uri' : 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+                        'id'  : 5
+                    }
+                ],
+                'rtcp' :
+                {
+                    'cname'       : 'wB4Ql4lrsxYLjzuN',
+                    'reducedSize' : True,
+                    'mux'         : True
+                }
+            }
+        }
+    elif codecMimeType == 'video/VP8':
+        return {
+            'id'            : id or str(uuid4()),
+            'producerId'    : str(uuid4()),
+            'kind'          : 'video',
+            'rtpParameters' :
+            {
+                'codecs' :
+                [
+                    {
+                        'mimeType'     : 'video/VP8',
+                        'payloadType'  : 101,
+                        'clockRate'    : 90000,
+                        'rtcpFeedback' :
+                        [
+                            { 'type': 'nack' },
+                            { 'type': 'nack', 'parameter': 'pli' },
+                            { 'type': 'ccm', 'parameter': 'fir' },
+                            { 'type': 'goog-remb' },
+                            { 'type': 'transport-cc' }
+                        ],
+                        'parameters' :
+                        {
+                            'x-google-start-bitrate' : 1500
+                        }
+                    },
+                    {
+                        'mimeType'     : 'video/rtx',
+                        'payloadType'  : 102,
+                        'clockRate'    : 90000,
+                        'rtcpFeedback' : [],
+                        'parameters'   :
+                        {
+                            'apt' : 101
+                        }
+                    }
+                ],
+                'encodings' :
+                [
+                    {
+                        'ssrc' : 99991111,
+                        'rtx'  :
+                        {
+                            'ssrc' : 99991112
+                        }
+                    }
+                ],
+                'headerExtensions' :
+                [
+                    {
+                        'uri' : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+                        'id'  : 1
+                    },
+                    {
+                        'uri' : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+                        'id'  : 4
+                    },
+                    {
+                        'uri' : 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+                        'id'  : 5
+                    },
+                    {
+                        'uri' : 'urn:3gpp:video-orientation',
+                        'id'  : 11
+                    },
+                    {
+                        'uri' : 'urn:ietf:params:rtp-hdrext:toffset',
+                        'id'  : 12
+                    }
+                ],
+                'rtcp' :
+                {
+                    'cname'       : 'wB4Ql4lrsxYLjzuN',
+                    'reducedSize' : True,
+                    'mux'         : True
+                }
+            }
+        }
+    else:
+        raise TypeError(f'unknown codecMimeType {codecMimeType}')

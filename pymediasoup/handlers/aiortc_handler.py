@@ -361,7 +361,7 @@ class AiortcHandler(HandlerInterface):
     async def receive(self, options: HandlerReceiveOptions) -> HandlerReceiveResult:
         self._assertRecvDirection()
         logging.debug(f'receive() [trackId:{options.trackId}, kind:{options.kind}]')
-        localId = options.rtpParameters.mid if options.rtpParameters.mid else str(len(self._mapMidTransceiver))
+        localId = options.rtpParameters.mid if options.rtpParameters.mid != None else str(len(self._mapMidTransceiver))
         self.remoteSdp.receive(
             mid=localId,
             kind=options.kind,
@@ -377,7 +377,7 @@ class AiortcHandler(HandlerInterface):
         await self.pc.setRemoteDescription(offer)
         answer: RTCSessionDescription = await self.pc.createAnswer()
         localSdpDict = sdp_transform.parse(answer.sdp)
-        answerMediaDict = [m for m in localSdpDict.get('media') if m.get('mid') == localId][0]
+        answerMediaDict = [m for m in localSdpDict.get('media') if str(m.get('mid')) == localId][0]
         # May need to modify codec parameters in the answer based on codec
         # parameters in the offer.
         applyCodecParameters(offerRtpParameters=options.rtpParameters, answerMediaDict=answerMediaDict)

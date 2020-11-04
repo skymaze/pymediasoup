@@ -36,6 +36,8 @@ class Consumer(EnhancedEventEmitter):
         self._localId = localId
         self._producerId = producerId
         self._track = track
+        # NOTE: 'AudioStreamTrack' object has no attribute 'enabled'
+        self._paused: bool = False
         self._rtpParameters = rtpParameters
         self._rtpReceiver = rtpReceiver
         self._appData = appData

@@ -156,7 +156,7 @@ class RtpHeaderExtensionParameters(BaseModel):
     # If True, the value in the header is encrypted as per RFC 6904. Default False.
     encrypt: Optional[bool] = False
     # Configuration parameters for the header extension.
-    parameters: Optional[Any]
+    parameters: Optional[dict] = {}
 
 class RtcpParameters(BaseModel):
     # The Canonical Name (CNAME) used by RTCP (e.g. in SDES messages).

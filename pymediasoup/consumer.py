@@ -13,7 +13,7 @@ class ConsumerOptions(BaseModel):
     producerId: str
     kind: MediaKind
     rtpParameters: RtpParameters
-    appData: Optional[dict] = None
+    appData: Optional[dict] = {}
 
 class Consumer(EnhancedEventEmitter):
     # Closed flag.
@@ -28,7 +28,7 @@ class Consumer(EnhancedEventEmitter):
         track: MediaStreamTrack,
         rtpParameters: RtpParameters,
         rtpReceiver: Optional[RTCRtpReceiver] = None,
-        appData: Optional[dict] = None,
+        appData: Optional[dict] = {},
         loop=None
     ):
         super(Consumer, self).__init__(loop=loop)

@@ -55,7 +55,7 @@ class Transport(EnhancedEventEmitter):
         self._maxSctpMessageSize = options.sctpParameters.maxMessageSize if options.sctpParameters else None
 
         if options.additionalSettings:
-            additionalSettings = options.additionalSettings.copy()
+            additionalSettings = options.additionalSettings.copy(deep=True)
             del additionalSettings['iceServers']
             del additionalSettings['iceTransportPolicy']
             del additionalSettings['bundlePolicy']
@@ -232,6 +232,7 @@ class Transport(EnhancedEventEmitter):
     
     async def consume(self, options: ConsumerOptions) -> Consumer:
         logging.debug('Transport consume()')
+        rtpParameters = options.rtpParameters.copy(deep=True)
         if self._closed:
             raise InvalidStateError('closed')
         elif self._direction != 'recv':
@@ -240,10 +241,10 @@ class Transport(EnhancedEventEmitter):
             raise TypeError('no "connect" listener set into this transport')
 
         # NOTE: Mediasoup client enqueue command here.
-        if not canReceive(rtpParameters=options.rtpParameters, extendedRtpCapabilities=self._extendedRtpCapabilities):
+        if not canReceive(rtpParameters=rtpParameters, extendedRtpCapabilities=self._extendedRtpCapabilities):
             raise UnsupportedError('cannot consume this Producer')
 
-        handlerReceiveOptions: HandlerReceiveOptions = HandlerReceiveOptions(trackId=options.id, kind=options.kind, rtpParameters=options.rtpParameters)
+        handlerReceiveOptions: HandlerReceiveOptions = HandlerReceiveOptions(trackId=options.id, kind=options.kind, rtpParameters=rtpParameters)
         handlerReceiveResult: HandlerReceiveResult = await self._handler.receive(handlerReceiveOptions)
 
         consumer: Consumer = Consumer(
@@ -251,7 +252,7 @@ class Transport(EnhancedEventEmitter):
             localId=handlerReceiveResult.localId,
             producerId=options.producerId,
             track=handlerReceiveResult.track,
-            rtpParameters=options.rtpParameters,
+            rtpParameters=rtpParameters,
             appData=options.appData
         )
 

@@ -168,11 +168,11 @@ class AiortcHandler(HandlerInterface):
         if options.encodings:
             for idx in range(len(options.encodings)):
                 options.encodings[idx].rid = f'r{idx}'
-        # NOTE: Get a copy of RtpParameters
-        sendingRtpParameters: RtpParameters = RtpParameters(**self._sendingRtpParametersByKind[options.track.kind].dict())
+
+        sendingRtpParameters: RtpParameters = self._sendingRtpParametersByKind[options.track.kind].copy(deep=True)
         sendingRtpParameters.codecs = reduceCodecs(sendingRtpParameters.codecs, options.codec)
-        # NOTE: Get a copy of RtpParameters
-        sendingRemoteRtpParameters: RtpParameters = RtpParameters(**self._sendingRemoteRtpParametersByKind[options.track.kind].dict())
+
+        sendingRemoteRtpParameters: RtpParameters = self._sendingRemoteRtpParametersByKind[options.track.kind].copy(deep=True)
         sendingRemoteRtpParameters.codecs = reduceCodecs(sendingRemoteRtpParameters.codecs, options.codec)
 
         mediaSectionIdx = self.remoteSdp.getNextMediaSectionIdx()

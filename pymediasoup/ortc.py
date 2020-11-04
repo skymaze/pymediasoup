@@ -339,6 +339,8 @@ def reduceCodecs(codecs: List[RtpCodecParameters], capCodec: Optional[RtpCodecCa
 
 # Create RTP parameters for a Consumer for the RTP probator.
 def generateProbatorRtpParameters(videoRtpParameters: RtpParameters) -> RtpParameters:
+    videoRtpParameters = videoRtpParameters.copy(deep=True)
+
     rtpParameters: RtpParameters = RtpParameters(
         mid=RTP_PROBATOR_MID,
         encodings=[RtpEncodingParameters(ssrc=RTP_PROBATOR_SSRC)],

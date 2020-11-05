@@ -6,7 +6,7 @@ from .ortc import canReceive, generateProbatorRtpParameters, ExtendedRtpCapabili
 from .errors import InvalidStateError, UnsupportedError
 from .emitter import EnhancedEventEmitter
 from .handlers.handler_interface import HandlerInterface
-from .models.handler_interface import HandlerRunOptions, HandlerReceiveOptions, HandlerSendOptions, HandlerSendResult, HandlerReceiveResult, SctpStreamParameters, HandlerSendDataChannelResult, HandlerReceiveDataChannelOptions, HandlerReceiveDataChannelResult
+from .models.handler_interface import HandlerReceiveOptions, HandlerSendResult, HandlerReceiveResult, SctpStreamParameters, HandlerSendDataChannelResult, HandlerReceiveDataChannelOptions, HandlerReceiveDataChannelResult
 from .models.transport import ConnectionState, IceParameters, InternalTransportOptions, DtlsParameters, OnProduceDataPayload
 from .consumer import Consumer, ConsumerOptions
 from .producer import Producer, ProducerOptions
@@ -66,7 +66,7 @@ class Transport(EnhancedEventEmitter):
 
         self._handler: HandlerInterface = options.handlerFactory()
 
-        handlerRunOptions: HandlerRunOptions = HandlerRunOptions(
+        self._handler.run(
             direction=options.direction,
             iceParameters=options.iceParameters,
             iceCandidates=options.iceCandidates,
@@ -78,8 +78,6 @@ class Transport(EnhancedEventEmitter):
             proprietaryConstraints=options.proprietaryConstraints,
             extendedRtpCapabilities=options.extendedRtpCapabilities
         )
-
-        self._handler.run(options=handlerRunOptions)
 
         self._appData = options.appData
 
@@ -191,13 +189,12 @@ class Transport(EnhancedEventEmitter):
             raise TypeError('no "produce" listener set into this transport')
         
         # NOTE: Mediasoup client enqueue command here.
-        handlerSendOptions: HandlerSendOptions = HandlerSendOptions(
+        handlerSendResult: HandlerSendResult = await self._handler.send(
             track=options.track,
             encodings=options.encodings,
             codecOptions=options.codecOptions,
             codec=options.codec
         )
-        handlerSendResult: HandlerSendResult = await self._handler.send(handlerSendOptions)
 
         ids = await self.emit_for_results(
             'produce',
@@ -244,8 +241,11 @@ class Transport(EnhancedEventEmitter):
         if not canReceive(rtpParameters=rtpParameters, extendedRtpCapabilities=self._extendedRtpCapabilities):
             raise UnsupportedError('cannot consume this Producer')
 
-        handlerReceiveOptions: HandlerReceiveOptions = HandlerReceiveOptions(trackId=options.id, kind=options.kind, rtpParameters=rtpParameters)
-        handlerReceiveResult: HandlerReceiveResult = await self._handler.receive(handlerReceiveOptions)
+        handlerReceiveResult: HandlerReceiveResult = await self._handler.receive(
+            trackId=options.id,
+            kind=options.kind,
+            rtpParameters=rtpParameters
+        )
 
         consumer: Consumer = Consumer(
             id=options.id,
@@ -264,11 +264,9 @@ class Transport(EnhancedEventEmitter):
         if not self._probatorConsumerCreated and options.kind == 'video':
             probatorRtpParameters = generateProbatorRtpParameters(consumer.rtpParameters)
             await self._handler.receive(
-                HandlerReceiveOptions(
-                    trackId='probator',
-                    kind='video',
-                    rtpParameters=probatorRtpParameters
-                )
+                trackId='probator',
+                kind='video',
+                rtpParameters=probatorRtpParameters
             )
 
             logging.debug('Transport consume() | Consumer for RTP probation created')
@@ -298,7 +296,7 @@ class Transport(EnhancedEventEmitter):
             options.ordered = False
         
         # NOTE: Mediasoup client enqueue command here.
-        sctpStreamParameters: SctpStreamParameters = SctpStreamParameters(
+        handlerSendDataChannelResult: HandlerSendDataChannelResult = await self._handler.sendDataChannel(
             ordered=options.ordered,
             maxPacketLifeTime=options.maxPacketLifeTime,
             maxRetransmits=options.maxRetransmits,
@@ -306,7 +304,6 @@ class Transport(EnhancedEventEmitter):
             label=options.label,
             protocol=options.protocol
         )
-        handlerSendDataChannelResult: HandlerSendDataChannelResult = await self._handler.sendDataChannel(sctpStreamParameters)
 
         ids = await self.emit_for_results(
             'producedata',
@@ -344,12 +341,11 @@ class Transport(EnhancedEventEmitter):
             raise TypeError('no "connect" listener set into this transport')
         
         # NOTE: Mediasoup client enqueue command here.
-        handlerReceiveDataChannelOptions: HandlerReceiveDataChannelOptions = HandlerReceiveDataChannelOptions(
+        handlerReceiveDataChannelResult: HandlerReceiveDataChannelResult = await self._handler.receiveDataChannel(
             sctpStreamParameters=options.sctpStreamParameters,
             label=options.label,
             protocol=options.protocol
         )
-        handlerReceiveDataChannelResult: HandlerReceiveDataChannelResult = await self._handler.receiveDataChannel(handlerReceiveDataChannelOptions)
 
         dataConsumer: DataConsumer = DataConsumer(
             id=options.id,

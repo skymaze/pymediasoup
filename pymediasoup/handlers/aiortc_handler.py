@@ -1,18 +1,20 @@
 import logging
 from typing import Dict, Literal, List, Optional, Any
-from aiortc import RTCPeerConnection, RTCSessionDescription, RTCRtpTransceiver, MediaStreamTrack
+from aiortc import RTCIceServer, RTCPeerConnection, RTCSessionDescription, RTCRtpTransceiver, MediaStreamTrack
 import sdp_transform
-from .sdp.remote_sdp import RemoteSdp
 from .sdp import common_utils
-from .handler_interface import HandlerInterface
-from ..models.handler_interface import HandlerRunOptions, HandlerSendOptions, HandlerSendResult, HandlerSendDataChannelResult, HandlerReceiveDataChannelResult, HandlerReceiveOptions, HandlerReceiveResult, HandlerReceiveDataChannelOptions
-from ..rtp_parameters import RtpParameters, RtpCapabilities, RtpEncodingParameters, RtcpParameters
-from ..sctp_parameters import SctpCapabilities, SctpStreamParameters
-from ..ortc import getSendingRtpParameters, getSendingRemoteRtpParameters, reduceCodecs
-from ..scalability_modes import parse as smParse
+from .sdp.remote_sdp import RemoteSdp
 from .sdp.unified_plan_utils import addLegacySimulcast, getRtpEncodings
 from .sdp.common_utils import applyCodecParameters, extractDtlsParameters
-from ..models.transport import DtlsParameters, DtlsRole
+from .handler_interface import HandlerInterface
+from ..ortc import ExtendedRtpCapabilities
+from ..rtp_parameters import MediaKind, RtpParameters, RtpCapabilities, RtpCodecCapability, RtpEncodingParameters, RtcpParameters
+from ..sctp_parameters import SctpCapabilities, SctpParameters, SctpStreamParameters
+from ..ortc import getSendingRtpParameters, getSendingRemoteRtpParameters, reduceCodecs
+from ..scalability_modes import parse as smParse
+from ..models.transport import IceCandidate, IceParameters, DtlsParameters, DtlsRole
+from ..models.handler_interface import HandlerRunOptions, HandlerSendOptions, HandlerSendResult, HandlerSendDataChannelResult, HandlerReceiveDataChannelResult, HandlerReceiveOptions, HandlerReceiveResult, HandlerReceiveDataChannelOptions
+from ..producer import ProducerCodecOptions
 
 
 SCTP_NUM_STREAMS = { 'OS': 1024, 'MIS': 1024 }
@@ -95,9 +97,30 @@ class AiortcHandler(HandlerInterface):
     
     def run(
         self,
-        options: HandlerRunOptions
+        direction: Literal['send', 'recv'],
+        iceParameters: IceParameters,
+        iceCandidates: List[IceCandidate],
+        dtlsParameters: DtlsParameters,
+        extendedRtpCapabilities: ExtendedRtpCapabilities,
+        sctpParameters: Optional[SctpParameters]=None,
+        iceServers: Optional[RTCIceServer]=None,
+        iceTransportPolicy: Optional[Literal['all', 'relay']]=None,
+        additionalSettings: Optional[Any]=None,
+        proprietaryConstraints: Optional[Any]=None
     ):
-        logging.debug('run()')
+        logging.debug('AiortcHandler run()')
+        options = HandlerRunOptions(
+            direction=direction,
+            iceParameters=iceParameters,
+            iceCandidates=iceCandidates,
+            dtlsParameters=dtlsParameters,
+            sctpParameters=sctpParameters,
+            iceServers=iceServers,
+            iceTransportPolicy=iceTransportPolicy,
+            additionalSettings=additionalSettings,
+            proprietaryConstraints=proprietaryConstraints,
+            extendedRtpCapabilities=extendedRtpCapabilities
+        )
         self._direction = options.direction
         self._remoteSdp = RemoteSdp(
             iceParameters=options.iceParameters,
@@ -162,7 +185,19 @@ class AiortcHandler(HandlerInterface):
     async def getTransportStats(self):
         return self._pc.getStats()
 
-    async def send(self, options: HandlerSendOptions):
+    async def send(
+        self,
+        track: MediaStreamTrack,
+        encodings: List[RtpEncodingParameters]=[],
+        codecOptions: Optional[ProducerCodecOptions]=None,
+        codec: Optional[RtpCodecCapability]=None
+    ) -> HandlerSendResult:
+        options = HandlerSendOptions(
+            track=track,
+            encodings=encodings,
+            codecOptions=codecOptions,
+            codec=codec
+        )
         self._assertSendDirection()
         logging.debug(f'send() [kind:{options.track.kind}, track.id:{options.track.id}]')
         if options.encodings:
@@ -315,9 +350,27 @@ class AiortcHandler(HandlerInterface):
             raise Exception('associated RTCRtpTransceiver not found')
         return await transceiver.sender.getStats()
     
-    async def sendDataChannel(self, options: SctpStreamParameters) -> HandlerSendDataChannelResult:
+    async def sendDataChannel(
+        self,
+        streamId: Optional[int]=None,
+        ordered: Optional[bool]=True,
+        maxPacketLifeTime: Optional[int]=None,
+        maxRetransmits: Optional[int]=None,
+        priority: Optional[Literal['very-low','low','medium','high']]=None,
+        label: Optional[str]=None,
+        protocol: Optional[str]=None
+    ) -> HandlerSendDataChannelResult:
+        options=SctpStreamParameters(
+            streamId=streamId,
+            ordered=ordered,
+            maxPacketLifeTime=maxPacketLifeTime,
+            maxRetransmits=maxRetransmits,
+            priority=priority,
+            label=label,
+            protocol=protocol
+        )
         self._assertSendDirection()
-        logging.debug(f'sendDataChannel() [options:{options}]')
+        logging.debug('sendDataChannel()')
         dataChannel = self.pc.createDataChannel(
             label=options.label,
             maxPacketLifeTime=options.maxPacketLifeTime,
@@ -349,7 +402,7 @@ class AiortcHandler(HandlerInterface):
                 sdp=self.remoteSdp.getSdp()
             )
 
-            logging.debug('sendDataChannel() | calling pc.setRemoteDescription() [answer:{answer}]')
+            logging.debug(f'sendDataChannel() | calling pc.setRemoteDescription() [answer:{answer}]')
             await self.pc.setRemoteDescription(answer)
             self._hasDataChannelMediaSection = True
         
@@ -358,7 +411,17 @@ class AiortcHandler(HandlerInterface):
             sctpStreamParameters=options
         )
     
-    async def receive(self, options: HandlerReceiveOptions) -> HandlerReceiveResult:
+    async def receive(
+        self,
+        trackId: str,
+        kind: MediaKind,
+        rtpParameters: RtpParameters
+    ) -> HandlerReceiveResult:
+        options = HandlerReceiveOptions(
+            trackId=trackId,
+            kind=kind,
+            rtpParameters=rtpParameters
+        )
         self._assertRecvDirection()
         logging.debug(f'receive() [trackId:{options.trackId}, kind:{options.kind}]')
         localId = options.rtpParameters.mid if options.rtpParameters.mid != None else str(len(self._mapMidTransceiver))
@@ -426,7 +489,17 @@ class AiortcHandler(HandlerInterface):
             raise Exception('associated RTCRtpTransceiver not found')
         return await transceiver.receiver.getStats()
     
-    async def receiveDataChannel(self, options: HandlerReceiveDataChannelOptions) -> HandlerReceiveDataChannelResult:
+    async def receiveDataChannel(
+        self,
+        sctpStreamParameters: SctpStreamParameters,
+        label: Optional[str]=None,
+        protocol: Optional[str]=None
+    ) -> HandlerReceiveDataChannelResult:
+        options = HandlerReceiveDataChannelOptions(
+            sctpStreamParameters=sctpStreamParameters,
+            label=label,
+            protocol=protocol
+        )
         self._assertRecvDirection()
         logging.debug(f'[receiveDataChannel() [options:{options.sctpStreamParameters}]]')
         dataChannel = self.pc.createDataChannel(

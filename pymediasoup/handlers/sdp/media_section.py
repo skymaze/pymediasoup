@@ -231,7 +231,7 @@ class AnswerMediaSection(MediaSection):
                     self._mediaDict['maxMessageSize'] = sctpParameters.maxMessageSize
                 # Old spec.
                 elif offerMediaDict.get('sctpmap'):
-                    self._mediaDict['payloads'] = SctpParameters.port
+                    self._mediaDict['payloads'] = sctpParameters.port
                     self._mediaDict['sctpmap'] = {
                         'app': 'webrtc-datachannel',
                         'sctpmapNumber': sctpParameters.port,

@@ -15,7 +15,7 @@ class DataProducerOptions(BaseModel):
     priority: Optional[Literal['very-low','low','medium','high']]
     label: Optional[str]
     protocol: Optional[str]
-    appData: Optional[Any]
+    appData: Optional[dict] = {}
 
 class DataProducer(EnhancedEventEmitter):
     # Closed flag.
@@ -34,6 +34,7 @@ class DataProducer(EnhancedEventEmitter):
         super(DataProducer, self).__init__(loop=loop)
         self._id = id
         self._dataChannel = dataChannel
+        self._sctpStreamParameters = sctpStreamParameters
         self._appData = appData
         
         self._handleDataChannel()

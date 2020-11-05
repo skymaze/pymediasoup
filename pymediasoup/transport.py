@@ -7,7 +7,7 @@ from .errors import InvalidStateError, UnsupportedError
 from .emitter import EnhancedEventEmitter
 from .handlers.handler_interface import HandlerInterface
 from .models.handler_interface import HandlerRunOptions, HandlerReceiveOptions, HandlerSendOptions, HandlerSendResult, HandlerReceiveResult, SctpStreamParameters, HandlerSendDataChannelResult, HandlerReceiveDataChannelOptions, HandlerReceiveDataChannelResult
-from .models.transport import ConnectionState, IceParameters, InternalTransportOptions, DtlsParameters
+from .models.transport import ConnectionState, IceParameters, InternalTransportOptions, DtlsParameters, OnProduceDataPayload
 from .consumer import Consumer, ConsumerOptions
 from .producer import Producer, ProducerOptions
 from .data_consumer import DataConsumer, DataConsumerOptions
@@ -291,14 +291,14 @@ class Transport(EnhancedEventEmitter):
         elif len(self.listeners('connect')) == 0 and self._connectionState == 'new':
             raise TypeError('no "connect" listener set into this transport')
 
-        elif len(self.listeners('connect')) == 0:
-            raise TypeError('no "produce" listener set into this transport')
+        elif len(self.listeners('producedata')) == 0:
+            raise TypeError('no "producedata" listener set into this transport')
 
         if options.maxPacketLifeTime or options.maxRetransmits:
             options.ordered = False
         
         # NOTE: Mediasoup client enqueue command here.
-        SctpStreamParameters: SctpStreamParameters = SctpStreamParameters(
+        sctpStreamParameters: SctpStreamParameters = SctpStreamParameters(
             ordered=options.ordered,
             maxPacketLifeTime=options.maxPacketLifeTime,
             maxRetransmits=options.maxRetransmits,
@@ -306,16 +306,16 @@ class Transport(EnhancedEventEmitter):
             label=options.label,
             protocol=options.protocol
         )
-        handlerSendDataChannelResult: HandlerSendDataChannelResult = await self._handler.sendDataChannel(SctpStreamParameters)
+        handlerSendDataChannelResult: HandlerSendDataChannelResult = await self._handler.sendDataChannel(sctpStreamParameters)
 
         ids = await self.emit_for_results(
             'producedata',
-            {
-                'sctpStreamParameters': handlerSendDataChannelResult.sctpStreamParameters,
-                'label': options.label,
-                'protocal': options.protocol,
-                'appData': options.appData
-            }
+            OnProduceDataPayload(
+                sctpStreamParameters=handlerSendDataChannelResult.sctpStreamParameters,
+                label=options.label,
+                protocol=options.protocol,
+                appData=options.appData
+            )
         )
 
         dataProducer = DataProducer(

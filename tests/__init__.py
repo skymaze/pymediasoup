@@ -9,12 +9,13 @@ from pymediasoup import AiortcHandler
 from pymediasoup.rtp_parameters import RtpCapabilities, RtpParameters
 from pymediasoup.sctp_parameters import SctpCapabilities
 from pymediasoup.transport import Transport
-from pymediasoup.models.transport import DtlsParameters
+from pymediasoup.models.transport import DtlsParameters, OnProduceDataPayload
 from pymediasoup.producer import ProducerOptions, Producer
+from pymediasoup.data_producer import DataProducer, DataProducerOptions
 from pymediasoup.errors import UnsupportedError
 from pymediasoup.consumer import ConsumerOptions
 
-from .fake_parameters import generateRouterRtpCapabilities, generateTransportRemoteParameters, generateConsumerRemoteParameters
+from .fake_parameters import generateRouterRtpCapabilities, generateTransportRemoteParameters, generateConsumerRemoteParameters, generateDataProducerRemoteParameters
 from .fake_handler import FakeHandler
 
 logging.basicConfig(level=logging.DEBUG)
@@ -314,6 +315,43 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
 
         sendTransport.remove_all_listeners('connect')
         sendTransport.remove_all_listeners('produce')
+
+        # produce data
+        dataProducerId = ''
+        produceDataEventNumTimesCalled = 0
+
+        @sendTransport.on('producedata')
+        async def on_producedata(payload: OnProduceDataPayload):
+            nonlocal produceDataEventNumTimesCalled
+            produceDataEventNumTimesCalled += 1
+            self.assertEqual(payload.label, 'FOO')
+            self.assertEqual(payload.protocol, 'BAR')
+            self.assertEqual(payload.appData, {'foo': 'FOO'})
+
+            nonlocal dataProducerId
+
+            dataProducerId = generateDataProducerRemoteParameters()
+
+            return dataProducerId
+        
+        dataProducer: DataProducer = await sendTransport.produceData(DataProducerOptions(
+            ordered=False,
+            maxPacketLifeTime=5555,
+            label='FOO',
+            protocol='BAR',
+            appData={ 'foo': 'FOO' }
+        ))
+
+        self.assertEqual(dataProducer.id, dataProducerId)
+        self.assertFalse(dataProducer.closed)
+        self.assertFalse(dataProducer.sctpStreamParameters.ordered)
+        self.assertEqual(dataProducer.sctpStreamParameters.maxPacketLifeTime, 5555)
+        self.assertEqual(dataProducer.sctpStreamParameters.maxRetransmits, None)
+        self.assertEqual(dataProducer.label, 'FOO')
+        self.assertEqual(dataProducer.protocol, 'BAR')
+
+        sendTransport.remove_all_listeners('producedata')
+
     
     async def test_consume(self):
         device = Device(handlerFactory=FakeHandler.createFactory(tracks=TRACKS))

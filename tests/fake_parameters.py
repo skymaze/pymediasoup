@@ -418,3 +418,6 @@ def generateConsumerRemoteParameters(codecMimeType: str, id: Optional[str]=None)
         }
     else:
         raise TypeError(f'unknown codecMimeType {codecMimeType}')
+
+def generateDataProducerRemoteParameters():
+    return str(uuid4())

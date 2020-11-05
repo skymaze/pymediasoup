@@ -3,7 +3,7 @@ from enum import IntEnum
 from aiortc import RTCIceServer
 from pydantic import BaseModel
 from ..ortc import ExtendedRtpCapabilities
-from ..sctp_parameters import SctpParameters
+from ..sctp_parameters import SctpParameters, SctpStreamParameters
 
 
 class IceParameters(BaseModel):
@@ -77,3 +77,9 @@ class InternalTransportOptions(TransportOptions):
     handlerFactory: Callable
     extendedRtpCapabilities: Optional[ExtendedRtpCapabilities] = None
     canProduceByKind: Dict[str, bool]
+
+class OnProduceDataPayload(BaseModel):
+    sctpStreamParameters: SctpStreamParameters
+    label: str
+    protocol: str
+    appData: dict = {}

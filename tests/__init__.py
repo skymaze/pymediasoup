@@ -12,10 +12,11 @@ from pymediasoup.transport import Transport
 from pymediasoup.models.transport import DtlsParameters, OnProduceDataPayload
 from pymediasoup.producer import ProducerOptions, Producer
 from pymediasoup.data_producer import DataProducer, DataProducerOptions
+from pymediasoup.data_consumer import DataConsumer, DataConsumerOptions
 from pymediasoup.errors import UnsupportedError
 from pymediasoup.consumer import ConsumerOptions
 
-from .fake_parameters import generateRouterRtpCapabilities, generateTransportRemoteParameters, generateConsumerRemoteParameters, generateDataProducerRemoteParameters
+from .fake_parameters import generateRouterRtpCapabilities, generateTransportRemoteParameters, generateConsumerRemoteParameters, generateDataProducerRemoteParameters, generateDataConsumerRemoteParameters
 from .fake_handler import FakeHandler
 
 logging.basicConfig(level=logging.DEBUG)
@@ -534,3 +535,19 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         self.assertDictEqual(videoConsumer.appData, {})
 
         recvTransport.remove_all_listeners('connect')
+
+        id, dataProducerId, sctpStreamParameters = generateDataConsumerRemoteParameters()
+        dataConsumer: DataConsumer = await recvTransport.consumeData(DataConsumerOptions(
+            id=id,
+            dataProducerId=dataProducerId,
+            sctpStreamParameters=sctpStreamParameters,
+            label='FOO',
+            protocol='BAR',
+            appData={'bar': 'BAR'}
+        ))
+
+        self.assertEqual(dataConsumer.id, id)
+        self.assertEqual(dataConsumer.dataProducerId, dataProducerId)
+        self.assertFalse(dataConsumer.closed)
+        self.assertEqual(dataConsumer.label, 'FOO')
+        self.assertEqual(dataConsumer.protocol, 'BAR')

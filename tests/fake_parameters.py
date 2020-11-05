@@ -1,7 +1,7 @@
 from uuid import uuid4
 from typing import List, Optional
 from pymediasoup.rtp_parameters import RtpCapabilities
-from pymediasoup.models.transport import IceParameters, IceCandidate, DtlsParameters, DtlsFingerprint, SctpParameters
+from pymediasoup.models.transport import IceParameters, IceCandidate, DtlsParameters, DtlsFingerprint, SctpParameters, SctpStreamParameters
 
 
 def generateRouterRtpCapabilities():
@@ -421,3 +421,13 @@ def generateConsumerRemoteParameters(codecMimeType: str, id: Optional[str]=None)
 
 def generateDataProducerRemoteParameters():
     return str(uuid4())
+
+def generateDataConsumerRemoteParameters(id: str=None):
+    id = id or str(uuid4())
+    dataProducerId = str(uuid4())
+    sctpStreamParameters = SctpStreamParameters(
+        streamId=666,
+        maxPacketLifeTime=5000,
+        maxRetransmits=None
+    )
+    return id, dataProducerId, sctpStreamParameters

@@ -434,7 +434,7 @@ class AiortcHandler(HandlerInterface):
             maxPacketLifeTime=options.sctpStreamParameters.maxPacketLifeTime,
             maxRetransmits=options.sctpStreamParameters.maxRetransmits,
             ordered=options.sctpStreamParameters.ordered,
-            protocol=options.sctpStreamParameters.protocol,
+            protocol=options.protocol,
             negotiated=True,
             id=options.sctpStreamParameters.streamId
         )
@@ -456,7 +456,7 @@ class AiortcHandler(HandlerInterface):
             logging.debug(f'receiveDataChannel() | calling pc.setRemoteDescription() [answer:{answer}]')
             await self.pc.setLocalDescription(answer)
             self._hasDataChannelMediaSection = True
-        return dataChannel
+        return HandlerReceiveDataChannelResult(dataChannel=dataChannel)
     
     async def _setupTransport(self, localDtlsRole: DtlsRole, localSdpDict: dict={}):
         if localSdpDict == {}:

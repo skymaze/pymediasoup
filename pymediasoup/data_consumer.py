@@ -13,7 +13,7 @@ class DataConsumerOptions(BaseModel):
     sctpStreamParameters: SctpStreamParameters
     label: Optional[str]
     protocol: Optional[str]
-    appData: Optional[dict] = None
+    appData: Optional[dict] = {}
 
 class DataConsumer(EnhancedEventEmitter):
     # Closed flag.
@@ -27,7 +27,7 @@ class DataConsumer(EnhancedEventEmitter):
         dataProducerId: str,
         dataChannel: RTCDataChannel,
         sctpStreamParameters: SctpStreamParameters,
-        appData: Optional[dict] = None,
+        appData: Optional[dict] = {},
         loop=None
     ):
         super(DataConsumer, self).__init__(loop=loop)

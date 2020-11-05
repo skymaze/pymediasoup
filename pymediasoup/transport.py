@@ -1,7 +1,7 @@
 import logging
 from typing import Optional, Literal, List, Any, Callable, Dict
 from pyee import AsyncIOEventEmitter
-from aiortc import RTCIceServer
+from aiortc import RTCIceServer, MediaStreamTrack
 from .ortc import canReceive, generateProbatorRtpParameters, ExtendedRtpCapabilities
 from .errors import InvalidStateError, UnsupportedError
 from .emitter import EnhancedEventEmitter
@@ -12,6 +12,8 @@ from .consumer import Consumer, ConsumerOptions
 from .producer import Producer, ProducerOptions
 from .data_consumer import DataConsumer, DataConsumerOptions
 from .data_producer import DataProducer, DataProducerOptions
+from .producer import ProducerCodecOptions
+from .rtp_parameters import RtpParameters, RtpCodecCapability, RtpEncodingParameters, MediaKind
 
 
 class Transport(EnhancedEventEmitter):
@@ -173,7 +175,27 @@ class Transport(EnhancedEventEmitter):
         return await self._handler.updateIceServers(iceServers)
     
     # Create a Producer.
-    async def produce(self, options: ProducerOptions) -> Producer:
+    async def produce(
+        self,
+        track: Optional[MediaStreamTrack] = None,
+        encodings: Optional[List[RtpEncodingParameters]] = [],
+        codecOptions: Optional[ProducerCodecOptions] = None,
+        codec: Optional[RtpCodecCapability] = None,
+        stopTracks: bool = True,
+        disableTrackOnPause: bool = True,
+        zeroRtpOnPause: bool = False,
+        appData: Optional[Any] = {}
+    ) -> Producer:
+        options: ProducerOptions = ProducerOptions(
+            track=track,
+            encodings=encodings,
+            codecOptions=codecOptions,
+            codec=codec,
+            stopTracks=stopTracks,
+            disableTrackOnPause=disableTrackOnPause,
+            zeroRtpOnPause=zeroRtpOnPause,
+            appData=appData
+        )
         logging.debug(f'Transport produce() [track:{options.track}]')
         if not options.track:
             raise TypeError('missing track')
@@ -227,9 +249,23 @@ class Transport(EnhancedEventEmitter):
     
         # TODO: stop the given track if the command above failed due to closed Transport.
     
-    async def consume(self, options: ConsumerOptions) -> Consumer:
+    async def consume(
+        self,
+        id: str,
+        producerId: str,
+        kind: MediaKind,
+        rtpParameters: RtpParameters,
+        appData: Optional[dict] = {}
+    ) -> Consumer:
+        options: ConsumerOptions = ConsumerOptions(
+            id=id,
+            producerId=producerId,
+            kind=kind,
+            rtpParameters=rtpParameters,
+            appData=appData
+        )
         logging.debug('Transport consume()')
-        rtpParameters = options.rtpParameters.copy(deep=True)
+        rtpParameters:  RtpParameters = options.rtpParameters.copy(deep=True)
         if self._closed:
             raise InvalidStateError('closed')
         elif self._direction != 'recv':
@@ -278,7 +314,25 @@ class Transport(EnhancedEventEmitter):
         return consumer
     
     # Create a DataProducer
-    async def produceData(self, options: DataProducerOptions) -> DataProducer:
+    async def produceData(
+        self,
+        ordered: Optional[bool]=None,
+        maxPacketLifeTime: Optional[int]=None,
+        maxRetransmits: Optional[int]=None,
+        priority: Optional[Literal['very-low','low','medium','high']]=None,
+        label: Optional[str]=None,
+        protocol: Optional[str]=None,
+        appData: Optional[dict] = {}
+    ) -> DataProducer:
+        options: DataProducerOptions = DataProducerOptions(
+            ordered=ordered,
+            maxPacketLifeTime=maxPacketLifeTime,
+            maxRetransmits=maxRetransmits,
+            priority=priority,
+            label=label,
+            protocol=protocol,
+            appData=appData
+        )
         logging.debug('Transport produceData()')
         if self._direction != 'send':
             raise UnsupportedError('not a sending Transport')
@@ -331,7 +385,23 @@ class Transport(EnhancedEventEmitter):
         return dataProducer
 
     # Create a DataConsumer
-    async def consumeData(self, options: DataConsumerOptions) -> DataConsumer:
+    async def consumeData(
+        self,
+        id: str,
+        dataProducerId: str,
+        sctpStreamParameters: SctpStreamParameters,
+        label: Optional[str]=None,
+        protocol: Optional[str]=None,
+        appData: Optional[dict]={}
+    ) -> DataConsumer:
+        options: DataConsumerOptions = DataConsumerOptions(
+            id=id,
+            dataProducerId=dataProducerId,
+            sctpStreamParameters=sctpStreamParameters,
+            label=label,
+            protocol=protocol,
+            appData=appData
+        )
         logging.debug('Transport consumeData()')
         if self._closed:
             raise InvalidStateError('closed')

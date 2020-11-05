@@ -10,11 +10,11 @@ from pymediasoup.rtp_parameters import RtpCapabilities, RtpParameters
 from pymediasoup.sctp_parameters import SctpCapabilities
 from pymediasoup.transport import Transport
 from pymediasoup.models.transport import DtlsParameters, OnProduceDataPayload
-from pymediasoup.producer import ProducerOptions, Producer
-from pymediasoup.data_producer import DataProducer, DataProducerOptions
-from pymediasoup.data_consumer import DataConsumer, DataConsumerOptions
+from pymediasoup.producer import Producer
+from pymediasoup.data_producer import DataProducer
+from pymediasoup.data_consumer import DataConsumer
 from pymediasoup.errors import UnsupportedError
-from pymediasoup.consumer import ConsumerOptions
+from pymediasoup.consumer import Consumer
 
 from .fake_parameters import generateRouterRtpCapabilities, generateTransportRemoteParameters, generateConsumerRemoteParameters, generateDataProducerRemoteParameters, generateDataConsumerRemoteParameters
 from .fake_handler import FakeHandler
@@ -95,15 +95,13 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(recvTransport.connectionState, 'new')
         self.assertDictEqual(recvTransport.appData, {})
 
-        audioProducerOptions = ProducerOptions(
-            track=audioTrack,
-            stopTracks=False,
-            appData={'foo': 'FOO'}
-        )
-
         # transport.produce() in a receiving Transport rejects with UnsupportedError
         with self.assertRaises(UnsupportedError):
-            await recvTransport.produce(audioProducerOptions)
+            await recvTransport.produce(
+                track=audioTrack,
+                stopTracks=False,
+                appData={'foo': 'FOO'}
+            )
     
     async def test_produce(self):
 
@@ -155,16 +153,14 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             
             return id
 
-        audioProducerOptions = ProducerOptions(
+        # NOTE: 'AudioStreamTrack' object has no attribute 'enabled'
+        # audioTrack.enabled = False
+
+        audioProducer = await sendTransport.produce(
             track=audioTrack,
             stopTracks=False,
             appData={'foo': 'FOO'}
         )
-
-        # NOTE: 'AudioStreamTrack' object has no attribute 'enabled'
-        # audioTrack.enabled = False
-
-        audioProducer = await sendTransport.produce(audioProducerOptions)
 
         self.assertEqual(connectEventNumTimesCalled, 1)
         self.assertEqual(produceEventNumTimesCalled, 1)
@@ -219,13 +215,12 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         # Reset the audio paused state.
         audioProducer.resume()
 
-        videoProducerOptions: ProducerOptions = ProducerOptions(
+        videoProducer: Producer = await sendTransport.produce(
             track=videoTrack,
             encodings=[{'maxBitrate': 100000}, {'maxBitrate': 500000}],
             disableTrackOnPause=False,
             zeroRtpOnPause=True
         )
-        videoProducer: Producer = await sendTransport.produce(videoProducerOptions)
 
         self.assertEqual(connectEventNumTimesCalled, 1)
         self.assertEqual(produceEventNumTimesCalled, 2)
@@ -335,13 +330,13 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
 
             return dataProducerId
         
-        dataProducer: DataProducer = await sendTransport.produceData(DataProducerOptions(
+        dataProducer: DataProducer = await sendTransport.produceData(
             ordered=False,
             maxPacketLifeTime=5555,
             label='FOO',
             protocol='BAR',
             appData={ 'foo': 'FOO' }
-        ))
+        )
 
         self.assertEqual(dataProducer.id, dataProducerId)
         self.assertFalse(dataProducer.closed)
@@ -383,13 +378,13 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             nonlocal connectEventNumTimesCalled
             connectEventNumTimesCalled += 1
 
-        audioConsumer = await recvTransport.consume(ConsumerOptions(
+        audioConsumer: Consumer = await recvTransport.consume(
             id=audioConsumerRemoteParameters['id'],
             producerId=audioConsumerRemoteParameters['producerId'],
             kind=audioConsumerRemoteParameters['kind'],
             rtpParameters=audioConsumerRemoteParameters['rtpParameters'],
             appData={'bar': 'BAR'}
-        ))
+        )
 
         self.assertEqual(connectEventNumTimesCalled, 1)
         self.assertEqual(audioConsumer.id, audioConsumerRemoteParameters['id'])
@@ -448,12 +443,12 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
 
         self.assertDictEqual(audioConsumer.appData, {'bar': 'BAR'})
 
-        videoConsumer = await recvTransport.consume(ConsumerOptions(
+        videoConsumer: Consumer = await recvTransport.consume(
             id=videoConsumerRemoteParameters['id'],
             producerId=videoConsumerRemoteParameters['producerId'],
             kind=videoConsumerRemoteParameters['kind'],
             rtpParameters=videoConsumerRemoteParameters['rtpParameters']
-        ))
+        )
 
         self.assertEqual(videoConsumer.id, videoConsumerRemoteParameters['id'])
         self.assertEqual(videoConsumer.producerId, videoConsumerRemoteParameters['producerId'])
@@ -537,14 +532,14 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         recvTransport.remove_all_listeners('connect')
 
         id, dataProducerId, sctpStreamParameters = generateDataConsumerRemoteParameters()
-        dataConsumer: DataConsumer = await recvTransport.consumeData(DataConsumerOptions(
+        dataConsumer: DataConsumer = await recvTransport.consumeData(
             id=id,
             dataProducerId=dataProducerId,
             sctpStreamParameters=sctpStreamParameters,
             label='FOO',
             protocol='BAR',
             appData={'bar': 'BAR'}
-        ))
+        )
 
         self.assertEqual(dataConsumer.id, id)
         self.assertEqual(dataConsumer.dataProducerId, dataProducerId)

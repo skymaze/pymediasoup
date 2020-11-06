@@ -2,7 +2,6 @@ import logging
 import unittest
 from aiortc import VideoStreamTrack
 from aiortc.mediastreams import AudioStreamTrack
-import cv2
 
 from pymediasoup import Device
 from pymediasoup import AiortcHandler

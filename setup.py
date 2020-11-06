@@ -30,9 +30,7 @@ REQUIRED = [
 ]
 
 # What packages are optional?
-EXTRAS = {
-    'opencv-python'
-}
+EXTRAS = {}
 
 # The rest you shouldn't have to touch too much :)
 # ------------------------------------------------

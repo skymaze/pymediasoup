@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Dict, Callable, Literal, List, Any
+from typing import Optional, Dict, Callable, Literal, List, Any, Union
 from pyee import AsyncIOEventEmitter
 from aiortc import RTCIceServer
 from .handlers.handler_interface import HandlerInterface
@@ -65,9 +65,12 @@ class Device:
         return self._observer
     
     # Initialize the Device.
-    async def load(self, routerRtpCapabilities: RtpCapabilities):
+    async def load(self, routerRtpCapabilities: Union[RtpCapabilities, dict]):
         logging.debug(f'Device load() [routerRtpCapabilities:{routerRtpCapabilities}]')
-        routerRtpCapabilities = RtpCapabilities(**routerRtpCapabilities.dict())
+        if isinstance(routerRtpCapabilities, dict):
+            routerRtpCapabilities:RtpCapabilities = RtpCapabilities(**routerRtpCapabilities)
+        else:
+            routerRtpCapabilities:RtpCapabilities = routerRtpCapabilities.copy(deep=True)
         # Temporal handler to get its capabilities.
         if self._loaded:
             logging.warning('already loaded')
@@ -139,10 +142,10 @@ class Device:
     def createRecvTransport(
         self,
         id: str,
-        iceParameters: IceParameters,
-        iceCandidates: List[IceCandidate],
-        dtlsParameters: DtlsParameters,
-        sctpParameters: Optional[SctpParameters],
+        iceParameters: Union[IceParameters, dict],
+        iceCandidates: List[Union[IceCandidate, dict]],
+        dtlsParameters: Union[DtlsParameters, dict],
+        sctpParameters: Optional[Union[SctpParameters, dict]] = None,
         iceServers: Optional[List[RTCIceServer]] = None,
         iceTransportPolicy: Optional[Literal['all', 'relay']] = None,
         additionalSettings: Optional[dict] = None,
@@ -150,6 +153,17 @@ class Device:
         appData: Optional[dict] = {}
     ):
         logging.debug('createRecvTransport()')
+        if isinstance(iceParameters, dict):
+            iceParameters: IceParameters = IceParameters(**iceParameters)
+        
+        iceCandidates = [IceCandidate(**c) if isinstance(c, dict) else c for c in iceCandidates]
+        
+        if isinstance(dtlsParameters, dict):
+            dtlsParameters: DtlsParameters = DtlsParameters(**dtlsParameters)
+        
+        if isinstance(sctpParameters, dict):
+            sctpParameters: SctpParameters = SctpParameters(**sctpParameters)
+        
         return self._createTransport(
             direction='recv',
             id=id,

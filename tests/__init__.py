@@ -128,10 +128,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(isinstance(dtlsParameters, DtlsParameters))
         
         @sendTransport.on('produce')
-        async def on_produce(args: dict) -> str:
-            kind: str = args['kind']
-            rtpParameters: RtpParameters = args['rtpParameters']
-            appData: dict = args['appData']
+        async def on_produce(kind: str, rtpParameters: RtpParameters, appData: dict) -> str:
             nonlocal produceEventNumTimesCalled
             produceEventNumTimesCalled += 1
 

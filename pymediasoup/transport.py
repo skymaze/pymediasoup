@@ -220,11 +220,9 @@ class Transport(EnhancedEventEmitter):
 
         ids = await self.emit_for_results(
             'produce',
-            {
-                'kind': options.track.kind,
-                'rtpParameters': handlerSendResult.rtpParameters,
-                'appData': options.appData
-            }
+            options.track.kind,
+            handlerSendResult.rtpParameters,
+            options.appData
         )
 
         producer = Producer(

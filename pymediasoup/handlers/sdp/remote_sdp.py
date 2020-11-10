@@ -56,11 +56,19 @@ class RemoteSdp:
         # If DTLS parameters are given, assume WebRTC and BUNDLE.
         if dtlsParameters:
             self._sdpDict['msidSemantic'] = { 'semantic': 'WMS', 'token': '*' }
-            # NOTE: We take the latest fingerprint.
-            self._sdpDict['fingerprint'] = {
-                'type': dtlsParameters.fingerprints[-1].algorithm,
-                'hash': dtlsParameters.fingerprints[-1].value
-            }
+            # NOTE: aiortc currently only support sha-256
+            for fingerprint in dtlsParameters.fingerprints:
+                if fingerprint.algorithm == 'sha-256':
+
+                    self._sdpDict['fingerprint'] = {
+                        'type': fingerprint.algorithm,
+                        'hash': fingerprint.value
+                    }
+            # # NOTE: Mediasoup Client take the latest fingerprint.
+            # self._sdpDict['fingerprint'] = {
+            #     'type': dtlsParameters.fingerprints[-1].algorithm,
+            #     'hash': dtlsParameters.fingerprints[-1].value
+            # }
             self._sdpDict['groups'] = [{ 'type': 'BUNDLE', 'mids': '' }]
         
         # If there are plain RPT parameters, override SDP origin.

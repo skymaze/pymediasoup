@@ -28,12 +28,11 @@ REQUIRED = [
         'h264-profile-level-id>=1.0.0',
         'sdp-transform>=1.0.0'
     ]
-if sys.version_info <= (3, 8):
-    REQUIRED.append('typing_extensions>=3.7.4.3')
-
 
 # What packages are optional?
-EXTRAS = {}
+EXTRAS = {
+    ':python_version<"3.8"': ['typing_extensions>=3.7.4.3']
+}
 
 # The rest you shouldn't have to touch too much :)
 # ------------------------------------------------

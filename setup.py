@@ -18,7 +18,7 @@ URL = 'https://github.com/skymaze/pymediasoup'
 EMAIL = 'maze1024@gmail.com'
 AUTHOR = 'Jiang Yue'
 REQUIRES_PYTHON = '>=3.6.12'
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 
 # What packages are required for this module to be executed?
 REQUIRED = [

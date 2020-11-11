@@ -360,6 +360,8 @@ class AiortcHandler(HandlerInterface):
         label: Optional[str]=None,
         protocol: Optional[str]=None
     ) -> HandlerSendDataChannelResult:
+        if streamId == None:
+            streamId = self._nextSendSctpStreamId
         options=SctpStreamParameters(
             streamId=streamId,
             ordered=ordered,

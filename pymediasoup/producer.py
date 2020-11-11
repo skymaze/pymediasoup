@@ -293,6 +293,9 @@ class Producer(EnhancedEventEmitter):
         if not self._track:
             return
 
+        if self._track.readyState == 'ended':
+            return
+
         self._track.remove_listener('ended', self._onTrackEnded)
 
         if self._stopTracks:

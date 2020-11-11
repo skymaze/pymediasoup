@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Literal, List, Any, Callable, Dict
+from typing import Optional, Literal, List, Any, Callable, Dict, Union
 from pyee import AsyncIOEventEmitter
 from aiortc import RTCIceServer, MediaStreamTrack
 from .ortc import canReceive, generateProbatorRtpParameters, ExtendedRtpCapabilities
@@ -7,7 +7,7 @@ from .errors import InvalidStateError, UnsupportedError
 from .emitter import EnhancedEventEmitter
 from .handlers.handler_interface import HandlerInterface
 from .models.handler_interface import HandlerReceiveOptions, HandlerSendResult, HandlerReceiveResult, SctpStreamParameters, HandlerSendDataChannelResult, HandlerReceiveDataChannelOptions, HandlerReceiveDataChannelResult
-from .models.transport import ConnectionState, IceParameters, InternalTransportOptions, DtlsParameters, OnProduceDataPayload
+from .models.transport import ConnectionState, IceParameters, InternalTransportOptions, DtlsParameters
 from .consumer import Consumer, ConsumerOptions
 from .producer import Producer, ProducerOptions
 from .data_consumer import DataConsumer, DataConsumerOptions
@@ -17,28 +17,6 @@ from .rtp_parameters import RtpParameters, RtpCodecCapability, RtpEncodingParame
 
 
 class Transport(EnhancedEventEmitter):
-    # Closed flag.
-    _closed: bool = False
-    # Whether we can produce audio/video based on computed extended RTP
-    # capabilities.
-    _canProduceByKind: Dict[str, bool]
-    # App custom data.
-    _appData: Optional[dict]
-    # Transport connection state.
-    _connectionState: ConnectionState = 'new'
-    # Producers indexed by id
-    _producers: Dict[str, Producer] = {}
-    # Consumers indexed by id.
-    _consumers: Dict[str, Consumer] = {}
-    # DataProducers indexed by id
-    _dataProducers: Dict[str, DataProducer] = {}
-    # DataConsumers indexed by id.
-    _dataConsumers: Dict[str, DataConsumer] = {}
-    # Whether the Consumer for RTP probation has been created.
-    _probatorConsumerCreated: bool = False
-    # Observer instance.
-    _observer: AsyncIOEventEmitter = AsyncIOEventEmitter()
-
     def __init__(
         self,
         options: InternalTransportOptions,
@@ -47,6 +25,29 @@ class Transport(EnhancedEventEmitter):
         super(Transport, self).__init__(loop=loop)
 
         logging.debug(f'constructor() [id:{options.id}, direction:{options.direction}]')
+
+        # Closed flag.
+        self._closed: bool = False
+        # Whether we can produce audio/video based on computed extended RTP
+        # capabilities.
+        self._canProduceByKind: Dict[str, bool]
+        # App custom data.
+        self._appData: Optional[dict]
+        # Transport connection state.
+        self._connectionState: ConnectionState = 'new'
+        # Producers indexed by id
+        self._producers: Dict[str, Producer] = {}
+        # Consumers indexed by id.
+        self._consumers: Dict[str, Consumer] = {}
+        # DataProducers indexed by id
+        self._dataProducers: Dict[str, DataProducer] = {}
+        # DataConsumers indexed by id.
+        self._dataConsumers: Dict[str, DataConsumer] = {}
+        # Whether the Consumer for RTP probation has been created.
+        self._probatorConsumerCreated: bool = False
+        # Observer instance.
+        self._observer: AsyncIOEventEmitter = AsyncIOEventEmitter()
+
         # Id.
         self._id: str = options.id
         # Direction.
@@ -132,7 +133,7 @@ class Transport(EnhancedEventEmitter):
         return self._observer
 
     # Close the Transport.
-    def close(self):
+    async def close(self):
         if self._closed:
             return
         
@@ -141,7 +142,7 @@ class Transport(EnhancedEventEmitter):
         self._closed = True
 
         # Close the handler.
-        self._handler.close()
+        await self._handler.close()
 
         # Close all Process.
         for process_dict in [self._producers, self._consumers, self._dataProducers, self._dataConsumers]:
@@ -252,9 +253,13 @@ class Transport(EnhancedEventEmitter):
         id: str,
         producerId: str,
         kind: MediaKind,
-        rtpParameters: RtpParameters,
+        rtpParameters: Union[RtpParameters, dict],
         appData: Optional[dict] = {}
     ) -> Consumer:
+
+        if isinstance(rtpParameters, dict):
+            rtpParameters: RtpParameters = RtpParameters(**rtpParameters)
+
         options: ConsumerOptions = ConsumerOptions(
             id=id,
             producerId=producerId,
@@ -359,12 +364,10 @@ class Transport(EnhancedEventEmitter):
 
         ids = await self.emit_for_results(
             'producedata',
-            OnProduceDataPayload(
-                sctpStreamParameters=handlerSendDataChannelResult.sctpStreamParameters,
-                label=options.label,
-                protocol=options.protocol,
-                appData=options.appData
-            )
+            sctpStreamParameters=handlerSendDataChannelResult.sctpStreamParameters,
+            label=options.label,
+            protocol=options.protocol,
+            appData=options.appData
         )
 
         dataProducer = DataProducer(

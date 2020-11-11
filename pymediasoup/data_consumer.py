@@ -16,11 +16,6 @@ class DataConsumerOptions(BaseModel):
     appData: Optional[dict] = {}
 
 class DataConsumer(EnhancedEventEmitter):
-    # Closed flag.
-    _closed: bool = False
-    # Observer instance.
-    _observer: AsyncIOEventEmitter = AsyncIOEventEmitter()
-
     def __init__(
         self,
         id: str,
@@ -31,6 +26,11 @@ class DataConsumer(EnhancedEventEmitter):
         loop=None
     ):
         super(DataConsumer, self).__init__(loop=loop)
+
+        # Closed flag.
+        self._closed: bool = False
+        # Observer instance.
+        self._observer: AsyncIOEventEmitter = AsyncIOEventEmitter()
 
         self._id = id
         self._dataProducerId = dataProducerId
@@ -108,7 +108,7 @@ class DataConsumer(EnhancedEventEmitter):
 
         self._closed = True
 
-        self._destroyTrack()
+        self._dataChannel.close()
 
         self.emit('@close')
 
@@ -124,7 +124,7 @@ class DataConsumer(EnhancedEventEmitter):
 
         self._closed = True
 
-        self._destroyTrack()
+        self._dataChannel.close()
 
         self.emit('transportclose')
 

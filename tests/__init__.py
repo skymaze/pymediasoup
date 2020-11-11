@@ -6,9 +6,9 @@ from aiortc.mediastreams import AudioStreamTrack
 from pymediasoup import Device
 from pymediasoup import AiortcHandler
 from pymediasoup.rtp_parameters import RtpCapabilities, RtpParameters
-from pymediasoup.sctp_parameters import SctpCapabilities
+from pymediasoup.sctp_parameters import SctpCapabilities, SctpStreamParameters
 from pymediasoup.transport import Transport
-from pymediasoup.models.transport import DtlsParameters, OnProduceDataPayload
+from pymediasoup.models.transport import DtlsParameters
 from pymediasoup.producer import Producer
 from pymediasoup.data_producer import DataProducer
 from pymediasoup.data_consumer import DataConsumer
@@ -313,12 +313,17 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         produceDataEventNumTimesCalled = 0
 
         @sendTransport.on('producedata')
-        async def on_producedata(payload: OnProduceDataPayload):
+        async def on_producedata(
+            sctpStreamParameters: SctpStreamParameters,
+            label: str,
+            protocol: str,
+            appData: dict
+        ):
             nonlocal produceDataEventNumTimesCalled
             produceDataEventNumTimesCalled += 1
-            self.assertEqual(payload.label, 'FOO')
-            self.assertEqual(payload.protocol, 'BAR')
-            self.assertEqual(payload.appData, {'foo': 'FOO'})
+            self.assertEqual(label, 'FOO')
+            self.assertEqual(protocol, 'BAR')
+            self.assertEqual(appData, {'foo': 'FOO'})
 
             nonlocal dataProducerId
 

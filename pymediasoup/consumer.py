@@ -16,10 +16,6 @@ class ConsumerOptions(BaseModel):
     appData: Optional[dict] = {}
 
 class Consumer(EnhancedEventEmitter):
-    # Closed flag.
-    _closed: bool = False
-    # Observer instance.
-    _observer: AsyncIOEventEmitter = AsyncIOEventEmitter()
     def __init__(
         self,
         id: str,
@@ -32,6 +28,12 @@ class Consumer(EnhancedEventEmitter):
         loop=None
     ):
         super(Consumer, self).__init__(loop=loop)
+
+        # Closed flag.
+        self._closed: bool = False
+        # Observer instance.
+        self._observer: AsyncIOEventEmitter = AsyncIOEventEmitter()
+
         self._id = id
         self._localId = localId
         self._producerId = producerId
@@ -181,15 +183,17 @@ class Consumer(EnhancedEventEmitter):
         
         self._observer.emit('resume')
     
+    def _onTrackEnded(self):
+        logging.debug('track "ended" event')
+        self.emit('trackended')
+        # Emit observer event.
+        self._observer.emit('trackended')
+    
     def _handleTrack(self):
         if not self._track:
             return
 
-        @self._track.on('ended')
-        def on_ended():
-            logging.debug('Consumer track "ended" event')
-            self.emit('trackended')
-            self._observer.emit('trackended')
+        self._track.on('ended', self._onTrackEnded)
     
     def _destroyTrack(self):
         if not self._track:
@@ -197,5 +201,4 @@ class Consumer(EnhancedEventEmitter):
 
         self._track.remove_listener('ended', self._onTrackEnded)
 
-        if self._stopTracks:
-            self._track.stop()
+        self._track.stop()

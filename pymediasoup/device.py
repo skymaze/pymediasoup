@@ -120,7 +120,7 @@ class Device:
         additionalSettings: Optional[dict] = None,
         proprietaryConstraints: Any = None,
         appData: Optional[dict] = {}
-    ):
+    ) -> Transport:
         logging.debug('createSendTransport()')
         return self._createTransport(
             direction='send',
@@ -151,7 +151,7 @@ class Device:
         additionalSettings: Optional[dict] = None,
         proprietaryConstraints: Any = None,
         appData: Optional[dict] = {}
-    ):
+    ) -> Transport:
         logging.debug('createRecvTransport()')
         if isinstance(iceParameters, dict):
             iceParameters: IceParameters = IceParameters(**iceParameters)
@@ -191,7 +191,7 @@ class Device:
         additionalSettings: Optional[dict] = None,
         proprietaryConstraints: Any = None,
         appData: Optional[dict] = {}
-    ):
+    ) -> Transport:
         if not self._loaded:
             raise InvalidStateError('not loaded')
         transport = Transport(options=InternalTransportOptions(

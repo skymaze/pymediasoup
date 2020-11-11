@@ -56,23 +56,23 @@ class MediaSection:
     
     def disable(self):
         self._mediaDict['direction'] = 'inactive'
-        del self._mediaDict['ext']
-        del self._mediaDict['ssrcs']
-        del self._mediaDict['ssrcGroups']
-        del self._mediaDict['simulcast']
-        del self._mediaDict['simulcast_03']
-        del self._mediaDict['rids']
+        self._mediaDict.pop('ext', None)
+        self._mediaDict.pop('ssrcs', None)
+        self._mediaDict.pop('ssrcGroups', None)
+        self._mediaDict.pop('simulcast', None)
+        self._mediaDict.pop('simulcast_03', None)
+        self._mediaDict.pop('rids', None)
     
     def close(self):
         self._mediaDict['direction'] = 'inactive'
         self._mediaDict['port'] = 0
-        del self._mediaDict['ext']
-        del self._mediaDict['ssrcs']
-        del self._mediaDict['ssrcGroups']
-        del self._mediaDict['simulcast']
-        del self._mediaDict['simulcast_03']
-        del self._mediaDict['rids']
-        del self._mediaDict['extmapAllowMixed']
+        self._mediaDict.pop('ext', None)
+        self._mediaDict.pop('ssrcs', None)
+        self._mediaDict.pop('ssrcGroups', None)
+        self._mediaDict.pop('simulcast', None)
+        self._mediaDict.pop('simulcast_03', None)
+        self._mediaDict.pop('rids', None)
+        self._mediaDict.pop('extmapAllowMixed', None)
     
     def setDtlsRole(self, role: str):
         logging.warning('MediaSection setDtlsRole() not implement')

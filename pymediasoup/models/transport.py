@@ -77,9 +77,3 @@ class InternalTransportOptions(TransportOptions):
     handlerFactory: Callable
     extendedRtpCapabilities: Optional[ExtendedRtpCapabilities] = None
     canProduceByKind: Dict[str, bool]
-
-class OnProduceDataPayload(BaseModel):
-    sctpStreamParameters: SctpStreamParameters
-    label: str
-    protocol: str
-    appData: dict = {}

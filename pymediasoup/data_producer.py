@@ -18,11 +18,6 @@ class DataProducerOptions(BaseModel):
     appData: Optional[dict] = {}
 
 class DataProducer(EnhancedEventEmitter):
-    # Closed flag.
-    _closed: bool = False
-    # Observer instance.
-    _observer: AsyncIOEventEmitter = AsyncIOEventEmitter()
-
     def __init__(
         self,
         id: str,
@@ -32,6 +27,12 @@ class DataProducer(EnhancedEventEmitter):
         loop=None
     ):
         super(DataProducer, self).__init__(loop=loop)
+
+        # Closed flag.
+        self._closed: bool = False
+        # Observer instance.
+        self._observer: AsyncIOEventEmitter = AsyncIOEventEmitter()
+
         self._id = id
         self._dataChannel = dataChannel
         self._sctpStreamParameters = sctpStreamParameters

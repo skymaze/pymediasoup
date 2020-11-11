@@ -1,6 +1,6 @@
 import logging
 # logging.basicConfig(level=logging.DEBUG)
-
+import sys
 import json
 import asyncio
 import argparse
@@ -113,7 +113,10 @@ class Demo():
 
     async def run(self):
         self._websocket = await websockets.connect(uri, subprotocols=['protoo'])
-        task_run_recv_msg = asyncio.create_task(self.recv_msg_task())
+        if sys.version_info < (3, 7):
+            task_run_recv_msg = asyncio.ensure_future(self.recv_msg_task())
+        else:
+            task_run_recv_msg = asyncio.create_task(self.recv_msg_task())
         self._tasks.append(task_run_recv_msg)
 
         await self.load()

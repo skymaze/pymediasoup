@@ -1,4 +1,10 @@
-from typing import Optional, List, Any, Literal
+import sys
+if sys.version_info >= (3, 8):
+    from typing import Optional, List, Any, Literal
+else:
+    from typing import Optional, List, Any
+    from typing_extensions import Literal
+
 from pydantic import BaseModel
 
 

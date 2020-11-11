@@ -17,17 +17,20 @@ DESCRIPTION = 'mediasoup python client'
 URL = 'https://github.com/skymaze/pymediasoup'
 EMAIL = 'maze1024@gmail.com'
 AUTHOR = 'Jiang Yue'
-REQUIRES_PYTHON = '>=3.8.0'
+REQUIRES_PYTHON = '>=3.6.12'
 VERSION = '0.1.0'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'pydantic>=1.6.1',
-    'aiortc>=1.0.0',
-    'pyee>=8.0.0',
-    'h264-profile-level-id>=1.0.0',
-    'sdp-transform>=1.0.0'
-]
+        'pydantic>=1.6.1',
+        'aiortc>=1.0.0',
+        'pyee>=8.0.0',
+        'h264-profile-level-id>=1.0.0',
+        'sdp-transform>=1.0.0'
+    ]
+if sys.version_info <= (3, 8):
+    REQUIRED.append('typing_extensions>=3.7.4.3')
+
 
 # What packages are optional?
 EXTRAS = {}

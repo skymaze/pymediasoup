@@ -1,5 +1,11 @@
+import sys
+if sys.version_info >= (3, 8):
+    from typing import Dict, Literal, List, Optional, Any
+else:
+    from typing import Dict, List, Optional, Any
+    from typing_extensions import Literal
+
 import logging
-from typing import Dict, Literal, List, Optional, Any
 from aiortc import RTCIceServer, RTCPeerConnection, RTCSessionDescription, RTCRtpTransceiver, MediaStreamTrack
 import sdp_transform
 from .sdp import common_utils

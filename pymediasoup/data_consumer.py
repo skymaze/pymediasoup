@@ -1,5 +1,11 @@
+import sys
+if sys.version_info >= (3, 8):
+    from typing import Optional, Any, Literal
+else:
+    from typing import Optional, Any
+    from typing_extensions import Literal
+
 import logging
-from typing import Optional, Any, Literal
 from pydantic import BaseModel
 from pyee import AsyncIOEventEmitter
 from aiortc import RTCDataChannel

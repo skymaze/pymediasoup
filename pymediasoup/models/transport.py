@@ -1,4 +1,10 @@
-from typing import Optional, Literal, List, Any, Callable, Dict
+import sys
+if sys.version_info >= (3, 8):
+    from typing import Optional, Literal, List, Any, Callable, Dict
+else:
+    from typing import Optional, List, Any, Callable, Dict
+    from typing_extensions import Literal
+
 from enum import IntEnum
 from aiortc import RTCIceServer
 from pydantic import BaseModel

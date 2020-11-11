@@ -1,5 +1,11 @@
+import sys
+if sys.version_info >= (3, 8):
+    from typing import Optional, Literal, List, Any, Callable, Dict, Union
+else:
+    from typing import Optional, List, Any, Callable, Dict, Union
+    from typing_extensions import Literal
+
 import logging
-from typing import Optional, Literal, List, Any, Callable, Dict, Union
 from pyee import AsyncIOEventEmitter
 from aiortc import RTCIceServer, MediaStreamTrack
 from .ortc import canReceive, generateProbatorRtpParameters, ExtendedRtpCapabilities

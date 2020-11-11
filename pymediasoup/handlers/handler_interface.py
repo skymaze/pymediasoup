@@ -1,4 +1,10 @@
-from typing import Callable, Literal, List, Optional, Any
+import sys
+if sys.version_info >= (3, 8):
+    from typing import Callable, Literal, List, Optional, Any
+else:
+    from typing import Callable, List, Optional, Any
+    from typing_extensions import Literal
+
 from pydantic import BaseModel
 from aiortc import RTCIceServer, MediaStreamTrack
 from ..ortc import ExtendedRtpCapabilities

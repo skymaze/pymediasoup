@@ -1,5 +1,11 @@
+import sys
+if sys.version_info >= (3, 8):
+    from typing import Optional, Dict, Callable, Literal, List, Any, Union
+else:
+    from typing import Optional, Dict, Callable, List, Any, Union
+    from typing_extensions import Literal
+
 import logging
-from typing import Optional, Dict, Callable, Literal, List, Any, Union
 from pyee import AsyncIOEventEmitter
 from aiortc import RTCIceServer
 from .handlers.handler_interface import HandlerInterface

@@ -1,6 +1,12 @@
+import sys
+if sys.version_info >= (3, 8):
+    from typing import List, Optional, Literal
+else:
+    from typing import List, Optional
+    from typing_extensions import Literal
+
 import re
 import logging
-from typing import List, Optional, Literal
 from aiortc import RTCIceParameters, RTCIceCandidate, RTCDtlsParameters
 from ...producer import ProducerCodecOptions
 from ...rtp_parameters import RtpParameters, RtpCodecParameters, RtpEncodingParameters

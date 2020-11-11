@@ -1,5 +1,11 @@
+import sys
+if sys.version_info >= (3, 8):
+    from typing import List, Optional, Literal, Dict
+else:
+    from typing import List, Optional, Dict
+    from typing_extensions import Literal
+
 import logging
-from typing import List, Optional, Literal, Dict
 from pydantic import BaseModel
 from aiortc import RTCIceCandidate
 import sdp_transform

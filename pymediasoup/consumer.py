@@ -112,7 +112,7 @@ class Consumer(EnhancedEventEmitter):
     def observer(self) -> AsyncIOEventEmitter:
         return self._observer
 
-    def close(self):
+    async def close(self):
         if self._closed:
             return
         
@@ -122,11 +122,11 @@ class Consumer(EnhancedEventEmitter):
 
         self._destroyTrack()
 
-        self.emit('@close')
+        await self.emit_for_results('@close')
 
         # Emit observer event.
         self._observer.emit('close')
-    
+  
     # Transport was closed.
     def transportClosed(self):
         if self._closed:

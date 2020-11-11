@@ -67,6 +67,8 @@ class Producer(EnhancedEventEmitter):
         self._zeroRtpOnPause = zeroRtpOnPause
         self._appData = appData
 
+        self._handleTrack()
+
     # Producer id.
     @property
     def id(self) -> str:
@@ -132,7 +134,7 @@ class Producer(EnhancedEventEmitter):
     def observer(self) -> AsyncIOEventEmitter:
         return self._observer
 
-    def close(self):
+    async def close(self):
         if self._closed:
             return
         
@@ -142,7 +144,7 @@ class Producer(EnhancedEventEmitter):
 
         self._destroyTrack()
 
-        self.emit('@close')
+        await self.emit_for_results('@close')
 
         # Emit observer event.
         self._observer.emit('close')
@@ -276,15 +278,16 @@ class Producer(EnhancedEventEmitter):
         
         await self.emit_for_results('@setrtpencodingparameters', params)
     
+    def _onTrackEnded(self):
+            logging.debug('Producer track "ended" event')
+            self.emit('trackended')
+            self._observer.emit('trackended')
+    
     def _handleTrack(self):
         if not self._track:
             return
 
-        @self._track.on('ended')
-        def on_ended():
-            logging.debug('Producer track "ended" event')
-            self.emit('trackended')
-            self._observer.emit('trackended')
+        self._track.on('ended', self._onTrackEnded)
     
     def _destroyTrack(self):
         if not self._track:

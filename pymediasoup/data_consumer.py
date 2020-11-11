@@ -100,7 +100,7 @@ class DataConsumer(EnhancedEventEmitter):
         return self._observer
     
     # Closes the DataConsumer.
-    def close(self):
+    async def close(self):
         if self._closed:
             return
         
@@ -110,7 +110,7 @@ class DataConsumer(EnhancedEventEmitter):
 
         self._dataChannel.close()
 
-        self.emit('@close')
+        await self.emit_for_results('@close')
 
         # Emit observer event.
         self._observer.emit('close')

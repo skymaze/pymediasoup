@@ -101,7 +101,7 @@ class DataProducer(EnhancedEventEmitter):
         return self._observer
     
     # Closes the DataProducer.
-    def close(self):
+    async def close(self):
         if self._closed:
             return
         
@@ -109,9 +109,9 @@ class DataProducer(EnhancedEventEmitter):
 
         self._closed = True
 
-        self._destroyTrack()
+        self._dataChannel.close()
 
-        self.emit('@close')
+        await self.emit_for_results('@close')
 
         # Emit observer event.
         self._observer.emit('close')
@@ -125,7 +125,7 @@ class DataProducer(EnhancedEventEmitter):
 
         self._closed = True
 
-        self._destroyTrack()
+        self._dataChannel.close()
 
         self.emit('transportclose')
 

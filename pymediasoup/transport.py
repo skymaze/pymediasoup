@@ -492,10 +492,10 @@ class Transport(EnhancedEventEmitter):
         
     def _handleDataProducer(self, dataProducer: DataProducer):
         @dataProducer.on('@close')
-        def on_close():
+        async def on_close():
             del self._dataProducers[dataProducer.id]
         
     def _handleDataConsumer(self, dataConsumer: DataConsumer):
         @dataConsumer.on('@close')
-        def on_close():
+        async def on_close():
             del self._dataConsumers[dataConsumer.id]

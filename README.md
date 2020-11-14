@@ -10,5 +10,15 @@ pip3 install pymediasoup
 ## Usage
 PyMediasoup API design is similar to the official [mediasoup-client](https://github.com/versatica/mediasoup-client)
 
+```python
+from pymediasoup import Device
+from pymediasoup import AiortcHandler
+
+# Create a device
+# In order to generate the correct parameters, here should contain all the tracks you want to use
+tracks = []
+device = Device(handlerFactory=AiortcHandler.createFactory(tracks=tracks))
+```
+
 ## LICENSE
 MIT

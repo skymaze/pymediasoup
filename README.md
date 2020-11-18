@@ -1,6 +1,11 @@
 # PyMediasoup
+[![Python](https://img.shields.io/pypi/pyversions/pymediasoup)](https://www.python.org/)
+[![Pypi](https://img.shields.io/pypi/v/pymediasoup)](https://pypi.org/project/pymediasoup/)
+[![License](https://img.shields.io/pypi/l/pymediasoup)](https://github.com/skymaze/pymediasoup/blob/main/LICENSE)
+
 
 [mediasoup](https://mediasoup.org/) python client
+
 
 ## Install
 ```bash

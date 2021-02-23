@@ -79,7 +79,7 @@ class Demo():
                         )
                         response = {
                             'response': True,
-                            'id': message['data']['id'],
+                            'id': message['id'],
                             'ok': True,
                             'data': {}
                         }
@@ -99,6 +99,8 @@ class Demo():
                             'data': {}
                         }
                         await self._websocket.send(json.dumps(response))
+                elif message.get('notification'):
+                    print(message)
 
     # wait for answer ready
     async def wait_answer_ready(self, id):
@@ -139,7 +141,7 @@ class Demo():
             'data': {}
         }
         await self._websocket.send(json.dumps(req))
-        await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=10)
+        await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
         ans = self._answers.get(reqId)
 
         # Load Router RtpCapabilities
@@ -162,7 +164,7 @@ class Demo():
             }
         }
         await self._websocket.send(json.dumps(req))
-        await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=10)
+        await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
         ans = self._answers.get(reqId)
 
         # Create sendTransport
@@ -187,7 +189,7 @@ class Demo():
                 }
             }
             await self._websocket.send(json.dumps(req))
-            await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=10)
+            await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
         
         @self._sendTransport.on('produce')
         async def on_produce(kind: str, rtpParameters, appData: dict):
@@ -204,7 +206,7 @@ class Demo():
                 }
             }
             await self._websocket.send(json.dumps(req))
-            await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=10)
+            await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
             ans = self._answers.get(reqId)
             return ans['data']['id']
 
@@ -230,7 +232,7 @@ class Demo():
                 }
             }
             await self._websocket.send(json.dumps(req))
-            await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=10)
+            await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
             ans = self._answers.get(reqId)
             return ans['data']['id']
 
@@ -255,7 +257,7 @@ class Demo():
             }
         }
         await self._websocket.send(json.dumps(req))
-        await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=10)
+        await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
         ans = self._answers.get(reqId)
 
         # produce
@@ -310,7 +312,7 @@ class Demo():
             }
         }
         await self._websocket.send(json.dumps(req))
-        await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=10)
+        await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
         ans = self._answers.get(reqId)
 
         # Create recvTransport
@@ -335,7 +337,7 @@ class Demo():
                 }
             }
             await self._websocket.send(json.dumps(req))
-            await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=10)
+            await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
         
     async def consume(self, id, producerId, kind, rtpParameters):
         if self._recvTransport == None:

@@ -156,6 +156,8 @@ class AnswerMediaSection(MediaSection):
                                         codecParameters['usedtx'] = 1 if codecOptions.opusDtx else 0
                                     if codecOptions.opusMaxPlaybackRate != None:
                                         codecParameters['maxplaybackrate'] = codecOptions.opusMaxPlaybackRate
+                                    if codecOptions.opusMaxAverageBitrate != None:
+                                        codecParameters['maxaveragebitrate'] = codecOptions.opusMaxAverageBitrate
                                     if codecOptions.opusPtime != None:
                                         offerCodec.parameters['ptime'] = codecOptions.opusPtime
                                         codecParameters['ptime'] = codecOptions.opusPtime

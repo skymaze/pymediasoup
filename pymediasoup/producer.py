@@ -14,6 +14,7 @@ class ProducerCodecOptions(BaseModel):
     opusFec: Optional[bool]
     opusDtx: Optional[bool]
     opusMaxPlaybackRate: Optional[int]
+    opusMaxAverageBitrate: Optional[int]
     opusPtime: Optional[int]
     videoGoogleStartBitrate: Optional[int]
     videoGoogleMaxBitrate: Optional[int]

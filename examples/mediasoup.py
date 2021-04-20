@@ -1,11 +1,10 @@
-import logging
-# logging.basicConfig(level=logging.DEBUG)
 import sys
 import json
 import asyncio
 import argparse
 import secrets
-from typing import Optional, List
+from typing import Optional, Dict, Awaitable, Any, TypeVar
+from asyncio.futures import Future
 
 from pymediasoup import Device
 from pymediasoup import AiortcHandler
@@ -25,13 +24,20 @@ from aiortc.contrib.media import MediaPlayer, MediaBlackhole, MediaRecorder
 import websockets
 from random import random
 
+T = TypeVar("T")
 class Demo():
-    def __init__(self, uri, player=None, recorder=MediaBlackhole()):
+    def __init__(self, uri, player=None, recorder=MediaBlackhole(), loop=None):
+        if not loop:
+            if sys.version_info.major == 3 and sys.version_info.minor == 6:
+                loop = asyncio.get_event_loop()
+            else:
+                loop = asyncio.get_running_loop()
+        self._loop = loop
         self._uri = uri
         self._player = player
         self._recorder = recorder
         # Save answers temporarily
-        self._answers = {}
+        self._answers: Dict[str, Future] = {}
         self._websocket = None
         self._device = None
 
@@ -68,7 +74,7 @@ class Demo():
                 message = json.loads(await self._websocket.recv())
                 if message.get('response'):
                     if message.get('id') != None:
-                        self._answers[message.get('id')] = message
+                        self._answers[message.get('id')].set_result(message)
                 elif message.get('request'):
                     if message.get('method') == 'newConsumer':
                         await self.consume(
@@ -102,12 +108,18 @@ class Demo():
                 elif message.get('notification'):
                     print(message)
 
-    # wait for answer ready
-    async def wait_answer_ready(self, id):
-        while True:
-            await asyncio.sleep(0.5)
-            if self._answers.get(id) != None:
-                break
+    # wait for answer ready        
+    async def _wait_for(
+        self, fut: Awaitable[T], timeout: Optional[float], **kwargs: Any
+    ) -> T:
+        try:
+            return await asyncio.wait_for(fut, timeout=timeout, **kwargs)
+        except asyncio.TimeoutError:
+            raise Exception("Operation timed out")
+
+    async def _send_request(self, request):
+        self._answers[request['id']] = self._loop.create_future()
+        await self._websocket.send(json.dumps(request))
 
     # Generates a random positive integer.
     def generateRandomNumber(self) -> int:
@@ -140,9 +152,8 @@ class Demo():
             'method': 'getRouterRtpCapabilities',
             'data': {}
         }
-        await self._websocket.send(json.dumps(req))
-        await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
-        ans = self._answers.get(reqId)
+        await self._send_request(req)
+        ans = await self._wait_for(self._answers[reqId], timeout=15)
 
         # Load Router RtpCapabilities
         await self._device.load(ans['data'])
@@ -163,9 +174,8 @@ class Demo():
                 'sctpCapabilities': self._device.sctpCapabilities.dict()
             }
         }
-        await self._websocket.send(json.dumps(req))
-        await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
-        ans = self._answers.get(reqId)
+        await self._send_request(req)
+        ans = await self._wait_for(self._answers[reqId], timeout=15)
 
         # Create sendTransport
         self._sendTransport = self._device.createSendTransport(
@@ -188,8 +198,8 @@ class Demo():
                     "dtlsParameters": dtlsParameters.dict(exclude_none=True)
                 }
             }
-            await self._websocket.send(json.dumps(req))
-            await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
+            await self._send_request(req)
+            ans = await self._wait_for(self._answers[reqId], timeout=15)
         
         @self._sendTransport.on('produce')
         async def on_produce(kind: str, rtpParameters, appData: dict):
@@ -205,9 +215,8 @@ class Demo():
                     'appData': appData
                 }
             }
-            await self._websocket.send(json.dumps(req))
-            await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
-            ans = self._answers.get(reqId)
+            await self._send_request(req)
+            ans = await self._wait_for(self._answers[reqId], timeout=15)
             return ans['data']['id']
 
         @self._sendTransport.on('producedata')
@@ -231,9 +240,8 @@ class Demo():
                     'appData': appData
                 }
             }
-            await self._websocket.send(json.dumps(req))
-            await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
-            ans = self._answers.get(reqId)
+            await self._send_request(req)
+            ans = await self._wait_for(self._answers[reqId], timeout=15)
             return ans['data']['id']
 
     async def produce(self):
@@ -256,9 +264,8 @@ class Demo():
                 "sctpCapabilities": self._device.sctpCapabilities.dict(exclude_none=True)
             }
         }
-        await self._websocket.send(json.dumps(req))
-        await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
-        ans = self._answers.get(reqId)
+        await self._send_request(req)
+        ans = await self._wait_for(self._answers[reqId], timeout=15)
 
         # produce
         videoProducer: Producer = await self._sendTransport.produce(
@@ -311,9 +318,8 @@ class Demo():
                 'sctpCapabilities': self._device.sctpCapabilities.dict()
             }
         }
-        await self._websocket.send(json.dumps(req))
-        await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
-        ans = self._answers.get(reqId)
+        await self._send_request(req)
+        ans = await self._wait_for(self._answers[reqId], timeout=15)
 
         # Create recvTransport
         self._recvTransport = self._device.createRecvTransport(
@@ -336,8 +342,8 @@ class Demo():
                     "dtlsParameters": dtlsParameters.dict(exclude_none=True)
                 }
             }
-            await self._websocket.send(json.dumps(req))
-            await asyncio.wait_for(self.wait_answer_ready(reqId), timeout=15)
+            await self._send_request(req)
+            ans = await self._wait_for(self._answers[reqId], timeout=15)
         
     async def consume(self, id, producerId, kind, rtpParameters):
         if self._recvTransport == None:
@@ -408,7 +414,7 @@ if __name__ == "__main__":
     # run event loop
     loop = asyncio.get_event_loop()
     try:
-        demo = Demo(uri=uri, player=player, recorder=recorder)
+        demo = Demo(uri=uri, player=player, recorder=recorder, loop=loop)
         loop.run_until_complete(demo.run())
     except KeyboardInterrupt:
         pass

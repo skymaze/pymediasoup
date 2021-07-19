@@ -1,4 +1,5 @@
 import sys
+
 if sys.version_info >= (3, 8):
     from typing import Optional, List, Any, Literal
 else:
@@ -9,7 +10,7 @@ from pydantic import BaseModel
 
 
 # Media kind ('audio' or 'video').
-MediaKind = Literal['audio', 'video']
+MediaKind = Literal["audio", "video"]
 
 # Provides information on RTCP feedback messages for a specific codec. Those
 # messages can be transport layer feedback messages or codec-specific feedback
@@ -17,7 +18,8 @@ MediaKind = Literal['audio', 'video']
 # supportedRtpCapabilities.ts file.
 class RtcpFeedback(BaseModel):
     type: str
-    parameter: str = ''
+    parameter: str = ""
+
 
 class Codec(BaseModel):
     # The codec MIME media type/subtype (e.g. 'audio/opus', 'video/VP8').
@@ -25,16 +27,18 @@ class Codec(BaseModel):
     # Codec clock rate expressed in Hertz.
     clockRate: int
     # The number of channels supported (e.g. two for stereo). Just for audio.
-	# Default 1.
+    # Default 1.
     channels: Optional[int] = None
     # Transport layer and codec-specific feedback messages for this codec.
     rtcpFeedback: List[RtcpFeedback] = []
+
 
 class RtpCodec(Codec):
     # Codec specific parameters. Some parameters (such as 'packetization-mode'
     # and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
     # codec matching.
     parameters: dict = {}
+
 
 class ExtendedCodec(Codec):
     kind: MediaKind
@@ -44,6 +48,7 @@ class ExtendedCodec(Codec):
     remoteRtxPayloadType: Optional[int]
     localParameters: dict = {}
     remoteParameters: dict = {}
+
 
 # Provides information on the capabilities of a codec within the RTP
 # capabilities. The list of media codecs supported by mediasoup and their
@@ -66,12 +71,14 @@ class RtpCodecCapability(RtpCodec):
     # The preferred RTP payload type.
     preferredPayloadType: Optional[int]
 
+
 # Provides information on codec settings within the RTP parameters. The list
 # of media codecs supported by mediasoup and their settings is defined in the
 # supportedRtpCapabilities.ts file.
 class RtpCodecParameters(RtpCodec):
     # The value that goes in the RTP Payload Type Field. Must be unique.
     payloadType: int
+
 
 # Provides information relating to supported header extensions. The list of
 # RTP header extensions supported by mediasoup is defined in the
@@ -83,20 +90,23 @@ class RtpCodecParameters(RtpCodec):
 # ignored if present in endpoints' RTP capabilities.
 class RtpHeaderExtension(BaseModel):
     # Media kind. If empty string, it's valid for all kinds.
-	# Default any media kind.
+    # Default any media kind.
     kind: Optional[MediaKind] = None
     # The URI of the RTP header extension, as defined in RFC 5285.
     uri: str
     # The preferred numeric identifier that goes in the RTP packet. Must be
-	# unique.
+    # unique.
     preferredId: int
     # If True, it is preferred that the value in the header be encrypted as per
-	# RFC 6904. Default False.
+    # RFC 6904. Default False.
     preferredEncrypt: Optional[bool] = False
     # If 'sendrecv', mediasoup supports sending and receiving this RTP extension.
-	# 'sendonly' means that mediasoup can send (but not receive) it. 'recvonly'
-	# means that mediasoup can receive (but not send) it.
-    direction: Optional[Literal['sendrecv', 'sendonly', 'recvonly', 'inactive']] = 'sendrecv'
+    # 'sendonly' means that mediasoup can send (but not receive) it. 'recvonly'
+    # means that mediasoup can receive (but not send) it.
+    direction: Optional[
+        Literal["sendrecv", "sendonly", "recvonly", "inactive"]
+    ] = "sendrecv"
+
 
 class ExtendedHeaderExtension(BaseModel):
     kind: Optional[MediaKind] = None
@@ -104,7 +114,10 @@ class ExtendedHeaderExtension(BaseModel):
     sendId: int
     recvId: int
     encrypt: bool
-    direction: Optional[Literal['sendrecv', 'sendonly', 'recvonly', 'inactive']] = 'sendrecv'
+    direction: Optional[
+        Literal["sendrecv", "sendonly", "recvonly", "inactive"]
+    ] = "sendrecv"
+
 
 # The RTP capabilities define what mediasoup or an endpoint can receive at
 # media level.
@@ -116,8 +129,10 @@ class RtpCapabilities(BaseModel):
     # Supported FEC mechanisms.
     fecMechanisms: List[str] = []
 
+
 class RTX(BaseModel):
     ssrc: int
+
 
 # Provides information relating to an encoding, which represents a media RTP
 # stream and its associated RTX stream (if any).
@@ -127,26 +142,27 @@ class RtpEncodingParameters(BaseModel):
     # The RID RTP extension value. Must be unique.
     rid: Optional[str]
     # Codec payload type this encoding affects. If unset, first media codec is
-	# chosen.
+    # chosen.
     codecPayloadType: Optional[int]
     # RTX stream information. It must contain a numeric ssrc field indicating
-	# the RTX SSRC.
+    # the RTX SSRC.
     rtx: Optional[RTX]
     # It indicates whether discontinuous RTP transmission will be used. Useful
-	# for audio (if the codec supports it) and for video screen sharing (when
-	# static content is being transmitted, this option disables the RTP
-	# inactivity checks in mediasoup). Default False.
+    # for audio (if the codec supports it) and for video screen sharing (when
+    # static content is being transmitted, this option disables the RTP
+    # inactivity checks in mediasoup). Default False.
     dtx: Optional[bool] = False
     # Number of spatial and temporal layers in the RTP stream (e.g. 'L1T3').
-	# See webrtc-svc.
+    # See webrtc-svc.
     scalabilityMode: Optional[str]
     # Others.
     scaleResolutionDownBy: Optional[int]
     maxBitrate: Optional[int]
     maxFramerate: Optional[int]
     adaptivePtime: Optional[bool]
-    priority: Optional[Literal['very-low','low','medium','high']]
-    networkPriority: Optional[Literal['very-low','low','medium','high']]
+    priority: Optional[Literal["very-low", "low", "medium", "high"]]
+    networkPriority: Optional[Literal["very-low", "low", "medium", "high"]]
+
 
 # Defines a RTP header extension within the RTP parameters. The list of RTP
 # header extensions supported by mediasoup is defined in the
@@ -164,14 +180,16 @@ class RtpHeaderExtensionParameters(BaseModel):
     # Configuration parameters for the header extension.
     parameters: Optional[dict] = {}
 
+
 class RtcpParameters(BaseModel):
     # The Canonical Name (CNAME) used by RTCP (e.g. in SDES messages).
     cname: Optional[str]
     # Whether reduced size RTCP RFC 5506 is configured (if True) or compound RTCP
-	# as specified in RFC 3550 (if False). Default True.
+    # as specified in RFC 3550 (if False). Default True.
     reducedSize: Optional[bool] = True
     # Whether RTCP-mux is used. Default True.
     mux: Optional[bool]
+
 
 # The RTP send parameters describe a media stream received by mediasoup from
 # an endpoint through its corresponding mediasoup Producer. These parameters
@@ -213,7 +231,8 @@ class RtpParameters(BaseModel):
     encodings: List[RtpEncodingParameters] = []
     # Parameters used for RTCP.
     rtcp: Optional[RtcpParameters]
-    
+
+
 class ExtendedRtpCapabilities(BaseModel):
     codecs: List[ExtendedCodec] = []
     headerExtensions: List[ExtendedHeaderExtension] = []

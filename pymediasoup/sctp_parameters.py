@@ -1,4 +1,5 @@
 import sys
+
 if sys.version_info >= (3, 8):
     from typing import Optional, Literal
 else:
@@ -14,8 +15,10 @@ class NumSctpStreams(BaseModel):
     # Maximum number of incoming SCTP streams.
     MIS: int
 
+
 class SctpCapabilities(BaseModel):
     numStreams: NumSctpStreams
+
 
 class SctpParameters(BaseModel):
     # Must always equal 5000.
@@ -27,6 +30,7 @@ class SctpParameters(BaseModel):
     # Maximum allowed size for SCTP messages.
     maxMessageSize: int
 
+
 # SCTP stream parameters describe the reliability of a certain SCTP stream.
 # If ordered is True then maxPacketLifeTime and maxRetransmits must be
 # False.
@@ -36,16 +40,16 @@ class SctpStreamParameters(BaseModel):
     # SCTP stream id.
     streamId: Optional[int]
     # Whether data messages must be received in order. if True the messages will
-	# be sent reliably. Default True.
+    # be sent reliably. Default True.
     ordered: Optional[bool] = True
     # When ordered is False indicates the time (in milliseconds) after which a
-	# SCTP packet will stop being retransmitted.
+    # SCTP packet will stop being retransmitted.
     maxPacketLifeTime: Optional[int]
     # When ordered is False indicates the maximum number of times a packet will
-	# be retransmitted.
+    # be retransmitted.
     maxRetransmits: Optional[int]
     # DataChannel priority.
-    priority: Optional[Literal['very-low','low','medium','high']]
+    priority: Optional[Literal["very-low", "low", "medium", "high"]]
     # A label which can be used to distinguish this DataChannel from others.
     label: Optional[str]
     # Name of the sub-protocol used by this DataChannel.

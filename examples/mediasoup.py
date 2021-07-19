@@ -39,7 +39,7 @@ class Demo:
         self._player = player
         self._recorder = recorder
         # Save answers temporarily
-        self._answers: Dict[str, Future] = {}
+        self._answers: Dict[int, Future] = {}
         self._websocket = None
         self._device = None
 

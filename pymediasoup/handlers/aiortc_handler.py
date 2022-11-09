@@ -362,7 +362,6 @@ class AiortcHandler(HandlerInterface):
         ordered: Optional[bool]=True,
         maxPacketLifeTime: Optional[int]=None,
         maxRetransmits: Optional[int]=None,
-        priority: Optional[Literal['very-low','low','medium','high']]=None,
         label: Optional[str]=None,
         protocol: Optional[str]=None
     ) -> HandlerSendDataChannelResult:
@@ -373,7 +372,6 @@ class AiortcHandler(HandlerInterface):
             ordered=ordered,
             maxPacketLifeTime=maxPacketLifeTime,
             maxRetransmits=maxRetransmits,
-            priority=priority,
             label=label,
             protocol=protocol
         )

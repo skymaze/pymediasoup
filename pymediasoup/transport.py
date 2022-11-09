@@ -328,7 +328,6 @@ class Transport(EnhancedEventEmitter):
         ordered: Optional[bool]=None,
         maxPacketLifeTime: Optional[int]=None,
         maxRetransmits: Optional[int]=None,
-        priority: Optional[Literal['very-low','low','medium','high']]=None,
         label: Optional[str]=None,
         protocol: Optional[str]=None,
         appData: Optional[dict] = {}
@@ -337,7 +336,6 @@ class Transport(EnhancedEventEmitter):
             ordered=ordered,
             maxPacketLifeTime=maxPacketLifeTime,
             maxRetransmits=maxRetransmits,
-            priority=priority,
             label=label,
             protocol=protocol,
             appData=appData
@@ -363,7 +361,6 @@ class Transport(EnhancedEventEmitter):
             ordered=options.ordered,
             maxPacketLifeTime=options.maxPacketLifeTime,
             maxRetransmits=options.maxRetransmits,
-            priority=options.priority,
             label=options.label,
             protocol=options.protocol
         )

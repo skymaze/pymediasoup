@@ -93,7 +93,6 @@ class HandlerInterface(EnhancedEventEmitter):
         ordered: Optional[bool]=True,
         maxPacketLifeTime: Optional[int]=None,
         maxRetransmits: Optional[int]=None,
-        priority: Optional[Literal['very-low','low','medium','high']]=None,
         label: Optional[str]=None,
         protocol: Optional[str]=None
     ) -> HandlerSendDataChannelResult:

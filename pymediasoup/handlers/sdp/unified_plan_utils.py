@@ -57,7 +57,6 @@ def addLegacySimulcast(offerMediaDict: dict, numStreams: int):
     
     ssrcMsidLine = ssrcMsidLines[0]
 
-    # NOTE: const [ streamId, trackId ] = ssrcMsidLine.value.split(' ')[0];
     streamId, trackId = ssrcMsidLine.get('value').split(' ')
     firstSsrc = ssrcMsidLine.get('id')
 

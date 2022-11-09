@@ -255,7 +255,7 @@ class RemoteSdp:
             self._mediaSections[idx] = newMediaSection
             # Update the map.
             del self._midToIndex[oldMediaSection.mid]
-            self._midToIndex[newMediaSection.mid] =idx
+            self._midToIndex[newMediaSection.mid] = idx
             # Update the SDP object.
             self._sdpDict['media'][idx] = newMediaSection.getDict()
             # Regenerate BUNDLE mids.

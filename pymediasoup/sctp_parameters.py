@@ -44,8 +44,6 @@ class SctpStreamParameters(BaseModel):
     # When ordered is False indicates the maximum number of times a packet will
 	# be retransmitted.
     maxRetransmits: Optional[int]
-    # DataChannel priority.
-    priority: Optional[Literal['very-low','low','medium','high']]
     # A label which can be used to distinguish this DataChannel from others.
     label: Optional[str]
     # Name of the sub-protocol used by this DataChannel.

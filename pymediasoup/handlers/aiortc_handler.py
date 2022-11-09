@@ -322,6 +322,7 @@ class AiortcHandler(HandlerInterface):
         # )
         # logging.debug(f'stopSending() | calling pc.setRemoteDescription() [answer:{answer}]')
         # await self._pc.setRemoteDescription(answer)
+        # self._mapMidTransceiver.pop(localId, None)
     
     async def replaceTrack(self, localId, track=None):
         self._assertSendDirection()
@@ -487,6 +488,7 @@ class AiortcHandler(HandlerInterface):
         answer = await self.pc.createAnswer()
         logging.debug(f'stopReceiving() | calling pc.setLocalDescription() [answer:{answer}]')
         await self.pc.setLocalDescription(answer)
+        self._mapMidTransceiver.pop(localId, None)
     
     async def getReceiverStats(self, localId: str):
         self._assertRecvDirection()

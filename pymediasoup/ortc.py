@@ -158,7 +158,17 @@ def getExtendedRtpCapabilities(localCaps: RtpCapabilities, remoteCaps: RtpCapabi
 def getRecvRtpCapabilities(extendedRtpCapabilities: ExtendedRtpCapabilities) -> RtpCapabilities:
     rtpCapabilities: RtpCapabilities = RtpCapabilities()
     for extendedCodec in extendedRtpCapabilities.codecs:
-        codec: RtpCodecCapability = RtpCodecCapability(**extendedCodec.dict())
+
+        codec: RtpCodecCapability = RtpCodecCapability(
+            mimeType=extendedCodec.mimeType,
+            kind=extendedCodec.kind,
+            preferredPayloadType=extendedCodec.remotePayloadType,
+            clockRate=extendedCodec.clockRate,
+            channels=extendedCodec.channels,
+            parameters=extendedCodec.localParameters,
+            rtcpFeedback=extendedCodec.rtcpFeedback
+        )
+
         rtpCapabilities.codecs.append(codec)
 
         # Add RTX codec.

@@ -16,6 +16,10 @@ from .errors import InvalidStateError
 from .transport import InternalTransportOptions, Transport
 from .models.transport import IceParameters, IceCandidate, DtlsParameters
 
+
+logger = logging.getLogger(__name__)
+
+
 class Device:
     def __init__(self, handlerFactory):
         self._observer: AsyncIOEventEmitter = AsyncIOEventEmitter()
@@ -72,31 +76,31 @@ class Device:
     
     # Initialize the Device.
     async def load(self, routerRtpCapabilities: Union[RtpCapabilities, dict]):
-        logging.debug(f'Device load() [routerRtpCapabilities:{routerRtpCapabilities}]')
+        logger.debug(f'Device load() [routerRtpCapabilities:{routerRtpCapabilities}]')
         if isinstance(routerRtpCapabilities, dict):
             routerRtpCapabilities:RtpCapabilities = RtpCapabilities(**routerRtpCapabilities)
         else:
             routerRtpCapabilities:RtpCapabilities = routerRtpCapabilities.copy(deep=True)
         # Temporal handler to get its capabilities.
         if self._loaded:
-            logging.warning('already loaded')
+            logger.warning('already loaded')
             return
         handler: HandlerInterface = self._handlerFactory()
         nativeRtpCapabilities = await handler.getNativeRtpCapabilities()
-        logging.debug(f'Device load() | got native RTP capabilities:{nativeRtpCapabilities}')
+        logger.debug(f'Device load() | got native RTP capabilities:{nativeRtpCapabilities}')
         # Get extended RTP capabilities.
         self._extendedRtpCapabilities = getExtendedRtpCapabilities(nativeRtpCapabilities, routerRtpCapabilities)
-        logging.debug(f'Device load() | got extended RTP capabilities:{self._extendedRtpCapabilities}')
+        logger.debug(f'Device load() | got extended RTP capabilities:{self._extendedRtpCapabilities}')
         # Check whether we can produce audio/video.
         self._canProduceByKind['audio'] = canSend('audio', self._extendedRtpCapabilities)
         self._canProduceByKind['video'] = canSend('video', self._extendedRtpCapabilities)
         # Generate our receiving RTP capabilities for receiving media.
         self._recvRtpCapabilities = getRecvRtpCapabilities(self._extendedRtpCapabilities)
-        logging.debug(f'Device load() | got receiving RTP capabilities:{self._recvRtpCapabilities}')
+        logger.debug(f'Device load() | got receiving RTP capabilities:{self._recvRtpCapabilities}')
         # Generate our SCTP capabilities.
         self._sctpCapabilities = await handler.getNativeSctpCapabilities()
-        logging.debug(f'Device load() | got native SCTP capabilities:{self._sctpCapabilities}')
-        logging.debug('Device load() succeeded')
+        logger.debug(f'Device load() | got native SCTP capabilities:{self._sctpCapabilities}')
+        logger.debug('Device load() succeeded')
         self._loaded = True
         self._handlerName = handler.name
         await handler.close()
@@ -127,7 +131,7 @@ class Device:
         proprietaryConstraints: Any = None,
         appData: Optional[dict] = {}
     ) -> Transport:
-        logging.debug('createSendTransport()')
+        logger.debug('createSendTransport()')
         return self._createTransport(
             direction='send',
             id=id,
@@ -158,7 +162,7 @@ class Device:
         proprietaryConstraints: Any = None,
         appData: Optional[dict] = {}
     ) -> Transport:
-        logging.debug('createRecvTransport()')
+        logger.debug('createRecvTransport()')
         if isinstance(iceParameters, dict):
             iceParameters: IceParameters = IceParameters(**iceParameters)
         

@@ -22,6 +22,9 @@ from .producer import ProducerCodecOptions
 from .rtp_parameters import RtpParameters, RtpCodecCapability, RtpEncodingParameters, MediaKind
 
 
+logger = logging.getLogger(__name__)
+
+
 class Transport(EnhancedEventEmitter):
     def __init__(
         self,
@@ -30,7 +33,7 @@ class Transport(EnhancedEventEmitter):
     ):
         super(Transport, self).__init__(loop=loop)
 
-        logging.debug(f'constructor() [id:{options.id}, direction:{options.direction}]')
+        logger.debug(f'constructor() [id:{options.id}, direction:{options.direction}]')
 
         # Closed flag.
         self._closed: bool = False
@@ -143,7 +146,7 @@ class Transport(EnhancedEventEmitter):
         if self._closed:
             return
         
-        logging.debug('Transport close()')
+        logger.debug('Transport close()')
 
         self._closed = True
 
@@ -203,7 +206,7 @@ class Transport(EnhancedEventEmitter):
             zeroRtpOnPause=zeroRtpOnPause,
             appData=appData
         )
-        logging.debug(f'Transport produce() [track:{options.track}]')
+        logger.debug(f'Transport produce() [track:{options.track}]')
         if not options.track:
             raise TypeError('missing track')
         elif self._direction != 'send':
@@ -273,7 +276,7 @@ class Transport(EnhancedEventEmitter):
             rtpParameters=rtpParameters,
             appData=appData
         )
-        logging.debug('Transport consume()')
+        logger.debug('Transport consume()')
         rtpParameters:  RtpParameters = options.rtpParameters.copy(deep=True)
         if self._closed:
             raise InvalidStateError('closed')
@@ -314,7 +317,7 @@ class Transport(EnhancedEventEmitter):
                 rtpParameters=probatorRtpParameters
             )
 
-            logging.debug('Transport consume() | Consumer for RTP probation created')
+            logger.debug('Transport consume() | Consumer for RTP probation created')
 
             self._probatorConsumerCreated = True
         
@@ -340,7 +343,7 @@ class Transport(EnhancedEventEmitter):
             protocol=protocol,
             appData=appData
         )
-        logging.debug('Transport produceData()')
+        logger.debug('Transport produceData()')
         if self._direction != 'send':
             raise UnsupportedError('not a sending Transport')
 
@@ -406,7 +409,7 @@ class Transport(EnhancedEventEmitter):
             protocol=protocol,
             appData=appData
         )
-        logging.debug('Transport consumeData()')
+        logger.debug('Transport consumeData()')
         if self._closed:
             raise InvalidStateError('closed')
         elif self._direction != 'recv':

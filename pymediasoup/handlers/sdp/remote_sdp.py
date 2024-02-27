@@ -16,6 +16,9 @@ from ...rtp_parameters import MediaKind, RtpParameters
 from ...sctp_parameters import SctpParameters
 
 
+logger = logging.getLogger(__name__)
+
+
 class MediaSectionIdx(BaseModel):
     idx: int
     reuseMid: Optional[str]
@@ -83,12 +86,12 @@ class RemoteSdp:
             self._sdpDict['origin']['ipVer'] = plainRtpParameters.ipVersion
     
     def updateIceParameters(self, iceParameters: IceParameters):
-        logging.debug(f'updateIceParameters() [iceParameters:{iceParameters}]')
+        logger.debug(f'updateIceParameters() [iceParameters:{iceParameters}]')
         self._iceParameters = iceParameters
         self._sdpDict['icelite'] = 'ice-lite' if iceParameters.iceLite else None
     
     def updateDtlsRole(self, role: DtlsRole):
-        logging.debug(f'updateDtlsRole() [role:{role}]')
+        logger.debug(f'updateDtlsRole() [role:{role}]')
         if self._dtlsParameters:
             self._dtlsParameters.role = role
             for mediaSection in self._mediaSections:
@@ -98,10 +101,10 @@ class RemoteSdp:
         # If a closed media section is found, return its index.
         for idx, mediaSection in enumerate(self._mediaSections):
             if mediaSection.closed:
-                logging.debug(f'remoteSdp | getNextMediaSectionIdx() Closed media sections found { mediaSection}')
+                logger.debug(f'remoteSdp | getNextMediaSectionIdx() Closed media sections found { mediaSection}')
                 return MediaSectionIdx(idx=idx, reuseMid=mediaSection.mid)
         # If no closed media section is found, return next one.
-        logging.debug(f'remoteSdp | getNextMediaSectionIdx() No closed media sections found, return next {len(self._mediaSections)}')
+        logger.debug(f'remoteSdp | getNextMediaSectionIdx() No closed media sections found, return next {len(self._mediaSections)}')
         return MediaSectionIdx(idx=len(self._mediaSections))
     
     def send(
@@ -113,7 +116,7 @@ class RemoteSdp:
         reuseMid: Optional[str]=None,
         extmapAllowMixed = False
     ):
-        logging.debug(f'remoteSdp | send() offerMediaDict {offerMediaDict}')
+        logger.debug(f'remoteSdp | send() offerMediaDict {offerMediaDict}')
         mediaSection = AnswerMediaSection(
             sctpParameters=self._sctpParameters,
             iceParameters=self._iceParameters,
@@ -188,7 +191,7 @@ class RemoteSdp:
         # NOTE: Closing the first m section is a pain since it invalidates the
         # bundled transport, so let's avoid it.
         if mid == self._firstMid:
-            logging.debug(f'closeMediaSection() | cannot close first media section, disabling it instead [mid:{mid}]')
+            logger.debug(f'closeMediaSection() | cannot close first media section, disabling it instead [mid:{mid}]')
             self.disableMediaSection(mid)
             return
         mediaSection.close()

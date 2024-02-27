@@ -14,6 +14,9 @@ from ...sctp_parameters import SctpParameters
 from ...models.transport import PlainRtpParameters, IceCandidate
 
 
+logger = logging.getLogger(__name__)
+
+
 def getCodecName(codec: RtpCodecParameters):
     pattern = re.compile(r'^(audio|video)/(.+)', re.I)
     match = pattern.match(codec.mimeType)
@@ -81,13 +84,13 @@ class MediaSection:
         self._mediaDict.pop('extmapAllowMixed', None)
     
     def setDtlsRole(self, role: str):
-        logging.warning('MediaSection setDtlsRole() not implement')
+        logger.warning('MediaSection setDtlsRole() not implement')
 
     def planBReceive(self, offerRtpParameters: RtpParameters, streamId: str, trackId: str):
-        logging.warning('MediaSection planBReceive() not implement')
+        logger.warning('MediaSection planBReceive() not implement')
     
     def planBStopReceiving(self, offerRtpParameters: RtpParameters):
-        logging.warning('MediaSection planBStopReceiving() not implement')
+        logger.warning('MediaSection planBStopReceiving() not implement')
     
 class AnswerMediaSection(MediaSection):
     def __init__(

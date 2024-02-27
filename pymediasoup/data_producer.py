@@ -14,6 +14,9 @@ from .emitter import EnhancedEventEmitter
 from .sctp_parameters import SctpStreamParameters
 
 
+logger = logging.getLogger(__name__)
+
+
 class DataProducerOptions(BaseModel):
     ordered: Optional[bool]
     maxPacketLifeTime: Optional[int]
@@ -110,7 +113,7 @@ class DataProducer(EnhancedEventEmitter):
         if self._closed:
             return
         
-        logging.debug('DataProducer close()')
+        logger.debug('DataProducer close()')
 
         self._closed = True
 
@@ -126,7 +129,7 @@ class DataProducer(EnhancedEventEmitter):
         if self._closed:
             return
 
-        logging.debug('DataProducer transportClosed()')
+        logger.debug('DataProducer transportClosed()')
 
         self._closed = True
 
@@ -138,7 +141,7 @@ class DataProducer(EnhancedEventEmitter):
     
     # Send a message.
     def send(self, data: Union[bytes, str]):
-        logging.debug('DataProducer send()')
+        logger.debug('DataProducer send()')
 
         if self._closed:
             raise InvalidStateError('closed')
@@ -151,7 +154,7 @@ class DataProducer(EnhancedEventEmitter):
             if self._closed:
                 return
             
-            logging.debug('DataProducer DataChannel "open" event')
+            logger.debug('DataProducer DataChannel "open" event')
 
             self.emit('open')
 
@@ -161,7 +164,7 @@ class DataProducer(EnhancedEventEmitter):
             if self._closed:
                 return
 
-            logging.error(f'DataProducer DataChannel "error" event: {message}')
+            logger.error(f'DataProducer DataChannel "error" event: {message}')
             
             self.emit('error', message)
 
@@ -169,7 +172,7 @@ class DataProducer(EnhancedEventEmitter):
         def on_close():
             if self._closed:
                 return
-            logging.warning('DataProducer DataChannel "close" event')
+            logger.warning('DataProducer DataChannel "close" event')
             self._closed = True
             self.emit('@close')
             self._observer.emit('close')
@@ -178,7 +181,7 @@ class DataProducer(EnhancedEventEmitter):
         def on_message(message):
             if self._closed:
                 return
-            logging.warning(f'DataProducer DataChannel "message" event in a DataProducer, message discarded: {message}')
+            logger.warning(f'DataProducer DataChannel "message" event in a DataProducer, message discarded: {message}')
 
         @self._dataChannel.on('bufferedamountlow')
         def on_bufferedamountlow():

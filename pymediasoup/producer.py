@@ -8,6 +8,9 @@ from .errors import InvalidStateError, UnsupportedError
 from .rtp_parameters import RtpParameters, RtpCodecCapability, RtpEncodingParameters
 
 
+logger = logging.getLogger(__name__)
+
+
 # https://mediasoup.org/documentation/v3/mediasoup-client/api/#ProducerCodecOptions
 class ProducerCodecOptions(BaseModel):
     opusStereo: Optional[bool]
@@ -139,7 +142,7 @@ class Producer(EnhancedEventEmitter):
         if self._closed:
             return
         
-        logging.debug('Producer close()')
+        logger.debug('Producer close()')
 
         self._closed = True
 
@@ -155,7 +158,7 @@ class Producer(EnhancedEventEmitter):
         if self._closed:
             return
 
-        logging.debug('Producer transportClosed()')
+        logger.debug('Producer transportClosed()')
 
         self._closed = True
 
@@ -174,11 +177,11 @@ class Producer(EnhancedEventEmitter):
     
     # Pauses sending media.
     def pause(self):
-        logging.warning("Producer pause() | 'AudioStreamTrack' object has no attribute 'enabled' pause() won't work")
-        logging.debug('Producer pause()')
+        logger.warning("Producer pause() | 'AudioStreamTrack' object has no attribute 'enabled' pause() won't work")
+        logger.debug('Producer pause()')
 
         if self._closed:
-            logging.debug('Producer pause() | Producer closed')
+            logger.debug('Producer pause() | Producer closed')
             return
         
         self._paused = True
@@ -195,11 +198,11 @@ class Producer(EnhancedEventEmitter):
     
     # Resumes sending media.
     def resume(self):
-        logging.warning("Producer pause() | 'AudioStreamTrack' object has no attribute 'enabled' resume() may not work")
-        logging.debug('Producer resume()')
+        logger.warning("Producer pause() | 'AudioStreamTrack' object has no attribute 'enabled' resume() may not work")
+        logger.debug('Producer resume()')
 
         if self._closed:
-            logging.debug('Producer resume() | Producer closed')
+            logger.debug('Producer resume() | Producer closed')
             return
         
         self._paused = False
@@ -216,7 +219,7 @@ class Producer(EnhancedEventEmitter):
 
     # Replaces the current track with a new one or null.
     async def replaceTrack(self, track: MediaStreamTrack):
-        logging.debug(f'replaceTrack() [track: {track}]')
+        logger.debug(f'replaceTrack() [track: {track}]')
 
         if self._closed:
             # This must be done here. Otherwise there is no chance to stop the given
@@ -231,7 +234,7 @@ class Producer(EnhancedEventEmitter):
         
         # Do nothing if this is the same track as the current handled one.
         if track == self._track:
-            logging.debug('Producer replaceTrack() | same track, ignored')
+            logger.debug('Producer replaceTrack() | same track, ignored')
             return
         
         if not self._zeroRtpOnPause or not self._paused:
@@ -280,7 +283,7 @@ class Producer(EnhancedEventEmitter):
         await self.emit_for_results('@setrtpencodingparameters', params)
     
     def _onTrackEnded(self):
-            logging.debug('Producer track "ended" event')
+            logger.debug('Producer track "ended" event')
             self.emit('trackended')
             self._observer.emit('trackended')
     

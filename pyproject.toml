@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pymediasoup"
-version = "0.2.5"
+version = "0.2.6"
 description = "mediasoup python client"
 authors = ["Jiang Yue <maze1024@gmail.com>"]
 license = "MIT"

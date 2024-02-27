@@ -1,4 +1,3 @@
-import logging
 from typing import List, Optional
 from .rtp_parameters import RtpCodec, RtcpFeedback, RtpHeaderExtension, RtpCapabilities, ExtendedRtpCapabilities, ExtendedCodec, ExtendedHeaderExtension, RtpCodecCapability, RtpHeaderExtension, MediaKind, RtpParameters, RtpCodecParameters, RtpHeaderExtensionParameters, RtpEncodingParameters, RtcpParameters
 import h264_profile_level_id as h264

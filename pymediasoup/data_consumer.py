@@ -13,6 +13,9 @@ from .emitter import EnhancedEventEmitter
 from .sctp_parameters import SctpStreamParameters
 
 
+logger = logging.getLogger(__name__)
+
+
 class DataConsumerOptions(BaseModel):
     id: str
     dataProducerId: str
@@ -110,7 +113,7 @@ class DataConsumer(EnhancedEventEmitter):
         if self._closed:
             return
         
-        logging.debug('DataConsumer close()')
+        logger.debug('DataConsumer close()')
 
         self._closed = True
 
@@ -126,7 +129,7 @@ class DataConsumer(EnhancedEventEmitter):
         if self._closed:
             return
 
-        logging.debug('DataConsumer transportClosed()')
+        logger.debug('DataConsumer transportClosed()')
 
         self._closed = True
 
@@ -141,7 +144,7 @@ class DataConsumer(EnhancedEventEmitter):
         def on_open():
             if self._closed:
                 return
-            logging.debug('DataConsumer DataChannel "open" event')
+            logger.debug('DataConsumer DataChannel "open" event')
             self.emit('open')
 
         # NOTE: aiortc.RTCDataChannel won't emit error event, here use pyee error event
@@ -150,7 +153,7 @@ class DataConsumer(EnhancedEventEmitter):
             if self._closed:
                 return
 
-            logging.error(f'DataConsumer DataChannel "error" event: {message}')
+            logger.error(f'DataConsumer DataChannel "error" event: {message}')
             
             self.emit('error', message)
 
@@ -158,7 +161,7 @@ class DataConsumer(EnhancedEventEmitter):
         def on_close():
             if self._closed:
                 return
-            logging.warning('DataConsumer DataChannel "close" event')
+            logger.warning('DataConsumer DataChannel "close" event')
             self._closed = True
             self.emit('@close')
             self._observer.emit('close')

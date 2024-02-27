@@ -23,6 +23,7 @@ from ..models.handler_interface import HandlerRunOptions, HandlerSendOptions, Ha
 from ..producer import ProducerCodecOptions
 
 
+logger = logging.getLogger(__name__)
 SCTP_NUM_STREAMS = { 'OS': 1024, 'MIS': 1024 }
 
 class AiortcHandler(HandlerInterface):
@@ -73,13 +74,13 @@ class AiortcHandler(HandlerInterface):
             raise Exception('Remote SDP not ready')
     
     async def close(self):
-        logging.debug('close()')
+        logger.debug('close()')
 
         if self._pc:
             await self._pc.close()
 
     async def getNativeRtpCapabilities(self) -> RtpCapabilities:
-        logging.debug('getNativeRtpCapabilities()')
+        logger.debug('getNativeRtpCapabilities()')
 
         pc = RTCPeerConnection()
         for track in self._tracks:
@@ -96,7 +97,7 @@ class AiortcHandler(HandlerInterface):
         return nativeRtpCapabilities
     
     async def getNativeSctpCapabilities(self) -> SctpCapabilities:
-        logging.debug('getNativeSctpCapabilities()')
+        logger.debug('getNativeSctpCapabilities()')
         return SctpCapabilities.parse_obj({
             'numStreams': SCTP_NUM_STREAMS
         })
@@ -114,7 +115,7 @@ class AiortcHandler(HandlerInterface):
         additionalSettings: Optional[Any]=None,
         proprietaryConstraints: Optional[Any]=None
     ):
-        logging.debug('AiortcHandler run()')
+        logger.debug('AiortcHandler run()')
         options = HandlerRunOptions(
             direction=direction,
             iceParameters=iceParameters,
@@ -158,34 +159,34 @@ class AiortcHandler(HandlerInterface):
                 self.emit('@connectionstatechange', 'closed')
         
     async def updateIceServers(self, iceServers):
-        logging.warning('updateIceServers() not implemented')
+        logger.warning('updateIceServers() not implemented')
         # TODO: aiortc can not update iceServers
     
     async def restartIce(self, iceParameters):
-        logging.debug('restartIce()')
+        logger.debug('restartIce()')
         self._remoteSdp.updateIceParameters(iceParameters)
         if not self._transportReady:
             return
         if self._direction == 'send':
             # NOTE: aiortc RTCPeerConnection createOffer do not have iceRestart options
             offer = await self._pc.createOffer()
-            logging.debug(f'restartIce() | calling pc.setLocalDescription() [offer:{offer}]')
+            logger.debug(f'restartIce() | calling pc.setLocalDescription() [offer:{offer}]')
             await self._pc.setLocalDescription(offer)
             answer: RTCSessionDescription = RTCSessionDescription(
                 type='answer',
                 sdp=self._remoteSdp.getSdp()
             )
-            logging.debug(f'restartIce() | calling pc.setRemoteDescription() [answer:{answer}]')
+            logger.debug(f'restartIce() | calling pc.setRemoteDescription() [answer:{answer}]')
             await self._pc.setRemoteDescription(answer)
         else:
             offer: RTCSessionDescription = RTCSessionDescription(
                 type='offer',
                 sdp=self._remoteSdp.getSdp()
             )
-            logging.debug(f'restartIce() | calling pc.setRemoteDescription() [offer:{offer}]')
+            logger.debug(f'restartIce() | calling pc.setRemoteDescription() [offer:{offer}]')
             await self._pc.setRemoteDescription(offer)
             answer = await self._pc.createAnswer()
-            logging.debug(f'restartIce() | calling pc.setLocalDescription() [answer:{answer}]')
+            logger.debug(f'restartIce() | calling pc.setLocalDescription() [answer:{answer}]')
             await self._pc.setLocalDescription(answer)
         
     async def getTransportStats(self):
@@ -205,7 +206,7 @@ class AiortcHandler(HandlerInterface):
             codec=codec
         )
         self._assertSendDirection()
-        logging.debug(f'send() [kind:{options.track.kind}, track.id:{options.track.id}]')
+        logger.debug(f'send() [kind:{options.track.kind}, track.id:{options.track.id}]')
         if options.encodings:
             for idx in range(len(options.encodings)):
                 options.encodings[idx].rid = f'r{idx}'
@@ -231,7 +232,7 @@ class AiortcHandler(HandlerInterface):
         else:
             layers=smParse('')
         if len(options.encodings) == 1 and layers.spatialLayers > 1 and sendingRtpParameters.codecs[0].mimeType.lower() == 'video/vp9':
-            logging.debug('send() | enabling legacy simulcast for VP9 SVC')
+            logger.debug('send() | enabling legacy simulcast for VP9 SVC')
             hackVp9Svc = True
             localSdpDict = sdp_transform.parse
             offerMediaDict = localSdpDict['media'][mediaSectionIdx.idx]
@@ -241,7 +242,7 @@ class AiortcHandler(HandlerInterface):
                 sdp=sdp_transform.write(localSdpDict)
             )
         
-        logging.debug(f'send() | calling pc.setLocalDescription() [offer:{offer}]')
+        logger.debug(f'send() | calling pc.setLocalDescription() [offer:{offer}]')
 
         await self.pc.setLocalDescription(offer)
         # We can now get the transceiver.mid.
@@ -252,7 +253,7 @@ class AiortcHandler(HandlerInterface):
 
         offerMediaDict = localSdpDict['media'][mediaSectionIdx.idx]
 
-        logging.debug(f"send() | get offerMediaDict {offerMediaDict} \n from localSdpDict {localSdpDict['media']} index {mediaSectionIdx.idx}")
+        logger.debug(f"send() | get offerMediaDict {offerMediaDict} \n from localSdpDict {localSdpDict['media']} index {mediaSectionIdx.idx}")
         # Set RTCP CNAME.
         if sendingRtpParameters.rtcp == None:
             sendingRtpParameters.rtcp = RtcpParameters()
@@ -292,7 +293,7 @@ class AiortcHandler(HandlerInterface):
             type='answer',
             sdp=self.remoteSdp.getSdp()
         )
-        logging.debug(f'send() | calling pc.setRemoteDescription() [answer:{answer}]')
+        logger.debug(f'send() | calling pc.setRemoteDescription() [answer:{answer}]')
         await self.pc.setRemoteDescription(answer)
         # Store in the map.
         self._mapMidTransceiver[localId] = transceiver
@@ -305,7 +306,7 @@ class AiortcHandler(HandlerInterface):
     async def stopSending(self, localId):
         pass
         # self._assertSendDirection()
-        # logging.debug(f'stopSending() [localId:{localId}]')
+        # logger.debug(f'stopSending() [localId:{localId}]')
         # transceiver = self._mapMidTransceiver.get(localId)
         # if not transceiver:
         #     raise Exception('associated RTCRtpTransceiver not found')
@@ -314,22 +315,22 @@ class AiortcHandler(HandlerInterface):
         # self._pc.removeTrack(transceiver.sender)
         # self._remoteSdp.closeMediaSection(transceiver.mid)
         # offer = await self._pc.createOffer()
-        # logging.debug(f'stopSending() | calling pc.setLocalDescription() [offer:{offer}]')
+        # logger.debug(f'stopSending() | calling pc.setLocalDescription() [offer:{offer}]')
         # await self._pc.localDescription(offer)
         # answer: RTCSessionDescription = RTCSessionDescription(
         #     type='answer',
         #     sdp=self._remoteSdp.getSdp()
         # )
-        # logging.debug(f'stopSending() | calling pc.setRemoteDescription() [answer:{answer}]')
+        # logger.debug(f'stopSending() | calling pc.setRemoteDescription() [answer:{answer}]')
         # await self._pc.setRemoteDescription(answer)
         # self._mapMidTransceiver.pop(localId, None)
     
     async def replaceTrack(self, localId, track=None):
         self._assertSendDirection()
         if track:
-            logging.debug(f'replaceTrack() [localId:{localId}, track.id:{track.id}]')
+            logger.debug(f'replaceTrack() [localId:{localId}, track.id:{track.id}]')
         else:
-            logging.debug(f'replaceTrack() [localId:{localId}, no track]')
+            logger.debug(f'replaceTrack() [localId:{localId}, no track]')
         transceiver = self._mapMidTransceiver.get(localId)
         if not transceiver:
             raise Exception('associated RTCRtpTransceiver not found')
@@ -337,17 +338,17 @@ class AiortcHandler(HandlerInterface):
         await transceiver.sender.replaceTrack(track)
     
     async def setMaxSpatialLayer(self, localId: str, spatialLayer: int):
-        logging.warning('setMaxSpatialLayer() not implemented')
+        logger.warning('setMaxSpatialLayer() not implemented')
         # NOTE: RTCRtpSender do not have getParameters()
         # self._assertSendDirection()
-        # logging.debug(f'setMaxSpatialLayer() [localId:{localId}, spatialLayer:{spatialLayer}]')
+        # logger.debug(f'setMaxSpatialLayer() [localId:{localId}, spatialLayer:{spatialLayer}]')
         # transceiver = self._mapMidTransceiver.get(localId)
         # if not transceiver:
         #     raise Exception('associated RTCRtpTransceiver not found')
         # parameters = transceiver.sender.getParameters()
     
     async def setRtpEncodingParameters(self, localId: str, params: Any):
-        logging.warning('setRtpEncodingParameters() not implemented')
+        logger.warning('setRtpEncodingParameters() not implemented')
         # NOTE: RTCRtpSender do not have getParameters()
     
     async def getSenderStats(self, localId: str):
@@ -377,7 +378,7 @@ class AiortcHandler(HandlerInterface):
             protocol=protocol
         )
         self._assertSendDirection()
-        logging.debug('sendDataChannel()')
+        logger.debug('sendDataChannel()')
         dataChannel = self.pc.createDataChannel(
             label=options.label,
             maxPacketLifeTime=options.maxPacketLifeTime,
@@ -401,7 +402,7 @@ class AiortcHandler(HandlerInterface):
             if not self._transportReady:
                 await self._setupTransport(localDtlsRole='server', localSdpDict=localSdpDict)
             
-            logging.debug(f'sendDataChannel() | calling pc.setLocalDescription() [offer:{offer}]')
+            logger.debug(f'sendDataChannel() | calling pc.setLocalDescription() [offer:{offer}]')
             await self.pc.setLocalDescription(offer)
             self.remoteSdp.sendSctpAssociation(offerMediaDict=offerMediaDict)
             answer: RTCSessionDescription = RTCSessionDescription(
@@ -409,7 +410,7 @@ class AiortcHandler(HandlerInterface):
                 sdp=self.remoteSdp.getSdp()
             )
 
-            logging.debug(f'sendDataChannel() | calling pc.setRemoteDescription() [answer:{answer}]')
+            logger.debug(f'sendDataChannel() | calling pc.setRemoteDescription() [answer:{answer}]')
             await self.pc.setRemoteDescription(answer)
             self._hasDataChannelMediaSection = True
         
@@ -430,7 +431,7 @@ class AiortcHandler(HandlerInterface):
             rtpParameters=rtpParameters
         )
         self._assertRecvDirection()
-        logging.debug(f'receive() [trackId:{options.trackId}, kind:{options.kind}]')
+        logger.debug(f'receive() [trackId:{options.trackId}, kind:{options.kind}]')
         localId = options.rtpParameters.mid if options.rtpParameters.mid != None else str(len(self._mapMidTransceiver))
         self.remoteSdp.receive(
             mid=localId,
@@ -443,7 +444,7 @@ class AiortcHandler(HandlerInterface):
             type='offer',
             sdp=self.remoteSdp.getSdp()
         )
-        logging.debug(f'receive() | calling pc.setRemoteDescription() [offer:{offer}]')
+        logger.debug(f'receive() | calling pc.setRemoteDescription() [offer:{offer}]')
         await self.pc.setRemoteDescription(offer)
         answer: RTCSessionDescription = await self.pc.createAnswer()
         localSdpDict = sdp_transform.parse(answer.sdp)
@@ -457,7 +458,7 @@ class AiortcHandler(HandlerInterface):
         )
         if not self._transportReady:
             await self._setupTransport(localDtlsRole='client', localSdpDict=localSdpDict)
-        logging.debug(f'receive() | calling pc.setLocalDescription() [answer:{answer}]')
+        logger.debug(f'receive() | calling pc.setLocalDescription() [answer:{answer}]')
         await self.pc.setLocalDescription(answer)
         transceivers = [t for t in self.pc.getTransceivers() if t.mid == localId]
         if not transceivers:
@@ -474,7 +475,7 @@ class AiortcHandler(HandlerInterface):
         
     async def stopReceiving(self, localId: str):
         self._assertRecvDirection()
-        logging.debug(f'stopReceiving() [localId:{localId}]')
+        logger.debug(f'stopReceiving() [localId:{localId}]')
         transceiver = self._mapMidTransceiver.get(localId)
         if not transceiver:
             raise Exception('associated RTCRtpTransceiver not found')
@@ -483,10 +484,10 @@ class AiortcHandler(HandlerInterface):
             type='offer',
             sdp=self.remoteSdp.getSdp()
         )
-        logging.debug(f'stopReceiving() | calling pc.setRemoteDescription() [offer:{offer}]')
+        logger.debug(f'stopReceiving() | calling pc.setRemoteDescription() [offer:{offer}]')
         await self.pc.setRemoteDescription(offer)
         answer = await self.pc.createAnswer()
-        logging.debug(f'stopReceiving() | calling pc.setLocalDescription() [answer:{answer}]')
+        logger.debug(f'stopReceiving() | calling pc.setLocalDescription() [answer:{answer}]')
         await self.pc.setLocalDescription(answer)
         self._mapMidTransceiver.pop(localId, None)
     
@@ -509,7 +510,7 @@ class AiortcHandler(HandlerInterface):
             protocol=protocol
         )
         self._assertRecvDirection()
-        logging.debug(f'[receiveDataChannel() [options:{options.sctpStreamParameters}]]')
+        logger.debug(f'[receiveDataChannel() [options:{options.sctpStreamParameters}]]')
         dataChannel = self.pc.createDataChannel(
             label=options.label,
             maxPacketLifeTime=options.sctpStreamParameters.maxPacketLifeTime,
@@ -528,13 +529,13 @@ class AiortcHandler(HandlerInterface):
                 type='offer',
                 sdp=self.remoteSdp.getSdp()
             )
-            logging.debug(f'receiveDataChannel() | calling pc.setRemoteDescription() [offer:{offer}]')
+            logger.debug(f'receiveDataChannel() | calling pc.setRemoteDescription() [offer:{offer}]')
             await self.pc.setRemoteDescription(offer)
             answer = await self.pc.createAnswer()
             if not self._transportReady:
                 localSdpDict = sdp_transform.parse(answer.sdp)
                 await self._setupTransport(localDtlsRole='client', localSdpDict=localSdpDict)
-            logging.debug(f'receiveDataChannel() | calling pc.setRemoteDescription() [answer:{answer}]')
+            logger.debug(f'receiveDataChannel() | calling pc.setRemoteDescription() [answer:{answer}]')
             await self.pc.setLocalDescription(answer)
             self._hasDataChannelMediaSection = True
         return HandlerReceiveDataChannelResult(dataChannel=dataChannel)

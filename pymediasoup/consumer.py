@@ -8,6 +8,9 @@ from .emitter import EnhancedEventEmitter
 from .rtp_parameters import MediaKind, RtpParameters
 
 
+logger = logging.getLogger(__name__)
+
+
 class ConsumerOptions(BaseModel):
     id: str
     producerId: str
@@ -116,7 +119,7 @@ class Consumer(EnhancedEventEmitter):
         if self._closed:
             return
         
-        logging.debug('Consumer close()')
+        logger.debug('Consumer close()')
 
         self._closed = True
 
@@ -132,7 +135,7 @@ class Consumer(EnhancedEventEmitter):
         if self._closed:
             return
 
-        logging.debug('Consumer transportClosed()')
+        logger.debug('Consumer transportClosed()')
 
         self._closed = True
 
@@ -151,10 +154,10 @@ class Consumer(EnhancedEventEmitter):
     
     # Pauses sending media.
     def pause(self):
-        logging.debug('Consumer pause()')
+        logger.debug('Consumer pause()')
 
         if self._closed:
-            logging.debug('Consumer pause() | Consumer closed')
+            logger.debug('Consumer pause() | Consumer closed')
             return
         
         self._paused = True
@@ -168,10 +171,10 @@ class Consumer(EnhancedEventEmitter):
     
     # Resumes sending media.
     def resume(self):
-        logging.debug('Consumer resume()')
+        logger.debug('Consumer resume()')
 
         if self._closed:
-            logging.debug('Consumer resume() | Consumer closed')
+            logger.debug('Consumer resume() | Consumer closed')
             return
         
         self._paused = False
@@ -184,7 +187,7 @@ class Consumer(EnhancedEventEmitter):
         self._observer.emit('resume')
     
     def _onTrackEnded(self):
-        logging.debug('track "ended" event')
+        logger.debug('track "ended" event')
         self.emit('trackended')
         # Emit observer event.
         self._observer.emit('trackended')

@@ -18,7 +18,7 @@ def getRtpEncodings(offerMediaDict: dict) -> List[RtpEncodingParameters]:
     for line in offerMediaDict.get('ssrcGroups', []):
         if line.get('semantics') != 'FID':
             continue
-        ssrc, rtxSsrc = re.split('\s', line.get('ssrcs'))
+        ssrc, rtxSsrc = re.split(r'\s', line.get('ssrcs'))
 
         ssrc = int(ssrc)
         rtxSsrc = int(rtxSsrc)
@@ -67,7 +67,7 @@ def addLegacySimulcast(offerMediaDict: dict, numStreams: int):
         if line.get('semantics') != 'FID':
             # False
             continue
-        ssrcs = re.split('\s', line.get('ssrcs'))
+        ssrcs = re.split(r'\s', line.get('ssrcs'))
         if int(ssrcs[0]) == firstSsrc:
             firstRtxSsrc = int(ssrcs[1])
             # True

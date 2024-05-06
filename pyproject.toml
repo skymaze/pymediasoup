@@ -12,7 +12,7 @@ python = "^3.8"
 pydantic = "^1.8.1"
 aiortc = "^1.5.0"
 h264-profile-level-id = "^1.0.0"
-sdp-transform = "^1.0.6"
+sdp-transform = "^1.1.0"
 pyee = "^11.1.0"
 av = "^11.0.0"
 

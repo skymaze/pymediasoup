@@ -565,13 +565,13 @@ test = ["pretend", "pytest (>=3.0.1)", "pytest-rerunfailures"]
 
 [[package]]
 name = "sdp-transform"
-version = "1.0.6"
+version = "1.1.0"
 description = "A simple Python parser and writer of SDP."
 optional = false
 python-versions = ">=3.6.0"
 files = [
-    {file = "sdp_transform-1.0.6-py3-none-any.whl", hash = "sha256:09d11a544c7b2920694507ac1021c10eae9a9da21400de8bd84c5ece4c183529"},
-    {file = "sdp_transform-1.0.6.tar.gz", hash = "sha256:e2a2982ffad2d2511ce303e5c562e0d5375e1858d9fcc2bc38855aac2b95f631"},
+    {file = "sdp_transform-1.1.0-py3-none-any.whl", hash = "sha256:565faad4c269877669a287327eb507a3968b7100bc40258e9f1eadba031fcff1"},
+    {file = "sdp_transform-1.1.0.tar.gz", hash = "sha256:422e09753a855096eb915b8867608ff0aa1ac3ac79e3c9c758f6ecfde1548aad"},
 ]
 
 [[package]]
@@ -599,4 +599,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "c0919e7cd0decd941ed0fc7c69a51ba0f53cef8607f1ed0723e2ed35c44b2452"
+content-hash = "c65e3ee0a7eeef977608b3356ee4e6dd25436a01fa325fb3641954de53716797"

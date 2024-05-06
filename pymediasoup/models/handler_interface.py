@@ -1,33 +1,40 @@
-import sys
-if sys.version_info >= (3, 8):
-    from typing import Callable, Literal, List, Optional, Any
-else:
-    from typing import Callable, List, Optional, Any
-    from typing_extensions import Literal
+from typing import Literal, List, Optional, Any
 
 from pydantic import BaseModel
-from aiortc import RTCIceServer, RTCRtpSender, RTCRtpReceiver, RTCDataChannel, MediaStreamTrack
+from aiortc import (
+    RTCIceServer,
+    RTCRtpSender,
+    RTCRtpReceiver,
+    RTCDataChannel,
+    MediaStreamTrack,
+)
 from .transport import IceCandidate, IceParameters, DtlsParameters
 from ..ortc import ExtendedRtpCapabilities
 from ..sctp_parameters import SctpParameters, SctpStreamParameters
 from ..producer import ProducerCodecOptions
-from ..rtp_parameters import RtpCodecCapability, RtpParameters, MediaKind, RtpEncodingParameters
+from ..rtp_parameters import (
+    RtpCodecCapability,
+    RtpParameters,
+    MediaKind,
+    RtpEncodingParameters,
+)
 
 
 class HandlerRunOptions(BaseModel):
-    direction: Literal['send', 'recv']
+    direction: Literal["send", "recv"]
     iceParameters: IceParameters
     iceCandidates: List[IceCandidate]
     dtlsParameters: DtlsParameters
     sctpParameters: Optional[SctpParameters]
     iceServers: Optional[RTCIceServer]
-    iceTransportPolicy: Optional[Literal['all', 'relay']]
+    iceTransportPolicy: Optional[Literal["all", "relay"]]
     additionalSettings: Optional[Any]
     proprietaryConstraints: Optional[Any]
     extendedRtpCapabilities: ExtendedRtpCapabilities
 
     class Config:
-        arbitrary_types_allowed=True
+        arbitrary_types_allowed = True
+
 
 class HandlerSendOptions(BaseModel):
     track: MediaStreamTrack
@@ -36,7 +43,8 @@ class HandlerSendOptions(BaseModel):
     codec: Optional[RtpCodecCapability]
 
     class Config:
-        arbitrary_types_allowed=True
+        arbitrary_types_allowed = True
+
 
 class HandlerSendResult(BaseModel):
     localId: str
@@ -44,12 +52,14 @@ class HandlerSendResult(BaseModel):
     rtpSender: Optional[RTCRtpSender]
 
     class Config:
-        arbitrary_types_allowed=True
+        arbitrary_types_allowed = True
+
 
 class HandlerReceiveOptions(BaseModel):
     trackId: str
     kind: MediaKind
     rtpParameters: RtpParameters
+
 
 class HandlerReceiveResult(BaseModel):
     localId: str
@@ -57,22 +67,25 @@ class HandlerReceiveResult(BaseModel):
     rtpReceiver: Optional[RTCRtpReceiver]
 
     class Config:
-        arbitrary_types_allowed=True
+        arbitrary_types_allowed = True
+
 
 class HandlerSendDataChannelResult(BaseModel):
     dataChannel: RTCDataChannel
     sctpStreamParameters: SctpStreamParameters
 
     class Config:
-        arbitrary_types_allowed=True
+        arbitrary_types_allowed = True
+
 
 class HandlerReceiveDataChannelOptions(BaseModel):
     sctpStreamParameters: SctpStreamParameters
     label: Optional[str]
     protocol: Optional[str]
 
+
 class HandlerReceiveDataChannelResult(BaseModel):
     dataChannel: RTCDataChannel
 
     class Config:
-        arbitrary_types_allowed=True
+        arbitrary_types_allowed = True

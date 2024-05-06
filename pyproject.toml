@@ -8,7 +8,7 @@ readme = "README.md"
 repository = "https://github.com/skymaze/pymediasoup"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.8.1"
 pydantic = "^1.8.1"
 aiortc = "^1.5.0"
 h264-profile-level-id = "^1.0.0"
@@ -16,8 +16,9 @@ sdp-transform = "^1.1.0"
 pyee = "^11.1.0"
 av = "^11.0.0"
 
-[tool.poetry.dev-dependencies]
-mypy = "^0.990"
+[tool.poetry.group.dev.dependencies]
+flake8 = "^7.0.0"
+black = "^24.4.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

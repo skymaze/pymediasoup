@@ -7,6 +7,7 @@ from aiortc import (
     RTCSessionDescription,
     RTCRtpTransceiver,
     MediaStreamTrack,
+    RTCConfiguration
 )
 import sdp_transform
 from .sdp import common_utils
@@ -165,7 +166,10 @@ class AiortcHandler(HandlerInterface):
                 "video", options.extendedRtpCapabilities
             ),
         }
-        self._pc = RTCPeerConnection()
+
+        configuration = RTCConfiguration(iceServers=iceServers)
+           
+        self._pc = RTCPeerConnection(configuration=configuration)
 
         @self._pc.on("iceconnectionstatechange")
         def on_iceconnectionstatechange():

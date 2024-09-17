@@ -26,7 +26,7 @@ class HandlerRunOptions(BaseModel):
     iceCandidates: List[IceCandidate]
     dtlsParameters: DtlsParameters
     sctpParameters: Optional[SctpParameters]
-    iceServers: Optional[RTCIceServer]
+    iceServers: Optional[List[RTCIceServer]]
     iceTransportPolicy: Optional[Literal["all", "relay"]]
     additionalSettings: Optional[Any]
     proprietaryConstraints: Optional[Any]

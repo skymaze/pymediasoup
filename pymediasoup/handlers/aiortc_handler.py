@@ -7,6 +7,7 @@ from aiortc import (
     RTCSessionDescription,
     RTCRtpTransceiver,
     MediaStreamTrack,
+    RTCConfiguration,
 )
 import sdp_transform
 from .sdp import common_utils
@@ -128,7 +129,7 @@ class AiortcHandler(HandlerInterface):
         dtlsParameters: DtlsParameters,
         extendedRtpCapabilities: ExtendedRtpCapabilities,
         sctpParameters: Optional[SctpParameters] = None,
-        iceServers: Optional[RTCIceServer] = None,
+        iceServers: Optional[List[RTCIceServer]] = None,
         iceTransportPolicy: Optional[Literal["all", "relay"]] = None,
         additionalSettings: Optional[Any] = None,
         proprietaryConstraints: Optional[Any] = None,
@@ -165,7 +166,8 @@ class AiortcHandler(HandlerInterface):
                 "video", options.extendedRtpCapabilities
             ),
         }
-        self._pc = RTCPeerConnection()
+        config = RTCConfiguration(iceServers=options.iceServers)
+        self._pc = RTCPeerConnection(config)
 
         @self._pc.on("iceconnectionstatechange")
         def on_iceconnectionstatechange():
@@ -180,7 +182,7 @@ class AiortcHandler(HandlerInterface):
             elif self._pc.iceConnectionState == "closed":
                 self.emit("@connectionstatechange", "closed")
 
-    async def updateIceServers(self, iceServers):
+    async def updateIceServers(self, iceServers: List[RTCIceServer]):
         logger.warning("updateIceServers() not implemented")
         # TODO: aiortc can not update iceServers
 

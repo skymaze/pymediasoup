@@ -7,7 +7,7 @@ from aiortc import (
     RTCSessionDescription,
     RTCRtpTransceiver,
     MediaStreamTrack,
-    RTCConfiguration
+    RTCConfiguration,
 )
 import sdp_transform
 from .sdp import common_utils
@@ -168,7 +168,7 @@ class AiortcHandler(HandlerInterface):
         }
 
         configuration = RTCConfiguration(iceServers=iceServers)
-           
+
         self._pc = RTCPeerConnection(configuration=configuration)
 
         @self._pc.on("iceconnectionstatechange")

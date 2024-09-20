@@ -52,7 +52,7 @@ class HandlerInterface(EnhancedEventEmitter):
         dtlsParameters: DtlsParameters,
         extendedRtpCapabilities: ExtendedRtpCapabilities,
         sctpParameters: Optional[SctpParameters] = None,
-        iceServers: Optional[RTCIceServer] = None,
+        iceServers: Optional[List[RTCIceServer]] = None,
         iceTransportPolicy: Optional[Literal["all", "relay"]] = None,
         additionalSettings: Optional[Any] = None,
         proprietaryConstraints: Optional[Any] = None,

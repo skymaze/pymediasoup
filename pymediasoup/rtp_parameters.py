@@ -1,6 +1,6 @@
 from typing import Optional, List, Literal
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 
 # Media kind ('audio' or 'video').

@@ -2,7 +2,7 @@ from typing import Optional, Literal, List, Any, Callable, Dict
 
 from enum import IntEnum
 from aiortc import RTCIceServer
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from ..ortc import ExtendedRtpCapabilities
 from ..sctp_parameters import SctpParameters
 

@@ -1,7 +1,7 @@
 from typing import Optional, Any, Literal
 
 import logging
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from pyee import AsyncIOEventEmitter
 from aiortc import RTCDataChannel
 from .emitter import EnhancedEventEmitter

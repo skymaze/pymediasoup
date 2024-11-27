@@ -2,7 +2,7 @@ import logging
 from typing import Optional, Any
 from aiortc import RTCRtpReceiver, MediaStreamTrack
 from pyee import AsyncIOEventEmitter
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from .errors import InvalidStateError
 from .emitter import EnhancedEventEmitter
 from .rtp_parameters import MediaKind, RtpParameters

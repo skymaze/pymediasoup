@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pymediasoup"
-version = "1.0.1"
+version = "1.1.0"
 description = "mediasoup python client"
 authors = ["Jiang Yue <maze1024@gmail.com>"]
 license = "MIT"
@@ -9,7 +9,7 @@ repository = "https://github.com/skymaze/pymediasoup"
 
 [tool.poetry.dependencies]
 python = "^3.8.1"
-pydantic = "^1.8.1"
+pydantic = ">=1.10.17,<3.0.0"
 aiortc = "^1.5.0"
 h264-profile-level-id = "^1.0.0"
 sdp-transform = "^1.1.0"

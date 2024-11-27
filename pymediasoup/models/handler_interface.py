@@ -1,6 +1,6 @@
 from typing import Literal, List, Optional, Any
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from aiortc import (
     RTCIceServer,
     RTCRtpSender,

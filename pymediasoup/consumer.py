@@ -202,6 +202,7 @@ class Consumer(EnhancedEventEmitter):
         if not self._track:
             return
 
-        self._track.remove_listener("ended", self._onTrackEnded)
-
-        self._track.stop()
+        try:
+            self._track.stop()
+        except Exception:
+            pass

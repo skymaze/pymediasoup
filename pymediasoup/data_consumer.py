@@ -2,7 +2,7 @@ from typing import Optional, Any, Literal
 
 import logging
 from pydantic.v1 import BaseModel
-from pyee import AsyncIOEventEmitter
+from pyee.asyncio import AsyncIOEventEmitter
 from aiortc import RTCDataChannel
 from .emitter import EnhancedEventEmitter
 from .sctp_parameters import SctpStreamParameters

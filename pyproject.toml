@@ -3,12 +3,11 @@ name = "pymediasoup"
 version = "1.2.1"
 description = "mediasoup python client"
 authors = [{ name = "Jiang Yue", email = "maze1024@gmail.com" }]
-requires-python = ">=3.9,<4"
+requires-python = ">=3.10,<4"
 readme = "README.md"
 license = "MIT"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -17,10 +16,10 @@ classifiers = [
 ]
 dependencies = [
     "pydantic>=1.10.17,<3.0.0",
-    "aiortc>=1.10.1,<2",
+    "aiortc>=1.14.0,<2",
     "h264-profile-level-id>=1.0.0,<2",
     "sdp-transform>=1.1.0,<2",
-    "pyee>=11.1.0,<12",
+    "pyee>=13,<14",
 ]
 
 [project.urls]

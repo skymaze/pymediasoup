@@ -1,7 +1,7 @@
 from typing import Optional, Literal, List, Any, Dict, Union
 
 import logging
-from pyee import AsyncIOEventEmitter
+from pyee.asyncio import AsyncIOEventEmitter
 from aiortc import RTCIceServer, MediaStreamTrack
 from .ortc import canReceive, generateProbatorRtpParameters, ExtendedRtpCapabilities
 from .errors import InvalidStateError, UnsupportedError

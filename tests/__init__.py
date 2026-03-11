@@ -32,6 +32,18 @@ TRACKS = [videoTrack, audioTrack]
 
 
 class TestMethods(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        self._transports_to_close = []
+
+    async def asyncTearDown(self):
+        for transport in self._transports_to_close:
+            if not transport.closed:
+                await transport.close()
+
+    def _register_transport(self, transport: Transport) -> Transport:
+        self._transports_to_close.append(transport)
+        return transport
+
     def test_create_device(self):
         device = Device(handlerFactory=AiortcHandler.createFactory(tracks=TRACKS))
         self.assertEqual(device.loaded, False)
@@ -68,14 +80,14 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         id, iceParameters, iceCandidates, dtlsParameters, sctpParameters = (
             generateTransportRemoteParameters()
         )
-        sendTransport = device.createSendTransport(
+        sendTransport = self._register_transport(device.createSendTransport(
             id=id,
             iceParameters=iceParameters,
             iceCandidates=iceCandidates,
             dtlsParameters=dtlsParameters,
             sctpParameters=sctpParameters,
             appData={"baz": "BAZ"},
-        )
+        ))
         self.assertTrue(isinstance(sendTransport, Transport))
         self.assertEqual(sendTransport.id, id)
         self.assertFalse(sendTransport.closed)
@@ -90,13 +102,13 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         id, iceParameters, iceCandidates, dtlsParameters, sctpParameters = (
             generateTransportRemoteParameters()
         )
-        recvTransport = device.createRecvTransport(
+        recvTransport = self._register_transport(device.createRecvTransport(
             id=id,
             iceParameters=iceParameters,
             iceCandidates=iceCandidates,
             dtlsParameters=dtlsParameters,
             sctpParameters=sctpParameters,
-        )
+        ))
         self.assertTrue(isinstance(recvTransport, Transport))
         self.assertEqual(recvTransport.id, id)
         self.assertFalse(recvTransport.closed)
@@ -123,13 +135,13 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         id, iceParameters, iceCandidates, dtlsParameters, sctpParameters = (
             generateTransportRemoteParameters()
         )
-        sendTransport = device.createSendTransport(
+        sendTransport = self._register_transport(device.createSendTransport(
             id=id,
             iceParameters=iceParameters,
             iceCandidates=iceCandidates,
             dtlsParameters=dtlsParameters,
             sctpParameters=sctpParameters,
-        )
+        ))
 
         @sendTransport.on("connect")
         async def on_connect(dtlsParameters):
@@ -382,13 +394,13 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         id, iceParameters, iceCandidates, dtlsParameters, sctpParameters = (
             generateTransportRemoteParameters()
         )
-        recvTransport = device.createRecvTransport(
+        recvTransport = self._register_transport(device.createRecvTransport(
             id=id,
             iceParameters=iceParameters,
             iceCandidates=iceCandidates,
             dtlsParameters=dtlsParameters,
             sctpParameters=sctpParameters,
-        )
+        ))
         self.assertTrue(isinstance(recvTransport, Transport))
         self.assertEqual(recvTransport.id, id)
         self.assertFalse(recvTransport.closed)

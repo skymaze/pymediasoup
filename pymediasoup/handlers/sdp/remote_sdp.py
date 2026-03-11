@@ -104,7 +104,7 @@ class RemoteSdp:
         for idx, mediaSection in enumerate(self._mediaSections):
             if mediaSection.closed:
                 logger.debug(
-                    f"remoteSdp | getNextMediaSectionIdx() Closed media sections found { mediaSection}"
+                    f"remoteSdp | getNextMediaSectionIdx() Closed media sections found {mediaSection}"
                 )
                 return MediaSectionIdx(idx=idx, reuseMid=mediaSection.mid)
         # If no closed media section is found, return next one.

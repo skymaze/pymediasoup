@@ -38,7 +38,7 @@ def extractRtpCapabilities(sdpDict: dict) -> RtpCapabilities:
         for rtp in m.get("rtp", []):
             codec: RtpCodecCapability = RtpCodecCapability(
                 kind=kind,
-                mimeType=f"{kind}/{rtp.get('codec','')}",
+                mimeType=f"{kind}/{rtp.get('codec', '')}",
                 preferredPayloadType=rtp.get("payload"),
                 clockRate=rtp.get("rate"),
                 channels=rtp.get("encoding"),

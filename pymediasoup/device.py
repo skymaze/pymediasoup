@@ -1,7 +1,7 @@
 from typing import Optional, Dict, Callable, Literal, List, Any, Union
 
 import logging
-from pyee import AsyncIOEventEmitter
+from pyee.asyncio import AsyncIOEventEmitter
 from aiortc import RTCIceServer
 from .handlers.handler_interface import HandlerInterface
 from .ortc import (

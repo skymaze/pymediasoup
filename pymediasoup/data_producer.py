@@ -1,7 +1,7 @@
 from typing import Optional, Any, Union, Literal
 
 import logging
-from pyee import AsyncIOEventEmitter
+from pyee.asyncio import AsyncIOEventEmitter
 from aiortc import RTCDataChannel
 from pydantic.v1 import BaseModel
 from .errors import InvalidStateError

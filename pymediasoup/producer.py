@@ -1,6 +1,6 @@
 import logging
 from typing import List, Optional, Any
-from pyee import AsyncIOEventEmitter
+from pyee.asyncio import AsyncIOEventEmitter
 from pydantic.v1 import BaseModel
 from aiortc import RTCRtpSender, MediaStreamTrack
 from .emitter import EnhancedEventEmitter

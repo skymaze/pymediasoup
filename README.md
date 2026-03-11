@@ -12,6 +12,22 @@
 pip3 install pymediasoup
 ```
 
+## Development
+Use uv for local development and CI parity.
+
+```bash
+uv sync --group dev
+uv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+uv run python -m unittest
+```
+
+Build and publish:
+
+```bash
+uv build
+uv publish
+```
+
 ## Usage
 PyMediasoup API design is similar to the official [mediasoup-client](https://github.com/versatica/mediasoup-client)
 

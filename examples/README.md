@@ -1,13 +1,11 @@
 # Examples
 
 ## mediaoup-demo
-```bash
-python -m pip install websockets
-```
-
 1. open https://v3demo.mediasoup.org/
-2. copy roomId
+2. copy roomId (keep the browser tab open)
 3. run
 ```bash
-python mediasoup.py roomId
+uv run --with websockets python mediasoup.py roomId
 ```
+
+If you see HTTP 403 during WebSocket handshake, the room may be expired/closed.

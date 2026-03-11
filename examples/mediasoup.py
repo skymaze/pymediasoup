@@ -1,10 +1,10 @@
-import sys
 import json
 import asyncio
 import argparse
 import secrets
 from typing import Optional, Dict, Awaitable, Any, TypeVar
 from asyncio.futures import Future
+from urllib.parse import urlsplit
 
 from pymediasoup import Device
 from pymediasoup import AiortcHandler
@@ -28,13 +28,7 @@ T = TypeVar("T")
 
 
 class Demo:
-    def __init__(self, uri, player=None, recorder=MediaBlackhole(), loop=None):
-        if not loop:
-            if sys.version_info.major == 3 and sys.version_info.minor == 6:
-                loop = asyncio.get_event_loop()
-            else:
-                loop = asyncio.get_running_loop()
-        self._loop = loop
+    def __init__(self, uri, player=None, recorder=MediaBlackhole()):
         self._uri = uri
         self._player = player
         self._recorder = recorder
@@ -76,11 +70,25 @@ class Demo:
                 message = json.loads(await self._websocket.recv())
                 if message.get("response"):
                     if message.get("id") is not None:
-                        self._answers[message.get("id")].set_result(message)
+                        answer = self._answers.get(message.get("id"))
+                        if answer and not answer.done():
+                            if message.get("ok", True):
+                                answer.set_result(message)
+                            else:
+                                reason = (
+                                    message.get("errorReason")
+                                    or message.get("reason")
+                                    or message.get("error")
+                                    or "unknown server error"
+                                )
+                                answer.set_exception(RuntimeError(str(reason)))
                 elif message.get("request"):
                     if message.get("method") == "newConsumer":
+                        consumer_id = message["data"].get("id") or message["data"].get(
+                            "consumerId"
+                        )
                         await self.consume(
-                            id=message["data"]["id"],
+                            id=consumer_id,
                             producerId=message["data"]["producerId"],
                             kind=message["data"]["kind"],
                             rtpParameters=message["data"]["rtpParameters"],
@@ -93,8 +101,11 @@ class Demo:
                         }
                         await self._websocket.send(json.dumps(response))
                     elif message.get("method") == "newDataConsumer":
+                        data_consumer_id = message["data"].get("id") or message["data"].get(
+                            "dataConsumerId"
+                        )
                         await self.consumeData(
-                            id=message["data"]["id"],
+                            id=data_consumer_id,
                             dataProducerId=message["data"]["dataProducerId"],
                             label=message["data"]["label"],
                             protocol=message["data"]["protocol"],
@@ -104,7 +115,7 @@ class Demo:
                         )
                         response = {
                             "response": True,
-                            "id": message["data"]["id"],
+                            "id": message["id"],
                             "ok": True,
                             "data": {},
                         }
@@ -122,19 +133,28 @@ class Demo:
             raise Exception("Operation timed out")
 
     async def _send_request(self, request):
-        self._answers[request["id"]] = self._loop.create_future()
+        self._answers[request["id"]] = asyncio.get_running_loop().create_future()
         await self._websocket.send(json.dumps(request))
+
+    def _require_data(self, response: dict, method: str) -> dict:
+        data = response.get("data")
+        if data is None:
+            raise RuntimeError(f"{method} failed: {response}")
+        return data
 
     # Generates a random positive integer.
     def generateRandomNumber(self) -> int:
         return round(random() * 10000000)
 
     async def run(self):
-        self._websocket = await websockets.connect(uri, subprotocols=["protoo"])
-        if sys.version_info < (3, 7):
-            task_run_recv_msg = asyncio.ensure_future(self.recv_msg_task())
-        else:
-            task_run_recv_msg = asyncio.create_task(self.recv_msg_task())
+        parsed = urlsplit(self._uri)
+        origin = f"https://{parsed.hostname}" if parsed.hostname else None
+        self._websocket = await websockets.connect(
+            self._uri,
+            subprotocols=["protoo"],
+            origin=origin,
+        )
+        task_run_recv_msg = asyncio.create_task(self.recv_msg_task())
         self._tasks.append(task_run_recv_msg)
 
         await self.load()
@@ -162,7 +182,8 @@ class Demo:
         ans = await self._wait_for(self._answers[reqId], timeout=15)
 
         # Load Router RtpCapabilities
-        await self._device.load(ans["data"])
+        data = self._require_data(ans, "getRouterRtpCapabilities")
+        await self._device.load(data.get("routerRtpCapabilities", data))
 
     async def createSendTransport(self):
         if self._sendTransport is not None:
@@ -178,18 +199,21 @@ class Demo:
                 "producing": True,
                 "consuming": False,
                 "sctpCapabilities": self._device.sctpCapabilities.dict(),
+                "appData": {"direction": "producer"},
             },
         }
         await self._send_request(req)
         ans = await self._wait_for(self._answers[reqId], timeout=15)
+        data = self._require_data(ans, "createWebRtcTransport(send)")
+        transport_id = data.get("id") or data.get("transportId")
 
         # Create sendTransport
         self._sendTransport = self._device.createSendTransport(
-            id=ans["data"]["id"],
-            iceParameters=ans["data"]["iceParameters"],
-            iceCandidates=ans["data"]["iceCandidates"],
-            dtlsParameters=ans["data"]["dtlsParameters"],
-            sctpParameters=ans["data"]["sctpParameters"],
+            id=transport_id,
+            iceParameters=data["iceParameters"],
+            iceCandidates=data["iceCandidates"],
+            dtlsParameters=data["dtlsParameters"],
+            sctpParameters=data["sctpParameters"],
         )
 
         @self._sendTransport.on("connect")
@@ -224,7 +248,8 @@ class Demo:
             }
             await self._send_request(req)
             ans = await self._wait_for(self._answers[reqId], timeout=15)
-            return ans["data"]["id"]
+            data = self._require_data(ans, "produce")
+            return data.get("id") or data.get("producerId")
 
         @self._sendTransport.on("producedata")
         async def on_producedata(
@@ -251,7 +276,8 @@ class Demo:
             }
             await self._send_request(req)
             ans = await self._wait_for(self._answers[reqId], timeout=15)
-            return ans["data"]["id"]
+            data = self._require_data(ans, "produceData")
+            return data.get("id") or data.get("dataProducerId")
 
     async def produce(self):
         if self._sendTransport is None:
@@ -319,18 +345,21 @@ class Demo:
                 "producing": False,
                 "consuming": True,
                 "sctpCapabilities": self._device.sctpCapabilities.dict(),
+                "appData": {"direction": "consumer"},
             },
         }
         await self._send_request(req)
         ans = await self._wait_for(self._answers[reqId], timeout=15)
+        data = self._require_data(ans, "createWebRtcTransport(recv)")
+        transport_id = data.get("id") or data.get("transportId")
 
         # Create recvTransport
         self._recvTransport = self._device.createRecvTransport(
-            id=ans["data"]["id"],
-            iceParameters=ans["data"]["iceParameters"],
-            iceCandidates=ans["data"]["iceCandidates"],
-            dtlsParameters=ans["data"]["dtlsParameters"],
-            sctpParameters=ans["data"]["sctpParameters"],
+            id=transport_id,
+            iceParameters=data["iceParameters"],
+            iceCandidates=data["iceCandidates"],
+            dtlsParameters=data["dtlsParameters"],
+            sctpParameters=data["sctpParameters"],
         )
 
         @self._recvTransport.on("connect")
@@ -421,12 +450,30 @@ if __name__ == "__main__":
     else:
         recorder = MediaBlackhole()
 
-    # run event loop
-    loop = asyncio.get_event_loop()
+    async def main():
+        demo = Demo(uri=uri, player=player, recorder=recorder)
+        try:
+            await demo.run()
+        except websockets.exceptions.InvalidStatus as exc:
+            status_code = getattr(exc, "status_code", None)
+            if status_code is None:
+                response = getattr(exc, "response", None)
+                status_code = getattr(response, "status_code", None) or getattr(
+                    response, "status", None
+                )
+            status_label = (
+                f"HTTP {status_code}" if status_code is not None else "unknown status"
+            )
+            raise RuntimeError(
+                f"WebSocket handshake rejected ({status_label}). Please make sure the roomId is valid, "
+                "the v3demo room page is open in your browser, and the connection includes the correct Origin."
+            ) from exc
+        except websockets.exceptions.WebSocketException as exc:
+            raise RuntimeError(f"WebSocket error: {exc}") from exc
+        finally:
+            await demo.close()
+
     try:
-        demo = Demo(uri=uri, player=player, recorder=recorder, loop=loop)
-        loop.run_until_complete(demo.run())
+        asyncio.run(main())
     except KeyboardInterrupt:
         pass
-    finally:
-        loop.run_until_complete(demo.close())

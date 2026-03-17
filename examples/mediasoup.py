@@ -64,6 +64,7 @@ class Demo:
 
         self._sendTransport: Optional[Transport] = None
         self._recvTransport: Optional[Transport] = None
+        self._chatDataProducer: Optional[DataProducer] = None
 
         self._producers = []
         self._consumers = []
@@ -358,12 +359,39 @@ class Demo:
             maxPacketLifeTime=5555,
             label="chat",
             protocol="",
-            appData={"info": "my-chat-DataProducer"},
+            appData={"channel": "chat"},
         )
+        self._chatDataProducer = dataProducer
         self._producers.append(dataProducer)
-        while not self._closed:
+        task_run_data_send = asyncio.create_task(self._data_send_loop(dataProducer))
+        self._tasks.append(task_run_data_send)
+
+    async def _data_send_loop(self, dataProducer: DataProducer):
+        while not self._closed and not dataProducer.closed:
+            if dataProducer.readyState != "open":
+                await asyncio.sleep(0.1)
+                continue
+
             await asyncio.sleep(1)
-            dataProducer.send(f"Hello at {time.time()}")
+            try:
+                dataProducer.send(f"Hello at {time.time()}")
+            except Exception as exc:
+                print(f"DataProducer send failed: {exc}")
+                break
+
+    async def _send_reply_when_ready(self, reply: str, timeout: float = 10.0):
+        waited = 0.0
+        interval = 0.1
+
+        while not self._closed and waited < timeout:
+            producer = self._chatDataProducer
+            if producer and not producer.closed and producer.readyState == "open":
+                producer.send(reply)
+                return
+            await asyncio.sleep(interval)
+            waited += interval
+
+        print(f"DataProducer not ready after {timeout}s, skip reply: {reply}")
 
     async def createRecvTransport(self):
         if self._recvTransport is not None:
@@ -435,9 +463,11 @@ class Demo:
         sctpStreamParameters,
         label=None,
         protocol=None,
-        appData={},
+        appData=None,
     ):
-        pass
+        if appData is None:
+            appData = {}
+
         dataConsumer: DataConsumer = await self.recvTransport.consumeData(
             id=id,
             dataProducerId=dataProducerId,
@@ -450,7 +480,17 @@ class Demo:
 
         @dataConsumer.on("message")
         def on_message(message):
-            print(f"DataChannel {label}-{protocol}: {message}")
+            if isinstance(message, bytes):
+                text = message.decode("utf-8", errors="replace")
+            else:
+                text = str(message)
+
+            print(f"DataChannel {label}-{protocol}: {text}")
+
+            reply = f"received {text}"
+            task_send_reply = asyncio.create_task(self._send_reply_when_ready(reply))
+            self._tasks.append(task_send_reply)
+            
 
     async def close(self):
         for consumer in self._consumers:

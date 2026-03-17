@@ -147,12 +147,12 @@ def applyCodecParameters(
 
         fmtps = [
             f
-            for f in answerMediaDict.get("rmtp", [])
+            for f in answerMediaDict.get("fmtp", [])
             if f.get("payload") == codec.payloadType
         ]
         if not fmtps:
             fmtp = {"payload": codec.payloadType, "config": ""}
-            if answerMediaDict.get("rmtp") is not None:
+            if answerMediaDict.get("fmtp") is not None:
                 answerMediaDict["fmtp"].append(fmtp)
             else:
                 answerMediaDict["fmtp"] = [fmtp]

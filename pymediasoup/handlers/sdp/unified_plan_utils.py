@@ -62,7 +62,7 @@ def addLegacySimulcast(offerMediaDict: dict, numStreams: int):
 
     ssrcMsidLine = ssrcMsidLines[0]
 
-    streamId, trackId = ssrcMsidLine.get("value").split(" ")
+    streamId, trackId = ssrcMsidLine.get("value").split(" ", 1)
     firstSsrc = ssrcMsidLine.get("id")
 
     firstRtxSsrc = None
@@ -77,16 +77,16 @@ def addLegacySimulcast(offerMediaDict: dict, numStreams: int):
             firstRtxSsrc = int(ssrcs[1])
             # True
 
-    ssrcCnameLine = [
+    ssrcCnameLines = [
         line
         for line in offerMediaDict.get("ssrcs", [])
         if line.get("attribute") == "cname"
     ]
 
-    if not ssrcCnameLine:
+    if not ssrcCnameLines:
         raise Exception("a=ssrc line with cname information not found")
 
-    cname = ssrcCnameLine.get("value")
+    cname = ssrcCnameLines[0].get("value")
 
     ssrcs = []
     rtxSsrcs = []
@@ -99,7 +99,9 @@ def addLegacySimulcast(offerMediaDict: dict, numStreams: int):
     offerMediaDict["ssrcGroups"] = []
     offerMediaDict["ssrcs"] = []
 
-    offerMediaDict["ssrcGroups"].append({"semantics": "SIM", "ssrc": " ".join(ssrcs)})
+    offerMediaDict["ssrcGroups"].append(
+        {"semantics": "SIM", "ssrcs": " ".join([str(ssrc) for ssrc in ssrcs])}
+    )
 
     for ssrc in ssrcs:
         offerMediaDict["ssrcs"].append(
@@ -113,10 +115,12 @@ def addLegacySimulcast(offerMediaDict: dict, numStreams: int):
         ssrc = ssrcs[i]
         rtxSsrc = rtxSsrcs[i]
 
-        offerMediaDict["ssrc"].append(
+        offerMediaDict["ssrcs"].append(
             {"id": rtxSsrc, "attribute": "cname", "value": cname}
         )
-        offerMediaDict["ssrc"].append(
+        offerMediaDict["ssrcs"].append(
             {"id": rtxSsrc, "attribute": "msid", "value": f"{streamId} {trackId}"}
         )
-        offerMediaDict["ssrc"].append({"id": "FID", "ssrcs": f"{ssrc} {rtxSsrc}"})
+        offerMediaDict["ssrcGroups"].append(
+            {"semantics": "FID", "ssrcs": f"{ssrc} {rtxSsrc}"}
+        )

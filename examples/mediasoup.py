@@ -6,6 +6,7 @@ from typing import Optional, Dict, Awaitable, Any, TypeVar
 from asyncio.futures import Future
 from urllib.parse import urlsplit
 
+import pymediasoup
 from pymediasoup import Device
 from pymediasoup import AiortcHandler
 from pymediasoup.transport import Transport
@@ -291,7 +292,7 @@ class Demo:
             "method": "join",
             "data": {
                 "displayName": "pymediasoup",
-                "device": {"flag": "python", "name": "python", "version": "0.1.0"},
+                "device": {"flag": "broadcaster", "name": "pymediasoup", "version": pymediasoup.__version__},
                 "rtpCapabilities": self._device.rtpCapabilities.dict(exclude_none=True),
                 "sctpCapabilities": self._device.sctpCapabilities.dict(
                     exclude_none=True

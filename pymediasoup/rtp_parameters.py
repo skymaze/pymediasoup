@@ -217,9 +217,9 @@ class RtcpParameters(BaseModel):
 # rid set.
 class RtpParameters(BaseModel):
     # The MID RTP extension value as defined in the BUNDLE specification.
-    mid: Optional[str]
+    mid: Optional[str] = None
     # Optional media stream id associated with this RTP stream.
-    msid: Optional[str]
+    msid: Optional[str] = None
     # Media and RTX codecs in use.
     codecs: List[RtpCodecParameters] = Field(default_factory=list)
     # RTP header extensions in use.
@@ -227,7 +227,7 @@ class RtpParameters(BaseModel):
     # Transmitted RTP streams and their settings.
     encodings: List[RtpEncodingParameters] = Field(default_factory=list)
     # Parameters used for RTCP.
-    rtcp: Optional[RtcpParameters]
+    rtcp: Optional[RtcpParameters] = None
 
 
 class ExtendedRtpCapabilities(BaseModel):

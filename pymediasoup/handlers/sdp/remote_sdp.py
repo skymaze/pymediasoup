@@ -2,7 +2,6 @@ from typing import List, Optional, Literal, Dict
 
 import logging
 from pydantic.v1 import BaseModel
-from aiortc import RTCIceCandidate
 import sdp_transform
 from .media_section import MediaSection, AnswerMediaSection, OfferMediaSection
 from ...models.transport import (
@@ -22,21 +21,21 @@ logger = logging.getLogger(__name__)
 
 class MediaSectionIdx(BaseModel):
     idx: int
-    reuseMid: Optional[str]
+    reuseMid: Optional[str] = None
 
 
 class RemoteSdp:
     def __init__(
         self,
         iceParameters: Optional[IceParameters] = None,
-        iceCandidates: List[IceCandidate] = [],
+        iceCandidates: Optional[List[IceCandidate]] = None,
         dtlsParameters: Optional[DtlsParameters] = None,
-        sctpParameters: SctpParameters = None,
+        sctpParameters: Optional[SctpParameters] = None,
         plainRtpParameters: Optional[PlainRtpParameters] = None,
         planB: bool = False,
     ):
         self._iceParameters: Optional[IceParameters] = iceParameters
-        self._iceCandidates: List[RTCIceCandidate] = iceCandidates
+        self._iceCandidates: List[IceCandidate] = iceCandidates or []
         self._dtlsParameters: Optional[DtlsParameters] = dtlsParameters
         self._sctpParameters: Optional[SctpParameters] = sctpParameters
         self._plainRtpParameters: Optional[PlainRtpParameters] = plainRtpParameters

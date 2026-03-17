@@ -1,9 +1,9 @@
-from typing import Optional, Any, Union, Literal
+from typing import Optional, Any, Union, Literal, cast
 
 import logging
 from pyee.asyncio import AsyncIOEventEmitter
 from aiortc import RTCDataChannel
-from pydantic.v1 import BaseModel
+from pydantic.v1 import BaseModel, Field
 from .errors import InvalidStateError
 from .emitter import EnhancedEventEmitter
 from .sctp_parameters import SctpStreamParameters
@@ -18,7 +18,7 @@ class DataProducerOptions(BaseModel):
     maxRetransmits: Optional[int]
     label: Optional[str]
     protocol: Optional[str]
-    appData: Optional[dict] = {}
+    appData: Optional[dict] = Field(default_factory=dict)
 
 
 class DataProducer(EnhancedEventEmitter):
@@ -40,7 +40,7 @@ class DataProducer(EnhancedEventEmitter):
         self._id = id
         self._dataChannel = dataChannel
         self._sctpStreamParameters = sctpStreamParameters
-        self._appData = appData
+        self._appData = appData if appData is not None else {}
 
         self._handleDataChannel()
 
@@ -62,7 +62,10 @@ class DataProducer(EnhancedEventEmitter):
     # DataChannel readyState.
     @property
     def readyState(self) -> Literal["closed", "closing", "connecting", "open"]:
-        return self._dataChannel.readyState
+        return cast(
+            Literal["closed", "closing", "connecting", "open"],
+            self._dataChannel.readyState,
+        )
 
     # DataChannel label.
     @property
@@ -97,7 +100,7 @@ class DataProducer(EnhancedEventEmitter):
     # Invalid setter.
     @appData.setter
     def appData(self, value):
-        raise Exception("cannot override appData object")
+        self._appData = value
 
     # Observer.
     @property

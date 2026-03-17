@@ -17,7 +17,8 @@ Use uv for local development and CI parity.
 
 ```bash
 uv sync --group dev
-uv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+uv run flake8 . --exclude=.venv,.git,__pycache__ --count --select=E9,F63,F7,F82 --show-source --statistics
+uv run flake8 . --exclude=.venv,.git,__pycache__ --count --exit-zero --max-complexity=24 --max-line-length=127 --statistics
 uv run python -m unittest
 ```
 

@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional, Any
 from pyee.asyncio import AsyncIOEventEmitter
-from pydantic.v1 import BaseModel
+from pydantic.v1 import BaseModel, Field
 from aiortc import RTCRtpSender, MediaStreamTrack
 from .emitter import EnhancedEventEmitter
 from .errors import InvalidStateError, UnsupportedError
@@ -26,13 +26,15 @@ class ProducerCodecOptions(BaseModel):
 
 class ProducerOptions(BaseModel):
     track: Optional[MediaStreamTrack] = None
-    encodings: Optional[List[RtpEncodingParameters]] = []
+    encodings: Optional[List[RtpEncodingParameters]] = Field(default_factory=list)
     codecOptions: Optional[ProducerCodecOptions] = None
     codec: Optional[RtpCodecCapability] = None
+    streamId: Optional[str] = None
+    headerExtensionOptions: Optional[dict] = None
     stopTracks: bool = True
     disableTrackOnPause: bool = True
     zeroRtpOnPause: bool = False
-    appData: Optional[Any] = {}
+    appData: Optional[Any] = Field(default_factory=dict)
 
     class Config:
         arbitrary_types_allowed = True
@@ -63,15 +65,14 @@ class Producer(EnhancedEventEmitter):
         self._localId = localId
         self._rtpSender = rtpSender
         self._track = track
+        self._kind = track.kind
         self._rtpParameters = rtpParameters
-        # NOTE: 'AudioStreamTrack' object has no attribute 'enabled'
-        # self._paused = (not track.enabled) if disableTrackOnPause else False
-        self._paused = False if disableTrackOnPause else False
+        self._paused = bool(disableTrackOnPause and not getattr(track, "enabled", True))
         self._maxSpatialLayer: Optional[int] = None
         self._stopTracks = stopTracks
         self._disableTrackOnPause = disableTrackOnPause
         self._zeroRtpOnPause = zeroRtpOnPause
-        self._appData = appData
+        self._appData = appData if appData is not None else {}
 
         self._handleTrack()
 
@@ -92,8 +93,8 @@ class Producer(EnhancedEventEmitter):
 
     # Media kind.
     @property
-    def kind(self) -> MediaStreamTrack.kind:
-        return self._track.kind
+    def kind(self) -> str:
+        return self._kind
 
     # Associated RTCRtpSender.
     @property
@@ -128,7 +129,7 @@ class Producer(EnhancedEventEmitter):
     # Invalid setter.
     @appData.setter
     def appData(self, value):
-        raise Exception("cannot override appData object")
+        self._appData = value
 
     # Observer.
     #
@@ -179,64 +180,60 @@ class Producer(EnhancedEventEmitter):
 
     # Pauses sending media.
     def pause(self):
-        logger.warning(
-            "Producer pause() | 'AudioStreamTrack' object has no attribute 'enabled' pause() won't work"
-        )
         logger.debug("Producer pause()")
 
         if self._closed:
             logger.debug("Producer pause() | Producer closed")
             return
 
+        if self._paused:
+            logger.debug("Producer pause() | Producer already paused")
+            return
+
         self._paused = True
 
-        if self._track and self._disableTrackOnPause:
-            # TODO: MediaStreamTrack missing enable property
-            # self._track.enabled = False
-            pass
+        self._syncTrackEnabled()
 
         if self._zeroRtpOnPause:
-            self.emit("@replacetrack")
+            self.emit("@pause")
 
         self._observer.emit("pause")
 
     # Resumes sending media.
     def resume(self):
-        logger.warning(
-            "Producer pause() | 'AudioStreamTrack' object has no attribute 'enabled' resume() may not work"
-        )
         logger.debug("Producer resume()")
 
         if self._closed:
             logger.debug("Producer resume() | Producer closed")
             return
 
+        if not self._paused:
+            logger.debug("Producer resume() | Producer already resumed")
+            return
+
         self._paused = False
 
-        if self._track and self._disableTrackOnPause:
-            # TODO: MediaStreamTrack missing enable property
-            # self._track.enabled = True
-            pass
+        self._syncTrackEnabled()
 
         if self._zeroRtpOnPause:
-            self.emit("@replacetrack")
+            self.emit("@resume")
 
         self._observer.emit("resume")
 
     # Replaces the current track with a new one or null.
-    async def replaceTrack(self, track: MediaStreamTrack):
+    async def replaceTrack(self, track: Optional[MediaStreamTrack] = None):
         logger.debug(f"replaceTrack() [track: {track}]")
 
         if self._closed:
             # This must be done here. Otherwise there is no chance to stop the given
             # track.
-            if self._stopTracks:
+            if track and self._stopTracks:
                 track.stop()
 
             raise InvalidStateError("closed")
 
-        elif track.readyState == "ended":
-            raise InvalidStateError("ended")
+        elif track and track.readyState == "ended":
+            raise InvalidStateError("track ended")
 
         # Do nothing if this is the same track as the current handled one.
         if track == self._track:
@@ -253,15 +250,7 @@ class Producer(EnhancedEventEmitter):
 
         # If this Producer was paused/resumed and the state of the new
         # track does not match, fix it.
-        if self._track and self._disableTrackOnPause:
-            if not self._paused:
-                # TODO: MediaStreamTrack missing enable property
-                # self._track.enabled = True
-                pass
-            elif self._paused:
-                # TODO: MediaStreamTrack missing enable property
-                # self._track.enabled = False
-                pass
+        self._syncTrackEnabled()
 
         self._handleTrack()
 
@@ -270,8 +259,11 @@ class Producer(EnhancedEventEmitter):
         if self._closed:
             raise InvalidStateError("closed")
 
-        elif self._kind != "video":
+        elif self.kind != "video":
             raise UnsupportedError("not a video Producer")
+
+        elif not isinstance(spatialLayer, int):
+            raise TypeError("invalid spatialLayer")
 
         if spatialLayer == self._maxSpatialLayer:
             return
@@ -299,14 +291,21 @@ class Producer(EnhancedEventEmitter):
 
         self._track.on("ended", self._onTrackEnded)
 
+    def _syncTrackEnabled(self):
+        if not self._track or not self._disableTrackOnPause:
+            return
+
+        if hasattr(self._track, "enabled"):
+            setattr(self._track, "enabled", not self._paused)
+
     def _destroyTrack(self):
         if not self._track:
             return
 
-        if self._track.readyState == "ended":
-            return
+        try:
+            self._track.remove_listener("ended", self._onTrackEnded)
+        except Exception:
+            pass
 
-        self._track.remove_listener("ended", self._onTrackEnded)
-
-        if self._stopTracks:
+        if self._track.readyState != "ended" and self._stopTracks:
             self._track.stop()

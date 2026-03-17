@@ -2,7 +2,7 @@ from typing import Optional, Literal, List, Any, Callable, Dict
 
 from enum import IntEnum
 from aiortc import RTCIceServer
-from pydantic.v1 import BaseModel
+from pydantic.v1 import BaseModel, Field
 from ..ortc import ExtendedRtpCapabilities
 from ..sctp_parameters import SctpParameters
 
@@ -78,7 +78,7 @@ class TransportOptions(BaseModel):
     iceTransportPolicy: Optional[Literal["all", "relay"]]
     additionalSettings: Optional[dict] = None
     proprietaryConstraints: Any = None
-    appData: Optional[dict] = {}
+    appData: Optional[dict] = Field(default_factory=dict)
 
     class Config:
         arbitrary_types_allowed = True

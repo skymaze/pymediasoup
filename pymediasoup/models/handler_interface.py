@@ -1,6 +1,6 @@
 from typing import Literal, List, Optional, Any
 
-from pydantic.v1 import BaseModel
+from pydantic.v1 import BaseModel, Field
 from aiortc import (
     RTCIceServer,
     RTCRtpSender,
@@ -38,9 +38,11 @@ class HandlerRunOptions(BaseModel):
 
 class HandlerSendOptions(BaseModel):
     track: MediaStreamTrack
-    encodings: List[RtpEncodingParameters] = []
+    encodings: List[RtpEncodingParameters] = Field(default_factory=list)
     codecOptions: Optional[ProducerCodecOptions]
     codec: Optional[RtpCodecCapability]
+    streamId: Optional[str] = None
+    headerExtensionOptions: Optional[dict] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -59,6 +61,7 @@ class HandlerReceiveOptions(BaseModel):
     trackId: str
     kind: MediaKind
     rtpParameters: RtpParameters
+    streamId: Optional[str] = None
 
 
 class HandlerReceiveResult(BaseModel):

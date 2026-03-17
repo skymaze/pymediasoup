@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, cast
 
 import h264_profile_level_id as h264
 
@@ -138,14 +138,22 @@ def getExtendedRtpCapabilities(
             if not matchingRemoteCodec:
                 continue
 
+            localPayloadType = localCodec.preferredPayloadType
+            remotePayloadType = matchingRemoteCodec.preferredPayloadType
+
+            if localPayloadType is None or remotePayloadType is None:
+                continue
+
             extendedRtpCapabilities.codecs.append(
                 ExtendedCodec(
                     kind=localCodec.kind,
                     mimeType=localCodec.mimeType,
                     clockRate=localCodec.clockRate,
                     channels=localCodec.channels,
-                    localPayloadType=localCodec.preferredPayloadType,
-                    remotePayloadType=matchingRemoteCodec.preferredPayloadType,
+                    localPayloadType=localPayloadType,
+                    remotePayloadType=remotePayloadType,
+                    localRtxPayloadType=None,
+                    remoteRtxPayloadType=None,
                     localParameters=localCodec.parameters,
                     remoteParameters=matchingRemoteCodec.parameters,
                     rtcpFeedback=reduceRtcpFeedback(localCodec, matchingRemoteCodec),
@@ -168,14 +176,22 @@ def getExtendedRtpCapabilities(
             if not matchingLocalCodec:
                 continue
 
+            localPayloadType = matchingLocalCodec.preferredPayloadType
+            remotePayloadType = remoteCodec.preferredPayloadType
+
+            if localPayloadType is None or remotePayloadType is None:
+                continue
+
             extendedRtpCapabilities.codecs.append(
                 ExtendedCodec(
                     kind=matchingLocalCodec.kind,
                     mimeType=matchingLocalCodec.mimeType,
                     clockRate=matchingLocalCodec.clockRate,
                     channels=matchingLocalCodec.channels,
-                    localPayloadType=matchingLocalCodec.preferredPayloadType,
-                    remotePayloadType=remoteCodec.preferredPayloadType,
+                    localPayloadType=localPayloadType,
+                    remotePayloadType=remotePayloadType,
+                    localRtxPayloadType=None,
+                    remoteRtxPayloadType=None,
                     localParameters=matchingLocalCodec.parameters,
                     remoteParameters=remoteCodec.parameters,
                     rtcpFeedback=reduceRtcpFeedback(matchingLocalCodec, remoteCodec),
@@ -257,7 +273,9 @@ def getSendRtpCapabilities(
 def getSendingRtpParameters(
     kind: MediaKind, extendedRtpCapabilities: ExtendedRtpCapabilities
 ) -> RtpParameters:
-    rtpParameters = RtpParameters(rtcp=RtcpParameters())
+    rtpParameters = RtpParameters(
+        mid=None, msid=None, rtcp=RtcpParameters(cname=None, mux=True)
+    )
 
     for extendedCodec in extendedRtpCapabilities.codecs:
         if extendedCodec.kind != kind:
@@ -306,7 +324,9 @@ def getSendingRtpParameters(
 def getSendingRemoteRtpParameters(
     kind: MediaKind, extendedRtpCapabilities: ExtendedRtpCapabilities
 ) -> RtpParameters:
-    rtpParameters = RtpParameters(rtcp=RtcpParameters())
+    rtpParameters = RtpParameters(
+        mid=None, msid=None, rtcp=RtcpParameters(cname=None, mux=True)
+    )
 
     for extendedCodec in extendedRtpCapabilities.codecs:
         if extendedCodec.kind != kind:
@@ -409,8 +429,24 @@ def generateProbatorRtpParameters(videoRtpParameters: RtpParameters) -> RtpParam
 
     rtpParameters = RtpParameters(
         mid=RTP_PROBATOR_MID,
-        encodings=[RtpEncodingParameters(ssrc=RTP_PROBATOR_SSRC)],
-        rtcp=RtcpParameters(cname="probator"),
+        msid=None,
+        encodings=[
+            RtpEncodingParameters(
+                ssrc=RTP_PROBATOR_SSRC,
+                rid=None,
+                codecPayloadType=None,
+                rtx=None,
+                dtx=False,
+                scalabilityMode=None,
+                scaleResolutionDownBy=None,
+                maxBitrate=None,
+                maxFramerate=None,
+                adaptivePtime=False,
+                priority=None,
+                networkPriority=None,
+            )
+        ],
+        rtcp=RtcpParameters(cname="probator", mux=True),
     )
 
     rtpParameters.codecs.append(videoRtpParameters.codecs[0])
@@ -468,7 +504,7 @@ def validateAndNormalizeRtpParameters(params: RtpParameters) -> None:
         validateAndNormalizeRtpEncodingParameters(encoding)
 
     if params.rtcp is None:
-        params.rtcp = RtcpParameters()
+        params.rtcp = RtcpParameters(cname=None, mux=True)
     elif not isinstance(params.rtcp, RtcpParameters):
         raise TypeError("params.rtcp is not an object")
 
@@ -537,7 +573,10 @@ def validateAndNormalizeRtpCodecCapability(codec: RtpCodecCapability) -> None:
     if len(mimeTypeParts) != 2:
         raise TypeError("invalid codec.mimeType")
 
-    codec.kind = mimeTypeParts[0].lower()
+    kind = mimeTypeParts[0].lower()
+    if kind not in ["audio", "video"]:
+        raise TypeError("invalid codec.mimeType")
+    codec.kind = cast(MediaKind, kind)
 
     if codec.preferredPayloadType is None or not isinstance(codec.preferredPayloadType, int):
         raise TypeError("missing codec.preferredPayloadType")

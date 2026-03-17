@@ -1,6 +1,7 @@
 from typing import Optional, Literal, List, Any, Dict, Union
 
 import logging
+from copy import deepcopy
 from pyee.asyncio import AsyncIOEventEmitter
 from aiortc import RTCIceServer, MediaStreamTrack
 from .ortc import (
@@ -74,16 +75,17 @@ class Transport(EnhancedEventEmitter):
         # Direction.
         self._direction: Literal["send", "recv"] = options.direction
         # Extended RTP capabilities.
-        self._extendedRtpCapabilities: ExtendedRtpCapabilities = (
-            options.extendedRtpCapabilities
-        )
+        extendedRtpCapabilities = options.extendedRtpCapabilities
+        if extendedRtpCapabilities is None:
+            raise TypeError("missing extendedRtpCapabilities")
+        self._extendedRtpCapabilities: ExtendedRtpCapabilities = extendedRtpCapabilities
         self._canProduceByKind: Dict[str, bool] = options.canProduceByKind
         self._maxSctpMessageSize = (
             options.sctpParameters.maxMessageSize if options.sctpParameters else None
         )
 
         if options.additionalSettings:
-            additionalSettings = options.additionalSettings.copy(deep=True)
+            additionalSettings = deepcopy(options.additionalSettings)
             additionalSettings.pop("iceServers", None)
             additionalSettings.pop("iceTransportPolicy", None)
             additionalSettings.pop("bundlePolicy", None)
@@ -104,7 +106,7 @@ class Transport(EnhancedEventEmitter):
             iceTransportPolicy=options.iceTransportPolicy,
             additionalSettings=additionalSettings,
             proprietaryConstraints=options.proprietaryConstraints,
-            extendedRtpCapabilities=options.extendedRtpCapabilities,
+            extendedRtpCapabilities=extendedRtpCapabilities,
         )
 
         self._appData = options.appData
@@ -298,7 +300,7 @@ class Transport(EnhancedEventEmitter):
     ) -> Consumer:
 
         if isinstance(rtpParameters, dict):
-            rtpParameters: RtpParameters = RtpParameters(**rtpParameters)
+            rtpParameters = RtpParameters(**rtpParameters)
 
         options: ConsumerOptions = ConsumerOptions(
             id=id,
@@ -309,7 +311,7 @@ class Transport(EnhancedEventEmitter):
             appData=appData if appData is not None else {},
         )
         logger.debug("Transport consume()")
-        rtpParameters: RtpParameters = options.rtpParameters.copy(deep=True)
+        rtpParameters = deepcopy(options.rtpParameters)
         if self._closed:
             raise InvalidStateError("closed")
         elif self._direction != "recv":

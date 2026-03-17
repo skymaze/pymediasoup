@@ -93,8 +93,8 @@ class Producer(EnhancedEventEmitter):
 
     # Media kind.
     @property
-    def kind(self) -> MediaStreamTrack.kind:
-        return self._track.kind
+    def kind(self) -> str:
+        return self._kind
 
     # Associated RTCRtpSender.
     @property
@@ -296,7 +296,7 @@ class Producer(EnhancedEventEmitter):
             return
 
         if hasattr(self._track, "enabled"):
-            self._track.enabled = not self._paused
+            setattr(self._track, "enabled", not self._paused)
 
     def _destroyTrack(self):
         if not self._track:

@@ -170,18 +170,19 @@ class AiortcHandler(HandlerInterface):
         configuration = RTCConfiguration(iceServers=iceServers)
 
         self._pc = RTCPeerConnection(configuration=configuration)
+        pc = self.pc
 
-        @self._pc.on("iceconnectionstatechange")
+        @pc.on("iceconnectionstatechange")
         def on_iceconnectionstatechange():
-            if self._pc.iceConnectionState == "checking":
+            if pc.iceConnectionState == "checking":
                 self.emit("@connectionstatechange", "connecting")
-            elif self._pc.iceConnectionState in ["connected", "completed"]:
+            elif pc.iceConnectionState in ["connected", "completed"]:
                 self.emit("@connectionstatechange", "connected")
-            elif self._pc.iceConnectionState == "failed":
+            elif pc.iceConnectionState == "failed":
                 self.emit("@connectionstatechange", "failed")
-            elif self._pc.iceConnectionState == "disconnected":
+            elif pc.iceConnectionState == "disconnected":
                 self.emit("@connectionstatechange", "disconnected")
-            elif self._pc.iceConnectionState == "closed":
+            elif pc.iceConnectionState == "closed":
                 self.emit("@connectionstatechange", "closed")
 
     async def updateIceServers(self, iceServers):
@@ -190,39 +191,40 @@ class AiortcHandler(HandlerInterface):
 
     async def restartIce(self, iceParameters):
         logger.debug("restartIce()")
-        self._remoteSdp.updateIceParameters(iceParameters)
+        self.remoteSdp.updateIceParameters(iceParameters)
         if not self._transportReady:
             return
+        pc = self.pc
         if self._direction == "send":
             # NOTE: aiortc RTCPeerConnection createOffer do not have iceRestart options
-            offer = await self._pc.createOffer()
+            offer = await pc.createOffer()
             logger.debug(
                 f"restartIce() | calling pc.setLocalDescription() [offer:{offer}]"
             )
-            await self._pc.setLocalDescription(offer)
+            await pc.setLocalDescription(offer)
             answer: RTCSessionDescription = RTCSessionDescription(
-                type="answer", sdp=self._remoteSdp.getSdp()
+                type="answer", sdp=self.remoteSdp.getSdp()
             )
             logger.debug(
                 f"restartIce() | calling pc.setRemoteDescription() [answer:{answer}]"
             )
-            await self._pc.setRemoteDescription(answer)
+            await pc.setRemoteDescription(answer)
         else:
             offer: RTCSessionDescription = RTCSessionDescription(
-                type="offer", sdp=self._remoteSdp.getSdp()
+                type="offer", sdp=self.remoteSdp.getSdp()
             )
             logger.debug(
                 f"restartIce() | calling pc.setRemoteDescription() [offer:{offer}]"
             )
-            await self._pc.setRemoteDescription(offer)
-            answer = await self._pc.createAnswer()
+            await pc.setRemoteDescription(offer)
+            answer = await pc.createAnswer()
             logger.debug(
                 f"restartIce() | calling pc.setLocalDescription() [answer:{answer}]"
             )
-            await self._pc.setLocalDescription(answer)
+            await pc.setLocalDescription(answer)
 
     async def getTransportStats(self):
-        return self._pc.getStats()
+        return self.pc.getStats()
 
     async def send(
         self,
@@ -288,7 +290,7 @@ class AiortcHandler(HandlerInterface):
         ):
             logger.debug("send() | enabling legacy simulcast for VP9 SVC")
             hackVp9Svc = True
-            localSdpDict = sdp_transform.parse
+            localSdpDict = sdp_transform.parse(offer.sdp)
             offerMediaDict = localSdpDict["media"][mediaSectionIdx.idx]
             addLegacySimulcast(
                 offerMediaDict=offerMediaDict, numStreams=layers.spatialLayers
@@ -302,6 +304,8 @@ class AiortcHandler(HandlerInterface):
         await self.pc.setLocalDescription(offer)
         # We can now get the transceiver.mid.
         localId = transceiver.mid
+        if localId is None:
+            raise Exception("new RTCRtpTransceiver MID not found")
         # Set MID.
         sendingRtpParameters.mid = localId
         sendingRtpParameters.msid = options.streamId
@@ -314,8 +318,11 @@ class AiortcHandler(HandlerInterface):
         )
         # Set RTCP CNAME.
         if sendingRtpParameters.rtcp is None:
-            sendingRtpParameters.rtcp = RtcpParameters()
-        sendingRtpParameters.rtcp.cname = common_utils.getCname(offerMediaDict)
+            sendingRtpParameters.rtcp = RtcpParameters(
+                cname=common_utils.getCname(offerMediaDict), mux=True
+            )
+        else:
+            sendingRtpParameters.rtcp.cname = common_utils.getCname(offerMediaDict)
         # Set RTP encodings by parsing the SDP offer if no encodings are given.
         if not options.encodings:
             sendingRtpParameters.encodings = getRtpEncodings(offerMediaDict)
@@ -395,7 +402,7 @@ class AiortcHandler(HandlerInterface):
         if not transceiver:
             raise Exception("associated RTCRtpTransceiver not found")
 
-        await transceiver.sender.replaceTrack(track)
+        transceiver.sender.replaceTrack(track)
 
     async def pauseSending(self, localId: str):
         logger.warning("pauseSending() not implemented")
@@ -446,10 +453,10 @@ class AiortcHandler(HandlerInterface):
         self._assertSendDirection()
         logger.debug("sendDataChannel()")
         dataChannel = self.pc.createDataChannel(
-            label=options.label,
+            label=options.label or "",
             maxPacketLifeTime=options.maxPacketLifeTime,
-            ordered=options.ordered,
-            protocol=options.protocol,
+            ordered=options.ordered if options.ordered is not None else True,
+            protocol=options.protocol or "",
             negotiated=True,
             id=self._nextSendSctpStreamId,
         )
@@ -463,7 +470,7 @@ class AiortcHandler(HandlerInterface):
             offer: RTCSessionDescription = await self.pc.createOffer()
             localSdpDict = sdp_transform.parse(offer.sdp)
             offerMediaDicts = [
-                m for m in localSdpDict.get("media") if m.get("type") == "application"
+                m for m in localSdpDict.get("media", []) if m.get("type") == "application"
             ]
             if not offerMediaDicts:
                 raise Exception("No datachannel")
@@ -513,11 +520,17 @@ class AiortcHandler(HandlerInterface):
             if options.rtpParameters.mid is not None
             else str(len(self._mapMidTransceiver))
         )
+        cname = (
+            options.rtpParameters.rtcp.cname
+            if options.rtpParameters.rtcp and options.rtpParameters.rtcp.cname
+            else None
+        )
+        streamId = options.streamId or cname or options.trackId
         self.remoteSdp.receive(
             mid=localId,
             kind=options.kind,
             offerRtpParameters=options.rtpParameters,
-            streamId=options.streamId or options.rtpParameters.rtcp.cname,
+            streamId=streamId,
             trackId=options.trackId,
         )
         offer: RTCSessionDescription = RTCSessionDescription(
@@ -528,7 +541,7 @@ class AiortcHandler(HandlerInterface):
         answer: RTCSessionDescription = await self.pc.createAnswer()
         localSdpDict = sdp_transform.parse(answer.sdp)
         answerMediaDict = [
-            m for m in localSdpDict.get("media") if str(m.get("mid")) == localId
+            m for m in localSdpDict.get("media", []) if str(m.get("mid")) == localId
         ][0]
         # May need to modify codec parameters in the answer based on codec
         # parameters in the offer.
@@ -563,6 +576,8 @@ class AiortcHandler(HandlerInterface):
         transceiver = self._mapMidTransceiver.get(localId)
         if not transceiver:
             raise Exception("associated RTCRtpTransceiver not found")
+        if transceiver.mid is None:
+            raise Exception("associated RTCRtpTransceiver MID not found")
         self.remoteSdp.closeMediaSection(transceiver.mid)
         offer: RTCSessionDescription = RTCSessionDescription(
             type="offer", sdp=self.remoteSdp.getSdp()
@@ -603,11 +618,15 @@ class AiortcHandler(HandlerInterface):
         self._assertRecvDirection()
         logger.debug(f"[receiveDataChannel() [options:{options.sctpStreamParameters}]]")
         dataChannel = self.pc.createDataChannel(
-            label=options.label,
+            label=options.label or "",
             maxPacketLifeTime=options.sctpStreamParameters.maxPacketLifeTime,
             maxRetransmits=options.sctpStreamParameters.maxRetransmits,
-            ordered=options.sctpStreamParameters.ordered,
-            protocol=options.protocol,
+            ordered=(
+                options.sctpStreamParameters.ordered
+                if options.sctpStreamParameters.ordered is not None
+                else True
+            ),
+            protocol=options.protocol or "",
             negotiated=True,
             id=options.sctpStreamParameters.streamId,
         )

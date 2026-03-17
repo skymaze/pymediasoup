@@ -39,9 +39,19 @@ def getRtpEncodings(offerMediaDict: dict) -> List[RtpEncodingParameters]:
 
     encodings: List[RtpEncodingParameters] = []
     for ssrc, rtxSsrc in ssrcToRtxSsrc.items():
-        encoding = RtpEncodingParameters(ssrc=ssrc)
-        if rtxSsrc is not None:
-            encoding.rtx = RTX(ssrc=rtxSsrc)
+        encoding = RtpEncodingParameters(
+            ssrc=ssrc,
+            rid=None,
+            codecPayloadType=None,
+            rtx=RTX(ssrc=rtxSsrc) if rtxSsrc is not None else None,
+            scalabilityMode=None,
+            scaleResolutionDownBy=None,
+            maxBitrate=None,
+            maxFramerate=None,
+            adaptivePtime=None,
+            priority=None,
+            networkPriority=None,
+        )
         encodings.append(encoding)
     return encodings
 

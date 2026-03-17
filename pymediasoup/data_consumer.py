@@ -1,4 +1,4 @@
-from typing import Optional, Any, Literal
+from typing import Optional, Any, Literal, cast
 
 import logging
 from pydantic.v1 import BaseModel, Field
@@ -68,7 +68,10 @@ class DataConsumer(EnhancedEventEmitter):
     # DataChannel readyState.
     @property
     def readyState(self) -> Literal["closed", "closing", "connecting", "open"]:
-        return self._dataChannel.readyState
+        state = self._dataChannel.readyState
+        if state not in ("closed", "closing", "connecting", "open"):
+            raise ValueError(f"Unexpected DataChannel readyState: {state}")
+        return cast(Literal["closed", "closing", "connecting", "open"], state)
 
     # DataChannel label.
     @property
@@ -83,11 +86,13 @@ class DataConsumer(EnhancedEventEmitter):
     # DataChannel binaryType.
     @property
     def binaryType(self) -> str:
-        return self._dataChannel.binaryType
+        channel = cast(Any, self._dataChannel)
+        return cast(str, getattr(channel, "binaryType", "arraybuffer"))
 
     @binaryType.setter
     def binaryType(self, binaryType: str):
-        self._dataChannel.binaryType = binaryType
+        channel = cast(Any, self._dataChannel)
+        setattr(channel, "binaryType", binaryType)
 
     # App custom data.
     @property

@@ -1,4 +1,4 @@
-from typing import Optional, Any, Union, Literal
+from typing import Optional, Any, Union, Literal, cast
 
 import logging
 from pyee.asyncio import AsyncIOEventEmitter
@@ -62,7 +62,10 @@ class DataProducer(EnhancedEventEmitter):
     # DataChannel readyState.
     @property
     def readyState(self) -> Literal["closed", "closing", "connecting", "open"]:
-        return self._dataChannel.readyState
+        return cast(
+            Literal["closed", "closing", "connecting", "open"],
+            self._dataChannel.readyState,
+        )
 
     # DataChannel label.
     @property

@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Any
+from typing import Optional, Any, cast
 from aiortc import RTCRtpReceiver, MediaStreamTrack
 from pyee.asyncio import AsyncIOEventEmitter
 from pydantic.v1 import BaseModel, Field
@@ -72,7 +72,7 @@ class Consumer(EnhancedEventEmitter):
 
     # Media kind.
     @property
-    def kind(self) -> MediaStreamTrack.kind:
+    def kind(self) -> str:
         return self._track.kind
 
     # Associated RTCRtpReceiver.
@@ -167,7 +167,7 @@ class Consumer(EnhancedEventEmitter):
         self._paused = True
 
         if hasattr(self._track, "enabled"):
-            self._track.enabled = False
+            cast(Any, self._track).enabled = False
 
         self.emit("@pause")
 
@@ -188,7 +188,7 @@ class Consumer(EnhancedEventEmitter):
         self._paused = False
 
         if hasattr(self._track, "enabled"):
-            self._track.enabled = True
+            cast(Any, self._track).enabled = True
 
         self.emit("@resume")
 

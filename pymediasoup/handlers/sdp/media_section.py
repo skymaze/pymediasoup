@@ -2,7 +2,7 @@ from typing import List, Optional, Literal
 
 import re
 import logging
-from aiortc import RTCIceParameters, RTCIceCandidate, RTCDtlsParameters
+from ...transport import IceParameters, DtlsParameters
 from ...producer import ProducerCodecOptions
 from ...rtp_parameters import RtpParameters, RtpCodecParameters, RtpEncodingParameters
 from ...sctp_parameters import SctpParameters
@@ -24,9 +24,9 @@ def getCodecName(codec: RtpCodecParameters):
 class MediaSection:
     def __init__(
         self,
-        iceParameters: Optional[RTCIceParameters] = None,
+        iceParameters: Optional[IceParameters] = None,
         iceCandidates: List[IceCandidate] = [],
-        dtlsParameters: Optional[RTCDtlsParameters] = None,
+        dtlsParameters: Optional[DtlsParameters] = None,
         planB: bool = False,
     ):
         self._mediaDict: dict = {}
@@ -55,7 +55,7 @@ class MediaSection:
     def getDict(self):
         return self._mediaDict
 
-    def setIceParameters(self, iceParameters: RTCIceParameters):
+    def setIceParameters(self, iceParameters: IceParameters):
         self._mediaDict["iceUfrag"] = iceParameters.usernameFragment
         self._mediaDict["icePwd"] = iceParameters.password
 
@@ -99,9 +99,9 @@ class AnswerMediaSection(MediaSection):
         offerRtpParameters: Optional[RtpParameters] = None,
         answerRtpParameters: Optional[RtpParameters] = None,
         codecOptions: Optional[ProducerCodecOptions] = None,
-        iceParameters: Optional[RTCIceParameters] = None,
-        iceCandidates: List[RTCIceCandidate] = [],
-        dtlsParameters: Optional[RTCDtlsParameters] = None,
+        iceParameters: Optional[IceParameters] = None,
+        iceCandidates: List[IceCandidate] = [],
+        dtlsParameters: Optional[DtlsParameters] = None,
         plainRtpParameters: Optional[PlainRtpParameters] = None,
         planB: bool = False,
         extmapAllowMixed: bool = False,
@@ -307,9 +307,9 @@ class OfferMediaSection(MediaSection):
         oldDataChannelSpec: Optional[bool] = False,
         sctpParameters: Optional[SctpParameters] = None,
         offerRtpParameters: Optional[RtpParameters] = None,
-        iceParameters: Optional[RTCIceParameters] = None,
-        iceCandidates: List[RTCIceCandidate] = [],
-        dtlsParameters: Optional[RTCDtlsParameters] = None,
+        iceParameters: Optional[IceParameters] = None,
+        iceCandidates: List[IceCandidate] = [],
+        dtlsParameters: Optional[DtlsParameters] = None,
         plainRtpParameters: Optional[PlainRtpParameters] = None,
         planB: bool = False,
     ):
@@ -435,7 +435,7 @@ class OfferMediaSection(MediaSection):
                         "maxMessageSize": sctpParameters.maxMessageSize,
                     }
 
-    def setDtlsRole(self, _):
+    def setDtlsRole(self, role: str):
         # Always 'actpass'.
         self._mediaDict["setup"] = "actpass"
 
@@ -445,6 +445,7 @@ class OfferMediaSection(MediaSection):
         encoding = offerRtpParameters.encodings[0]
         ssrc = encoding.ssrc
         rtxSsrc = encoding.rtx.ssrc if encoding.rtx and encoding.rtx.ssrc else None
+        cname = None
         if offerRtpParameters.rtcp:
             if offerRtpParameters.rtcp.cname:
                 cname = offerRtpParameters.rtcp.cname

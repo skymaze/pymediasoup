@@ -143,7 +143,7 @@ class Transport(EnhancedEventEmitter):
     def appData(self) -> Any:
         return self._appData
 
-    # Invalid setter.
+    # App custom data setter.
     @appData.setter
     def appData(self, value):
         self._appData = value

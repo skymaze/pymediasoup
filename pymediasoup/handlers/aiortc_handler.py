@@ -230,9 +230,16 @@ class AiortcHandler(HandlerInterface):
         encodings: List[RtpEncodingParameters] = [],
         codecOptions: Optional[ProducerCodecOptions] = None,
         codec: Optional[RtpCodecCapability] = None,
+        streamId: Optional[str] = None,
+        headerExtensionOptions: Optional[dict] = None,
     ) -> HandlerSendResult:
         options = HandlerSendOptions(
-            track=track, encodings=encodings, codecOptions=codecOptions, codec=codec
+            track=track,
+            encodings=encodings,
+            codecOptions=codecOptions,
+            codec=codec,
+            streamId=streamId,
+            headerExtensionOptions=headerExtensionOptions,
         )
         self._assertSendDirection()
         logger.debug(f"send() [kind:{options.track.kind}, track.id:{options.track.id}]")
@@ -297,6 +304,7 @@ class AiortcHandler(HandlerInterface):
         localId = transceiver.mid
         # Set MID.
         sendingRtpParameters.mid = localId
+        sendingRtpParameters.msid = options.streamId
         localSdpDict = sdp_transform.parse(self.pc.localDescription.sdp)
 
         offerMediaDict = localSdpDict["media"][mediaSectionIdx.idx]
@@ -480,10 +488,17 @@ class AiortcHandler(HandlerInterface):
         )
 
     async def receive(
-        self, trackId: str, kind: MediaKind, rtpParameters: RtpParameters
+        self,
+        trackId: str,
+        kind: MediaKind,
+        rtpParameters: RtpParameters,
+        streamId: Optional[str] = None,
     ) -> HandlerReceiveResult:
         options = HandlerReceiveOptions(
-            trackId=trackId, kind=kind, rtpParameters=rtpParameters
+            trackId=trackId,
+            kind=kind,
+            rtpParameters=rtpParameters,
+            streamId=streamId,
         )
         self._assertRecvDirection()
         logger.debug(f"receive() [trackId:{options.trackId}, kind:{options.kind}]")
@@ -496,7 +511,7 @@ class AiortcHandler(HandlerInterface):
             mid=localId,
             kind=options.kind,
             offerRtpParameters=options.rtpParameters,
-            streamId=options.rtpParameters.rtcp.cname,
+            streamId=options.streamId or options.rtpParameters.rtcp.cname,
             trackId=options.trackId,
         )
         offer: RTCSessionDescription = RTCSessionDescription(

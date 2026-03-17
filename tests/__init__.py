@@ -58,6 +58,8 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         device = Device(handlerFactory=AiortcHandler.createFactory(tracks=TRACKS))
         await device.load(generateRouterRtpCapabilities())
         self.assertTrue(isinstance(device.rtpCapabilities, RtpCapabilities))
+        self.assertTrue(isinstance(device.recvRtpCapabilities, RtpCapabilities))
+        self.assertTrue(isinstance(device.sendRtpCapabilities, RtpCapabilities))
 
     async def test_device_sctp_capabilities(self):
         device = Device(handlerFactory=AiortcHandler.createFactory(tracks=TRACKS))
@@ -163,6 +165,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             id: str = ""
             if kind == "audio":
                 self.assertDictEqual(appData, {"foo": "FOO"})
+                self.assertEqual(rtpParameters.msid, "audio-stream")
                 id, _, _, _, _ = generateTransportRemoteParameters()
                 nonlocal audioProducerId
                 audioProducerId = id
@@ -178,7 +181,11 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         # audioTrack.enabled = False
 
         audioProducer = await sendTransport.produce(
-            track=audioTrack, stopTracks=False, appData={"foo": "FOO"}
+            track=audioTrack,
+            streamId="audio-stream",
+            headerExtensionOptions={"abs-send-time": {"encrypt": False}},
+            stopTracks=False,
+            appData={"foo": "FOO"},
         )
 
         self.assertEqual(connectEventNumTimesCalled, 1)
@@ -190,6 +197,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(audioProducer.track, audioTrack)
         self.assertTrue(isinstance(audioProducer.rtpParameters, RtpParameters))
         self.assertEqual(len(audioProducer.rtpParameters.codecs), 1)
+        self.assertEqual(audioProducer.rtpParameters.msid, "audio-stream")
 
         codecs = audioProducer.rtpParameters.codecs
         self.assertDictEqual(
@@ -428,6 +436,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             producerId=audioConsumerRemoteParameters["producerId"],
             kind=audioConsumerRemoteParameters["kind"],
             rtpParameters=audioConsumerRemoteParameters["rtpParameters"],
+            streamId="audio-consumer-stream",
             appData={"bar": "BAR"},
         )
 

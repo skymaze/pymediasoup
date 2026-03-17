@@ -41,6 +41,8 @@ class HandlerSendOptions(BaseModel):
     encodings: List[RtpEncodingParameters] = []
     codecOptions: Optional[ProducerCodecOptions]
     codec: Optional[RtpCodecCapability]
+    streamId: Optional[str] = None
+    headerExtensionOptions: Optional[dict] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -59,6 +61,7 @@ class HandlerReceiveOptions(BaseModel):
     trackId: str
     kind: MediaKind
     rtpParameters: RtpParameters
+    streamId: Optional[str] = None
 
 
 class HandlerReceiveResult(BaseModel):

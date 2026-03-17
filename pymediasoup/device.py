@@ -9,6 +9,7 @@ from .ortc import (
     getExtendedRtpCapabilities,
     canSend,
     getRecvRtpCapabilities,
+    getSendRtpCapabilities,
 )
 from .rtp_parameters import RtpCapabilities
 from .sctp_parameters import SctpCapabilities, SctpParameters
@@ -32,6 +33,8 @@ class Device:
         self._extendedRtpCapabilities: Optional[ExtendedRtpCapabilities] = None
         # Local RTP capabilities for receiving media.
         self._recvRtpCapabilities: Optional[RtpCapabilities] = None
+        # Local RTP capabilities for sending media.
+        self._sendRtpCapabilities: Optional[RtpCapabilities] = None
         # Whether we can produce audio/video based on computed extended RTP
         # capabilities.
         self._canProduceByKind: Dict[str, bool] = {"audio": False, "video": False}
@@ -55,7 +58,24 @@ class Device:
     def rtpCapabilities(self) -> Optional[RtpCapabilities]:
         if not self._loaded:
             raise InvalidStateError("not loaded")
+        # Backward compatible alias for recv RTP capabilities.
         return self._recvRtpCapabilities
+
+    # RTP capabilities of the Device for receiving media.
+    # @raise {InvalidStateError} if not loaded.
+    @property
+    def recvRtpCapabilities(self) -> Optional[RtpCapabilities]:
+        if not self._loaded:
+            raise InvalidStateError("not loaded")
+        return self._recvRtpCapabilities
+
+    # RTP capabilities of the Device for sending media.
+    # @raise {InvalidStateError} if not loaded.
+    @property
+    def sendRtpCapabilities(self) -> Optional[RtpCapabilities]:
+        if not self._loaded:
+            raise InvalidStateError("not loaded")
+        return self._sendRtpCapabilities
 
     # SCTP capabilities of the Device.
     # @raise {InvalidStateError} if not loaded.
@@ -107,6 +127,9 @@ class Device:
         )
         # Generate our receiving RTP capabilities for receiving media.
         self._recvRtpCapabilities = getRecvRtpCapabilities(
+            self._extendedRtpCapabilities
+        )
+        self._sendRtpCapabilities = getSendRtpCapabilities(
             self._extendedRtpCapabilities
         )
         logger.debug(

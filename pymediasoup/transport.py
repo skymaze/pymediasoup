@@ -207,6 +207,8 @@ class Transport(EnhancedEventEmitter):
         encodings: Optional[List[RtpEncodingParameters]] = [],
         codecOptions: Optional[ProducerCodecOptions] = None,
         codec: Optional[RtpCodecCapability] = None,
+        streamId: Optional[str] = None,
+        headerExtensionOptions: Optional[dict] = None,
         stopTracks: bool = True,
         disableTrackOnPause: bool = True,
         zeroRtpOnPause: bool = False,
@@ -217,6 +219,8 @@ class Transport(EnhancedEventEmitter):
             encodings=encodings,
             codecOptions=codecOptions,
             codec=codec,
+            streamId=streamId,
+            headerExtensionOptions=headerExtensionOptions,
             stopTracks=stopTracks,
             disableTrackOnPause=disableTrackOnPause,
             zeroRtpOnPause=zeroRtpOnPause,
@@ -242,6 +246,8 @@ class Transport(EnhancedEventEmitter):
             encodings=options.encodings,
             codecOptions=options.codecOptions,
             codec=options.codec,
+            streamId=options.streamId,
+            headerExtensionOptions=options.headerExtensionOptions,
         )
 
         ids = await self.emit_for_results(
@@ -279,6 +285,7 @@ class Transport(EnhancedEventEmitter):
         producerId: str,
         kind: MediaKind,
         rtpParameters: Union[RtpParameters, dict],
+        streamId: Optional[str] = None,
         appData: Optional[dict] = {},
     ) -> Consumer:
 
@@ -290,6 +297,7 @@ class Transport(EnhancedEventEmitter):
             producerId=producerId,
             kind=kind,
             rtpParameters=rtpParameters,
+            streamId=streamId,
             appData=appData,
         )
         logger.debug("Transport consume()")
@@ -309,7 +317,10 @@ class Transport(EnhancedEventEmitter):
             raise UnsupportedError("cannot consume this Producer")
 
         handlerReceiveResult: HandlerReceiveResult = await self._handler.receive(
-            trackId=options.id, kind=options.kind, rtpParameters=rtpParameters
+            trackId=options.id,
+            kind=options.kind,
+            rtpParameters=rtpParameters,
+            streamId=options.streamId,
         )
 
         consumer: Consumer = Consumer(

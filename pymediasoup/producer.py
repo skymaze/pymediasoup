@@ -29,6 +29,8 @@ class ProducerOptions(BaseModel):
     encodings: Optional[List[RtpEncodingParameters]] = []
     codecOptions: Optional[ProducerCodecOptions] = None
     codec: Optional[RtpCodecCapability] = None
+    streamId: Optional[str] = None
+    headerExtensionOptions: Optional[dict] = None
     stopTracks: bool = True
     disableTrackOnPause: bool = True
     zeroRtpOnPause: bool = False

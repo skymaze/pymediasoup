@@ -258,6 +258,61 @@ def getRecvRtpCapabilities(
     return rtpCapabilities
 
 
+# Generate RTP capabilities for sending media based on the given extended
+# RTP capabilities.
+def getSendRtpCapabilities(
+    extendedRtpCapabilities: ExtendedRtpCapabilities,
+) -> RtpCapabilities:
+    rtpCapabilities: RtpCapabilities = RtpCapabilities()
+    for extendedCodec in extendedRtpCapabilities.codecs:
+        codec: RtpCodecCapability = RtpCodecCapability(
+            mimeType=extendedCodec.mimeType,
+            kind=extendedCodec.kind,
+            preferredPayloadType=extendedCodec.localPayloadType,
+            clockRate=extendedCodec.clockRate,
+            channels=extendedCodec.channels,
+            parameters=extendedCodec.localParameters,
+            rtcpFeedback=extendedCodec.rtcpFeedback,
+        )
+
+        rtpCapabilities.codecs.append(codec)
+
+        # Add RTX codec.
+        if not extendedCodec.localRtxPayloadType:
+            continue
+
+        rtxCodec: RtpCodecCapability = RtpCodecCapability(
+            mimeType=f"{extendedCodec.kind}/rtx",
+            kind=extendedCodec.kind,
+            preferredPayloadType=extendedCodec.localRtxPayloadType,
+            clockRate=extendedCodec.clockRate,
+            parameters={"apt": extendedCodec.localPayloadType},
+            rtcpFeedback=[],
+        )
+
+        rtpCapabilities.codecs.append(rtxCodec)
+
+    for extendedExtension in extendedRtpCapabilities.headerExtensions:
+        # Ignore RTP extensions not valid for sending.
+        if (
+            extendedExtension.direction != "sendrecv"
+            and extendedExtension.direction != "sendonly"
+        ):
+            continue
+
+        ext: RtpHeaderExtension = RtpHeaderExtension(
+            kind=extendedExtension.kind,
+            uri=extendedExtension.uri,
+            preferredId=extendedExtension.sendId,
+            preferredEncrypt=extendedExtension.encrypt,
+            direction=extendedExtension.direction,
+        )
+
+        rtpCapabilities.headerExtensions.append(ext)
+
+    return rtpCapabilities
+
+
 # Generate RTP parameters of the given kind for sending media.
 # NOTE: mid, encodings and rtcp fields are left empty.
 

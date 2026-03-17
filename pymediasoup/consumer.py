@@ -16,6 +16,7 @@ class ConsumerOptions(BaseModel):
     producerId: str
     kind: MediaKind
     rtpParameters: RtpParameters
+    streamId: Optional[str] = None
     appData: Optional[dict] = {}
 
 

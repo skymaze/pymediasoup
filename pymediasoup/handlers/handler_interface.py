@@ -74,6 +74,8 @@ class HandlerInterface(EnhancedEventEmitter):
         encodings: List[RtpEncodingParameters] = [],
         codecOptions: Optional[ProducerCodecOptions] = None,
         codec: Optional[RtpCodecCapability] = None,
+        streamId: Optional[str] = None,
+        headerExtensionOptions: Optional[dict] = None,
     ) -> HandlerSendResult:
         pass
 
@@ -106,7 +108,11 @@ class HandlerInterface(EnhancedEventEmitter):
         pass
 
     async def receive(
-        self, trackId: str, kind: MediaKind, rtpParameters: RtpParameters
+        self,
+        trackId: str,
+        kind: MediaKind,
+        rtpParameters: RtpParameters,
+        streamId: Optional[str] = None,
     ) -> HandlerReceiveResult:
         pass
 

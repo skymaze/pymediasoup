@@ -218,6 +218,8 @@ class RtcpParameters(BaseModel):
 class RtpParameters(BaseModel):
     # The MID RTP extension value as defined in the BUNDLE specification.
     mid: Optional[str]
+    # Optional media stream id associated with this RTP stream.
+    msid: Optional[str]
     # Media and RTX codecs in use.
     codecs: List[RtpCodecParameters] = []
     # RTP header extensions in use.

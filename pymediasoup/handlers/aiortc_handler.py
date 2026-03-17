@@ -405,10 +405,38 @@ class AiortcHandler(HandlerInterface):
         transceiver.sender.replaceTrack(track)
 
     async def pauseSending(self, localId: str):
-        logger.warning("pauseSending() not implemented")
+        """
+        Pause sending media for the given localId.
+
+        NOTE: aiortc backend does not currently support zeroRtpOnPause-style
+        pausing. This method explicitly fails so callers do not assume it works.
+        """
+        self._assertSendDirection()
+        logger.warning("pauseSending() is not supported by aiortc handler")
+        transceiver = self._mapMidTransceiver.get(localId)
+        if not transceiver:
+            raise Exception("associated RTCRtpTransceiver not found")
+        raise NotImplementedError(
+            "pauseSending() is not implemented for the aiortc handler; "
+            "zeroRtpOnPause is not supported"
+        )
 
     async def resumeSending(self, localId: str):
-        logger.warning("resumeSending() not implemented")
+        """
+        Resume sending media for the given localId.
+
+        NOTE: aiortc backend does not currently support zeroRtpOnPause-style
+        pausing. This method explicitly fails so callers do not assume it works.
+        """
+        self._assertSendDirection()
+        logger.warning("resumeSending() is not supported by aiortc handler")
+        transceiver = self._mapMidTransceiver.get(localId)
+        if not transceiver:
+            raise Exception("associated RTCRtpTransceiver not found")
+        raise NotImplementedError(
+            "resumeSending() is not implemented for the aiortc handler; "
+            "zeroRtpOnPause is not supported"
+        )
 
     async def setMaxSpatialLayer(self, localId: str, spatialLayer: int):
         logger.warning("setMaxSpatialLayer() not implemented")

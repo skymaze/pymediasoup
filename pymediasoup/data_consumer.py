@@ -1,7 +1,7 @@
 from typing import Optional, Any, Literal
 
 import logging
-from pydantic.v1 import BaseModel
+from pydantic.v1 import BaseModel, Field
 from pyee.asyncio import AsyncIOEventEmitter
 from aiortc import RTCDataChannel
 from .emitter import EnhancedEventEmitter
@@ -17,7 +17,7 @@ class DataConsumerOptions(BaseModel):
     sctpStreamParameters: SctpStreamParameters
     label: Optional[str]
     protocol: Optional[str]
-    appData: Optional[dict] = {}
+    appData: Optional[dict] = Field(default_factory=dict)
 
 
 class DataConsumer(EnhancedEventEmitter):
@@ -27,7 +27,7 @@ class DataConsumer(EnhancedEventEmitter):
         dataProducerId: str,
         dataChannel: RTCDataChannel,
         sctpStreamParameters: SctpStreamParameters,
-        appData: Optional[dict] = {},
+        appData: Optional[dict] = None,
         loop=None,
     ):
         super(DataConsumer, self).__init__(loop=loop)
@@ -41,7 +41,7 @@ class DataConsumer(EnhancedEventEmitter):
         self._dataProducerId = dataProducerId
         self._dataChannel = dataChannel
         self._sctpStreamParameters = sctpStreamParameters
-        self._appData = appData
+        self._appData = appData if appData is not None else {}
 
         self._handleDataChannel()
 
@@ -97,7 +97,7 @@ class DataConsumer(EnhancedEventEmitter):
     # Invalid setter.
     @appData.setter
     def appData(self, value):
-        raise Exception("cannot override appData object")
+        self._appData = value
 
     # Observer.
     @property

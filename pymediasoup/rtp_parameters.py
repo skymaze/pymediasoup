@@ -1,6 +1,6 @@
 from typing import Optional, List, Literal
 
-from pydantic.v1 import BaseModel
+from pydantic.v1 import BaseModel, Field
 
 
 # Media kind ('audio' or 'video').
@@ -25,14 +25,14 @@ class Codec(BaseModel):
     # Default 1.
     channels: Optional[int] = None
     # Transport layer and codec-specific feedback messages for this codec.
-    rtcpFeedback: List[RtcpFeedback] = []
+    rtcpFeedback: List[RtcpFeedback] = Field(default_factory=list)
 
 
 class RtpCodec(Codec):
     # Codec specific parameters. Some parameters (such as 'packetization-mode'
     # and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
     # codec matching.
-    parameters: dict = {}
+    parameters: dict = Field(default_factory=dict)
 
 
 class ExtendedCodec(Codec):
@@ -41,8 +41,8 @@ class ExtendedCodec(Codec):
     localRtxPayloadType: Optional[int]
     remotePayloadType: int
     remoteRtxPayloadType: Optional[int]
-    localParameters: dict = {}
-    remoteParameters: dict = {}
+    localParameters: dict = Field(default_factory=dict)
+    remoteParameters: dict = Field(default_factory=dict)
 
 
 # Provides information on the capabilities of a codec within the RTP
@@ -118,11 +118,11 @@ class ExtendedHeaderExtension(BaseModel):
 # media level.
 class RtpCapabilities(BaseModel):
     # Supported media and RTX codecs.
-    codecs: List[RtpCodecCapability] = []
+    codecs: List[RtpCodecCapability] = Field(default_factory=list)
     # Supported RTP header extensions.
-    headerExtensions: List[RtpHeaderExtension] = []
+    headerExtensions: List[RtpHeaderExtension] = Field(default_factory=list)
     # Supported FEC mechanisms.
-    fecMechanisms: List[str] = []
+    fecMechanisms: List[str] = Field(default_factory=list)
 
 
 class RTX(BaseModel):
@@ -173,7 +173,7 @@ class RtpHeaderExtensionParameters(BaseModel):
     # If True, the value in the header is encrypted as per RFC 6904. Default False.
     encrypt: Optional[bool] = False
     # Configuration parameters for the header extension.
-    parameters: Optional[dict] = {}
+    parameters: Optional[dict] = Field(default_factory=dict)
 
 
 class RtcpParameters(BaseModel):
@@ -221,15 +221,15 @@ class RtpParameters(BaseModel):
     # Optional media stream id associated with this RTP stream.
     msid: Optional[str]
     # Media and RTX codecs in use.
-    codecs: List[RtpCodecParameters] = []
+    codecs: List[RtpCodecParameters] = Field(default_factory=list)
     # RTP header extensions in use.
-    headerExtensions: List[RtpHeaderExtensionParameters] = []
+    headerExtensions: List[RtpHeaderExtensionParameters] = Field(default_factory=list)
     # Transmitted RTP streams and their settings.
-    encodings: List[RtpEncodingParameters] = []
+    encodings: List[RtpEncodingParameters] = Field(default_factory=list)
     # Parameters used for RTCP.
     rtcp: Optional[RtcpParameters]
 
 
 class ExtendedRtpCapabilities(BaseModel):
-    codecs: List[ExtendedCodec] = []
-    headerExtensions: List[ExtendedHeaderExtension] = []
+    codecs: List[ExtendedCodec] = Field(default_factory=list)
+    headerExtensions: List[ExtendedHeaderExtension] = Field(default_factory=list)

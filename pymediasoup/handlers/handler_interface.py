@@ -33,16 +33,16 @@ class HandlerInterface(EnhancedEventEmitter):
 
     @property
     def name(self) -> str:
-        pass
+        raise NotImplementedError()
 
     def close(self):
-        pass
+        raise NotImplementedError()
 
     async def getNativeRtpCapabilities(self) -> RtpCapabilities:
-        pass
+        raise NotImplementedError()
 
     async def getNativeSctpCapabilities(self) -> SctpCapabilities:
-        pass
+        raise NotImplementedError()
 
     def run(
         self,
@@ -57,44 +57,50 @@ class HandlerInterface(EnhancedEventEmitter):
         additionalSettings: Optional[Any] = None,
         proprietaryConstraints: Optional[Any] = None,
     ):
-        pass
+        raise NotImplementedError()
 
     async def updateIceServers(self, iceServers: List[RTCIceServer]):
-        pass
+        raise NotImplementedError()
 
     async def restartIce(self, iceParameters: IceParameters):
-        pass
+        raise NotImplementedError()
 
     async def getTransportStats(self) -> Any:
-        pass
+        raise NotImplementedError()
 
     async def send(
         self,
         track: MediaStreamTrack,
-        encodings: List[RtpEncodingParameters] = [],
+        encodings: Optional[List[RtpEncodingParameters]] = None,
         codecOptions: Optional[ProducerCodecOptions] = None,
         codec: Optional[RtpCodecCapability] = None,
         streamId: Optional[str] = None,
         headerExtensionOptions: Optional[dict] = None,
     ) -> HandlerSendResult:
-        pass
+        raise NotImplementedError()
 
     async def stopSending(self, localId: str):
-        pass
+        raise NotImplementedError()
+
+    async def pauseSending(self, localId: str):
+        raise NotImplementedError()
+
+    async def resumeSending(self, localId: str):
+        raise NotImplementedError()
 
     async def replaceTrack(
         self, localId: str, track: Optional[MediaStreamTrack] = None
     ):
-        pass
+        raise NotImplementedError()
 
     async def setMaxSpatialLayer(self, localId: str, spatialLayer: int):
-        pass
+        raise NotImplementedError()
 
     async def setRtpEncodingParameters(self, localId: str, params: Any):
-        pass
+        raise NotImplementedError()
 
     async def getSenderStats(self, localId: str) -> Any:
-        pass
+        raise NotImplementedError()
 
     async def sendDataChannel(
         self,
@@ -105,7 +111,7 @@ class HandlerInterface(EnhancedEventEmitter):
         label: Optional[str] = None,
         protocol: Optional[str] = None,
     ) -> HandlerSendDataChannelResult:
-        pass
+        raise NotImplementedError()
 
     async def receive(
         self,
@@ -114,13 +120,19 @@ class HandlerInterface(EnhancedEventEmitter):
         rtpParameters: RtpParameters,
         streamId: Optional[str] = None,
     ) -> HandlerReceiveResult:
-        pass
+        raise NotImplementedError()
 
     async def stopReceiving(self, localId: str):
-        pass
+        raise NotImplementedError()
+
+    async def pauseReceiving(self, localId: str):
+        raise NotImplementedError()
+
+    async def resumeReceiving(self, localId: str):
+        raise NotImplementedError()
 
     async def getReceiverStats(self, localId: str):
-        pass
+        raise NotImplementedError()
 
     async def receiveDataChannel(
         self,
@@ -128,4 +140,4 @@ class HandlerInterface(EnhancedEventEmitter):
         label: Optional[str] = None,
         protocol: Optional[str] = None,
     ) -> HandlerReceiveDataChannelResult:
-        pass
+        raise NotImplementedError()

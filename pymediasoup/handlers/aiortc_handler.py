@@ -47,7 +47,7 @@ SCTP_NUM_STREAMS = {"OS": 1024, "MIS": 1024}
 
 class AiortcHandler(HandlerInterface):
 
-    def __init__(self, tracks: List[MediaStreamTrack] = [], loop=None):
+    def __init__(self, tracks: Optional[List[MediaStreamTrack]] = None, loop=None):
         super(AiortcHandler, self).__init__(loop=loop)
         # Handler direction.
         self._direction: Optional[Literal["send", "recv"]] = None
@@ -68,10 +68,10 @@ class AiortcHandler(HandlerInterface):
         self._nextSendSctpStreamId = 0
         # Got transport local and remote parameters.
         self._transportReady = False
-        self._tracks = tracks
+        self._tracks = tracks or []
 
     @classmethod
-    def createFactory(cls, tracks: List[MediaStreamTrack] = [], loop=None):
+    def createFactory(cls, tracks: Optional[List[MediaStreamTrack]] = None, loop=None):
         return lambda: cls(tracks, loop)
 
     @property
@@ -129,7 +129,7 @@ class AiortcHandler(HandlerInterface):
         dtlsParameters: DtlsParameters,
         extendedRtpCapabilities: ExtendedRtpCapabilities,
         sctpParameters: Optional[SctpParameters] = None,
-        iceServers: Optional[RTCIceServer] = None,
+        iceServers: Optional[List[RTCIceServer]] = None,
         iceTransportPolicy: Optional[Literal["all", "relay"]] = None,
         additionalSettings: Optional[Any] = None,
         proprietaryConstraints: Optional[Any] = None,
@@ -227,7 +227,7 @@ class AiortcHandler(HandlerInterface):
     async def send(
         self,
         track: MediaStreamTrack,
-        encodings: List[RtpEncodingParameters] = [],
+        encodings: Optional[List[RtpEncodingParameters]] = None,
         codecOptions: Optional[ProducerCodecOptions] = None,
         codec: Optional[RtpCodecCapability] = None,
         streamId: Optional[str] = None,
@@ -235,7 +235,7 @@ class AiortcHandler(HandlerInterface):
     ) -> HandlerSendResult:
         options = HandlerSendOptions(
             track=track,
-            encodings=encodings,
+            encodings=encodings or [],
             codecOptions=codecOptions,
             codec=codec,
             streamId=streamId,
@@ -396,6 +396,12 @@ class AiortcHandler(HandlerInterface):
             raise Exception("associated RTCRtpTransceiver not found")
 
         await transceiver.sender.replaceTrack(track)
+
+    async def pauseSending(self, localId: str):
+        logger.warning("pauseSending() not implemented")
+
+    async def resumeSending(self, localId: str):
+        logger.warning("resumeSending() not implemented")
 
     async def setMaxSpatialLayer(self, localId: str, spatialLayer: int):
         logger.warning("setMaxSpatialLayer() not implemented")
@@ -572,6 +578,12 @@ class AiortcHandler(HandlerInterface):
         await self.pc.setLocalDescription(answer)
         self._mapMidTransceiver.pop(localId, None)
 
+    async def pauseReceiving(self, localId: str):
+        logger.warning("pauseReceiving() not implemented")
+
+    async def resumeReceiving(self, localId: str):
+        logger.warning("resumeReceiving() not implemented")
+
     async def getReceiverStats(self, localId: str):
         self._assertRecvDirection()
         transceiver = self._mapMidTransceiver.get(localId)
@@ -624,8 +636,8 @@ class AiortcHandler(HandlerInterface):
             self._hasDataChannelMediaSection = True
         return HandlerReceiveDataChannelResult(dataChannel=dataChannel)
 
-    async def _setupTransport(self, localDtlsRole: DtlsRole, localSdpDict: dict = {}):
-        if localSdpDict == {}:
+    async def _setupTransport(self, localDtlsRole: DtlsRole, localSdpDict: Optional[dict] = None):
+        if localSdpDict is None:
             localSdpDict = sdp_transform.parse(self.pc.localDescription.sdp)
         # Get our local DTLS parameters.
         dtlsParameters: DtlsParameters = extractDtlsParameters(localSdpDict)

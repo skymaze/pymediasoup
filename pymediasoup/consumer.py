@@ -2,7 +2,7 @@ import logging
 from typing import Optional, Any
 from aiortc import RTCRtpReceiver, MediaStreamTrack
 from pyee.asyncio import AsyncIOEventEmitter
-from pydantic.v1 import BaseModel
+from pydantic.v1 import BaseModel, Field
 from .errors import InvalidStateError
 from .emitter import EnhancedEventEmitter
 from .rtp_parameters import MediaKind, RtpParameters
@@ -17,7 +17,7 @@ class ConsumerOptions(BaseModel):
     kind: MediaKind
     rtpParameters: RtpParameters
     streamId: Optional[str] = None
-    appData: Optional[dict] = {}
+    appData: Optional[dict] = Field(default_factory=dict)
 
 
 class Consumer(EnhancedEventEmitter):
@@ -29,7 +29,7 @@ class Consumer(EnhancedEventEmitter):
         track: MediaStreamTrack,
         rtpParameters: RtpParameters,
         rtpReceiver: Optional[RTCRtpReceiver] = None,
-        appData: Optional[dict] = {},
+        appData: Optional[dict] = None,
         loop=None,
     ):
         super(Consumer, self).__init__(loop=loop)
@@ -43,11 +43,10 @@ class Consumer(EnhancedEventEmitter):
         self._localId = localId
         self._producerId = producerId
         self._track = track
-        # NOTE: 'AudioStreamTrack' object has no attribute 'enabled'
-        self._paused: bool = False
+        self._paused: bool = not getattr(track, "enabled", True)
         self._rtpParameters = rtpParameters
         self._rtpReceiver = rtpReceiver
-        self._appData = appData
+        self._appData = appData if appData is not None else {}
 
         self._handleTrack()
 
@@ -104,7 +103,7 @@ class Consumer(EnhancedEventEmitter):
     # Invalid setter.
     @appData.setter
     def appData(self, value):
-        raise Exception("cannot override appData object")
+        self._appData = value
 
     # Observer.
     #
@@ -161,12 +160,16 @@ class Consumer(EnhancedEventEmitter):
             logger.debug("Consumer pause() | Consumer closed")
             return
 
+        if self._paused:
+            logger.debug("Consumer pause() | Consumer already paused")
+            return
+
         self._paused = True
 
-        if self._track and self._disableTrackOnPause:
-            # TODO: MediaStreamTrack missing enable property
-            # self._track.enabled = False
-            pass
+        if hasattr(self._track, "enabled"):
+            self._track.enabled = False
+
+        self.emit("@pause")
 
         self._observer.emit("pause")
 
@@ -178,12 +181,16 @@ class Consumer(EnhancedEventEmitter):
             logger.debug("Consumer resume() | Consumer closed")
             return
 
+        if not self._paused:
+            logger.debug("Consumer resume() | Consumer already resumed")
+            return
+
         self._paused = False
 
-        if self._track and self._disableTrackOnPause:
-            # TODO: MediaStreamTrack missing enable property
-            # self._track.enabled = True
-            pass
+        if hasattr(self._track, "enabled"):
+            self._track.enabled = True
+
+        self.emit("@resume")
 
         self._observer.emit("resume")
 
@@ -204,6 +211,7 @@ class Consumer(EnhancedEventEmitter):
             return
 
         try:
+            self._track.remove_listener("ended", self._onTrackEnded)
             self._track.stop()
         except Exception:
             pass

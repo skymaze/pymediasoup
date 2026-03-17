@@ -3,7 +3,12 @@ from typing import Optional, Literal, List, Any, Dict, Union
 import logging
 from pyee.asyncio import AsyncIOEventEmitter
 from aiortc import RTCIceServer, MediaStreamTrack
-from .ortc import canReceive, generateProbatorRtpParameters, ExtendedRtpCapabilities
+from .ortc import (
+    canReceive,
+    generateProbatorRtpParameters,
+    ExtendedRtpCapabilities,
+    validateAndNormalizeSctpStreamParameters,
+)
 from .errors import InvalidStateError, UnsupportedError
 from .emitter import EnhancedEventEmitter
 from .handlers.handler_interface import HandlerInterface
@@ -79,11 +84,11 @@ class Transport(EnhancedEventEmitter):
 
         if options.additionalSettings:
             additionalSettings = options.additionalSettings.copy(deep=True)
-            del additionalSettings["iceServers"]
-            del additionalSettings["iceTransportPolicy"]
-            del additionalSettings["bundlePolicy"]
-            del additionalSettings["rtcpMuxPolicy"]
-            del additionalSettings["sdpSemantics"]
+            additionalSettings.pop("iceServers", None)
+            additionalSettings.pop("iceTransportPolicy", None)
+            additionalSettings.pop("bundlePolicy", None)
+            additionalSettings.pop("rtcpMuxPolicy", None)
+            additionalSettings.pop("sdpSemantics", None)
         else:
             additionalSettings = None
 
@@ -139,7 +144,7 @@ class Transport(EnhancedEventEmitter):
     # Invalid setter.
     @appData.setter
     def appData(self, value):
-        raise Exception("cannot override appData object")
+        self._appData = value
 
     # Observer.
     #
@@ -160,6 +165,7 @@ class Transport(EnhancedEventEmitter):
         logger.debug("Transport close()")
 
         self._closed = True
+        self._connectionState = "closed"
 
         # Close the handler.
         await self._handler.close()
@@ -204,7 +210,7 @@ class Transport(EnhancedEventEmitter):
     async def produce(
         self,
         track: Optional[MediaStreamTrack] = None,
-        encodings: Optional[List[RtpEncodingParameters]] = [],
+        encodings: Optional[List[RtpEncodingParameters]] = None,
         codecOptions: Optional[ProducerCodecOptions] = None,
         codec: Optional[RtpCodecCapability] = None,
         streamId: Optional[str] = None,
@@ -212,7 +218,7 @@ class Transport(EnhancedEventEmitter):
         stopTracks: bool = True,
         disableTrackOnPause: bool = True,
         zeroRtpOnPause: bool = False,
-        appData: Optional[Any] = {},
+        appData: Optional[Any] = None,
     ) -> Producer:
         options: ProducerOptions = ProducerOptions(
             track=track,
@@ -224,10 +230,12 @@ class Transport(EnhancedEventEmitter):
             stopTracks=stopTracks,
             disableTrackOnPause=disableTrackOnPause,
             zeroRtpOnPause=zeroRtpOnPause,
-            appData=appData,
+            appData=appData if appData is not None else {},
         )
         logger.debug(f"Transport produce() [track:{options.track}]")
-        if not options.track:
+        if self._closed:
+            raise InvalidStateError("closed")
+        elif not options.track:
             raise TypeError("missing track")
         elif self._direction != "send":
             raise UnsupportedError("not a sending Transport")
@@ -237,7 +245,7 @@ class Transport(EnhancedEventEmitter):
             raise InvalidStateError("track ended")
         elif len(self.listeners("connect")) == 0 and self._connectionState == "new":
             raise TypeError('no "connect" listener set into this transport')
-        elif len(self.listeners("connect")) == 0:
+        elif len(self.listeners("produce")) == 0:
             raise TypeError('no "produce" listener set into this transport')
 
         # NOTE: Mediasoup client enqueue command here.
@@ -286,7 +294,7 @@ class Transport(EnhancedEventEmitter):
         kind: MediaKind,
         rtpParameters: Union[RtpParameters, dict],
         streamId: Optional[str] = None,
-        appData: Optional[dict] = {},
+        appData: Optional[dict] = None,
     ) -> Consumer:
 
         if isinstance(rtpParameters, dict):
@@ -298,7 +306,7 @@ class Transport(EnhancedEventEmitter):
             kind=kind,
             rtpParameters=rtpParameters,
             streamId=streamId,
-            appData=appData,
+            appData=appData if appData is not None else {},
         )
         logger.debug("Transport consume()")
         rtpParameters: RtpParameters = options.rtpParameters.copy(deep=True)
@@ -356,12 +364,12 @@ class Transport(EnhancedEventEmitter):
     # Create a DataProducer
     async def produceData(
         self,
-        ordered: Optional[bool] = None,
+        ordered: Optional[bool] = True,
         maxPacketLifeTime: Optional[int] = None,
         maxRetransmits: Optional[int] = None,
         label: Optional[str] = None,
         protocol: Optional[str] = None,
-        appData: Optional[dict] = {},
+        appData: Optional[dict] = None,
     ) -> DataProducer:
         options: DataProducerOptions = DataProducerOptions(
             ordered=ordered,
@@ -369,10 +377,12 @@ class Transport(EnhancedEventEmitter):
             maxRetransmits=maxRetransmits,
             label=label,
             protocol=protocol,
-            appData=appData,
+            appData=appData if appData is not None else {},
         )
         logger.debug("Transport produceData()")
-        if self._direction != "send":
+        if self._closed:
+            raise InvalidStateError("closed")
+        elif self._direction != "send":
             raise UnsupportedError("not a sending Transport")
 
         elif not self._maxSctpMessageSize:
@@ -429,7 +439,7 @@ class Transport(EnhancedEventEmitter):
         sctpStreamParameters: SctpStreamParameters,
         label: Optional[str] = None,
         protocol: Optional[str] = None,
-        appData: Optional[dict] = {},
+        appData: Optional[dict] = None,
     ) -> DataConsumer:
         options: DataConsumerOptions = DataConsumerOptions(
             id=id,
@@ -437,13 +447,16 @@ class Transport(EnhancedEventEmitter):
             sctpStreamParameters=sctpStreamParameters,
             label=label,
             protocol=protocol,
-            appData=appData,
+            appData=appData if appData is not None else {},
         )
         logger.debug("Transport consumeData()")
+        validateAndNormalizeSctpStreamParameters(options.sctpStreamParameters)
         if self._closed:
             raise InvalidStateError("closed")
         elif self._direction != "recv":
             raise UnsupportedError("not a receiving Transport")
+        elif not self._maxSctpMessageSize:
+            raise UnsupportedError("SCTP not enabled by remote Transport")
         elif len(self.listeners("connect")) == 0 and self._connectionState == "new":
             raise TypeError('no "connect" listener set into this transport')
 
@@ -496,6 +509,14 @@ class Transport(EnhancedEventEmitter):
                 return
             await self._handler.stopSending(producer.localId)
 
+        @producer.on("@pause")
+        async def on_pause():
+            await self._handler.pauseSending(producer.localId)
+
+        @producer.on("@resume")
+        async def on_resume():
+            await self._handler.resumeSending(producer.localId)
+
         @producer.on("@replacetrack")
         async def on_replacetrack(track):
             await self._handler.replaceTrack(producer.localId, track)
@@ -521,6 +542,14 @@ class Transport(EnhancedEventEmitter):
             if self._closed:
                 return
             await self._handler.stopReceiving(consumer.localId)
+
+        @consumer.on("@pause")
+        async def on_pause():
+            await self._handler.pauseReceiving(consumer.localId)
+
+        @consumer.on("@resume")
+        async def on_resume():
+            await self._handler.resumeReceiving(consumer.localId)
 
         @consumer.on("@getstats")
         async def on_getstats():

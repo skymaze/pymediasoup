@@ -49,7 +49,7 @@ class Device:
     def handlerName(self) -> str:
         if not self._loaded:
             raise InvalidStateError("not loaded")
-        return self._handlerName
+        return self._handlerName or ""
 
     # Whether the Device is loaded.
     @property

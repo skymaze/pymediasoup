@@ -219,7 +219,9 @@ def getExtendedRtpCapabilities(
         )
 
         if matchingLocalRtxCodec and matchingRemoteRtxCodec:
-            extendedCodec.localRtxPayloadType = matchingLocalRtxCodec.preferredPayloadType
+            extendedCodec.localRtxPayloadType = (
+                matchingLocalRtxCodec.preferredPayloadType
+            )
             extendedCodec.remoteRtxPayloadType = (
                 matchingRemoteRtxCodec.preferredPayloadType
             )
@@ -578,7 +580,9 @@ def validateAndNormalizeRtpCodecCapability(codec: RtpCodecCapability) -> None:
         raise TypeError("invalid codec.mimeType")
     codec.kind = cast(MediaKind, kind)
 
-    if codec.preferredPayloadType is None or not isinstance(codec.preferredPayloadType, int):
+    if codec.preferredPayloadType is None or not isinstance(
+        codec.preferredPayloadType, int
+    ):
         raise TypeError("missing codec.preferredPayloadType")
 
     if not isinstance(codec.clockRate, int):
@@ -682,7 +686,9 @@ def validateAndNormalizeRtpEncodingParameters(encoding: RtpEncodingParameters) -
     if encoding.rid is not None and not isinstance(encoding.rid, str):
         raise TypeError("invalid encoding.rid")
 
-    if encoding.codecPayloadType is not None and not isinstance(encoding.codecPayloadType, int):
+    if encoding.codecPayloadType is not None and not isinstance(
+        encoding.codecPayloadType, int
+    ):
         raise TypeError("invalid encoding.codecPayloadType")
 
     if encoding.rtx is not None and not isinstance(encoding.rtx.ssrc, int):
@@ -691,7 +697,9 @@ def validateAndNormalizeRtpEncodingParameters(encoding: RtpEncodingParameters) -
     if not isinstance(encoding.dtx, bool):
         encoding.dtx = False
 
-    if encoding.scalabilityMode is not None and not isinstance(encoding.scalabilityMode, str):
+    if encoding.scalabilityMode is not None and not isinstance(
+        encoding.scalabilityMode, str
+    ):
         raise TypeError("invalid encoding.scalabilityMode")
 
 
@@ -750,7 +758,9 @@ def _getRtpCapabilities(
             continue
 
         preferredId = (
-            extendedExtension.recvId if direction == "recvonly" else extendedExtension.sendId
+            extendedExtension.recvId
+            if direction == "recvonly"
+            else extendedExtension.sendId
         )
 
         rtpCapabilities.headerExtensions.append(

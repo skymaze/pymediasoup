@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Callable, Literal, List, Any, Union, cast
+from typing import Optional, Dict, Callable, Literal, List, Any, Union
 
 import logging
 from pyee.asyncio import AsyncIOEventEmitter

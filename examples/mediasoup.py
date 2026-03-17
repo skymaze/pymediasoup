@@ -82,7 +82,7 @@ class Demo:
         if self._device is None:
             raise RuntimeError("Device is not loaded yet")
         return self._device
-    
+
     @property
     def sendTransport(self) -> Transport:
         if self._sendTransport is None:
@@ -141,9 +141,7 @@ class Demo:
                         dataProducerId=message["data"]["dataProducerId"],
                         label=message["data"]["label"],
                         protocol=message["data"]["protocol"],
-                        sctpStreamParameters=message["data"][
-                            "sctpStreamParameters"
-                        ],
+                        sctpStreamParameters=message["data"]["sctpStreamParameters"],
                     )
                     response = {
                         "response": True,
@@ -239,7 +237,9 @@ class Demo:
         data = self._require_data(ans, "createWebRtcTransport(send)")
         transport_id_raw = data.get("id") or data.get("transportId")
         if transport_id_raw is None:
-            raise RuntimeError("createWebRtcTransport(send) failed: missing transport id")
+            raise RuntimeError(
+                "createWebRtcTransport(send) failed: missing transport id"
+            )
         transport_id = str(transport_id_raw)
 
         # Create sendTransport
@@ -326,7 +326,11 @@ class Demo:
             "method": "join",
             "data": {
                 "displayName": "pymediasoup",
-                "device": {"flag": "broadcaster", "name": "pymediasoup", "version": pymediasoup.__version__},
+                "device": {
+                    "flag": "broadcaster",
+                    "name": "pymediasoup",
+                    "version": pymediasoup.__version__,
+                },
                 "rtpCapabilities": self.device.rtpCapabilities.dict(exclude_none=True),
                 "sctpCapabilities": self.device.sctpCapabilities.dict(
                     exclude_none=True
@@ -415,7 +419,9 @@ class Demo:
         data = self._require_data(ans, "createWebRtcTransport(recv)")
         transport_id_raw = data.get("id") or data.get("transportId")
         if transport_id_raw is None:
-            raise RuntimeError("createWebRtcTransport(recv) failed: missing transport id")
+            raise RuntimeError(
+                "createWebRtcTransport(recv) failed: missing transport id"
+            )
         transport_id = str(transport_id_raw)
 
         # Create recvTransport
@@ -490,7 +496,6 @@ class Demo:
             reply = f"received {text}"
             task_send_reply = asyncio.create_task(self._send_reply_when_ready(reply))
             self._tasks.append(task_send_reply)
-            
 
     async def close(self):
         for consumer in self._consumers:

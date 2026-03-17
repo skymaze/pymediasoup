@@ -82,14 +82,16 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         id, iceParameters, iceCandidates, dtlsParameters, sctpParameters = (
             generateTransportRemoteParameters()
         )
-        sendTransport = self._register_transport(device.createSendTransport(
-            id=id,
-            iceParameters=iceParameters,
-            iceCandidates=iceCandidates,
-            dtlsParameters=dtlsParameters,
-            sctpParameters=sctpParameters,
-            appData={"baz": "BAZ"},
-        ))
+        sendTransport = self._register_transport(
+            device.createSendTransport(
+                id=id,
+                iceParameters=iceParameters,
+                iceCandidates=iceCandidates,
+                dtlsParameters=dtlsParameters,
+                sctpParameters=sctpParameters,
+                appData={"baz": "BAZ"},
+            )
+        )
         self.assertTrue(isinstance(sendTransport, Transport))
         self.assertEqual(sendTransport.id, id)
         self.assertFalse(sendTransport.closed)
@@ -104,13 +106,15 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         id, iceParameters, iceCandidates, dtlsParameters, sctpParameters = (
             generateTransportRemoteParameters()
         )
-        recvTransport = self._register_transport(device.createRecvTransport(
-            id=id,
-            iceParameters=iceParameters,
-            iceCandidates=iceCandidates,
-            dtlsParameters=dtlsParameters,
-            sctpParameters=sctpParameters,
-        ))
+        recvTransport = self._register_transport(
+            device.createRecvTransport(
+                id=id,
+                iceParameters=iceParameters,
+                iceCandidates=iceCandidates,
+                dtlsParameters=dtlsParameters,
+                sctpParameters=sctpParameters,
+            )
+        )
         self.assertTrue(isinstance(recvTransport, Transport))
         self.assertEqual(recvTransport.id, id)
         self.assertFalse(recvTransport.closed)
@@ -137,13 +141,15 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         id, iceParameters, iceCandidates, dtlsParameters, sctpParameters = (
             generateTransportRemoteParameters()
         )
-        sendTransport = self._register_transport(device.createSendTransport(
-            id=id,
-            iceParameters=iceParameters,
-            iceCandidates=iceCandidates,
-            dtlsParameters=dtlsParameters,
-            sctpParameters=sctpParameters,
-        ))
+        sendTransport = self._register_transport(
+            device.createSendTransport(
+                id=id,
+                iceParameters=iceParameters,
+                iceCandidates=iceCandidates,
+                dtlsParameters=dtlsParameters,
+                sctpParameters=sctpParameters,
+            )
+        )
 
         @sendTransport.on("connect")
         async def on_connect(dtlsParameters):
@@ -402,13 +408,15 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         id, iceParameters, iceCandidates, dtlsParameters, sctpParameters = (
             generateTransportRemoteParameters()
         )
-        recvTransport = self._register_transport(device.createRecvTransport(
-            id=id,
-            iceParameters=iceParameters,
-            iceCandidates=iceCandidates,
-            dtlsParameters=dtlsParameters,
-            sctpParameters=sctpParameters,
-        ))
+        recvTransport = self._register_transport(
+            device.createRecvTransport(
+                id=id,
+                iceParameters=iceParameters,
+                iceCandidates=iceCandidates,
+                dtlsParameters=dtlsParameters,
+                sctpParameters=sctpParameters,
+            )
+        )
         self.assertTrue(isinstance(recvTransport, Transport))
         self.assertEqual(recvTransport.id, id)
         self.assertFalse(recvTransport.closed)

@@ -470,7 +470,9 @@ class AiortcHandler(HandlerInterface):
             offer: RTCSessionDescription = await self.pc.createOffer()
             localSdpDict = sdp_transform.parse(offer.sdp)
             offerMediaDicts = [
-                m for m in localSdpDict.get("media", []) if m.get("type") == "application"
+                m
+                for m in localSdpDict.get("media", [])
+                if m.get("type") == "application"
             ]
             if not offerMediaDicts:
                 raise Exception("No datachannel")
@@ -655,7 +657,9 @@ class AiortcHandler(HandlerInterface):
             self._hasDataChannelMediaSection = True
         return HandlerReceiveDataChannelResult(dataChannel=dataChannel)
 
-    async def _setupTransport(self, localDtlsRole: DtlsRole, localSdpDict: Optional[dict] = None):
+    async def _setupTransport(
+        self, localDtlsRole: DtlsRole, localSdpDict: Optional[dict] = None
+    ):
         if localSdpDict is None:
             localSdpDict = sdp_transform.parse(self.pc.localDescription.sdp)
         # Get our local DTLS parameters.

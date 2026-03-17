@@ -101,12 +101,14 @@ class AnswerMediaSection(MediaSection):
         answerRtpParameters: Optional[RtpParameters] = None,
         codecOptions: Optional[ProducerCodecOptions] = None,
         iceParameters: Optional[IceParameters] = None,
-        iceCandidates: List[IceCandidate] = [],
+        iceCandidates: Optional[List[IceCandidate]] = None,
         dtlsParameters: Optional[DtlsParameters] = None,
         plainRtpParameters: Optional[PlainRtpParameters] = None,
         planB: bool = False,
         extmapAllowMixed: bool = False,
     ):
+        if iceCandidates is None:
+            iceCandidates = []
         super(AnswerMediaSection, self).__init__(
             iceParameters, iceCandidates, dtlsParameters, planB
         )

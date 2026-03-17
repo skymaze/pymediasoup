@@ -30,6 +30,8 @@ class Device:
         self._handlerFactory: Callable[..., HandlerInterface] = handlerFactory
         # Loaded flag.
         self._loaded: bool = False
+        # RTC handler name (set during load()).
+        self._handlerName: Optional[str] = None
 
         # Extended RTP capabilities.
         self._extendedRtpCapabilities: Optional[ExtendedRtpCapabilities] = None
@@ -45,6 +47,8 @@ class Device:
     # The RTC handler name.
     @property
     def handlerName(self) -> str:
+        if not self._loaded:
+            raise InvalidStateError("not loaded")
         return self._handlerName
 
     # Whether the Device is loaded.

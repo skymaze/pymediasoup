@@ -2,4 +2,4 @@ from .device import Device
 from .handlers.aiortc_handler import AiortcHandler
 
 __all__ = ["Device", "AiortcHandler"]
-__version__ = "1.3.0"
+__version__ = "1.4.0"

@@ -25,12 +25,13 @@ class MediaSection:
     def __init__(
         self,
         iceParameters: Optional[IceParameters] = None,
-        iceCandidates: List[IceCandidate] = [],
+        iceCandidates: Optional[List[IceCandidate]] = None,
         dtlsParameters: Optional[DtlsParameters] = None,
         planB: bool = False,
     ):
         self._mediaDict: dict = {}
         self._planB = planB
+        iceCandidates = iceCandidates or []
         if iceParameters:
             self.setIceParameters(iceParameters)
         if iceCandidates:

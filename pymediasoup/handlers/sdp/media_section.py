@@ -311,11 +311,13 @@ class OfferMediaSection(MediaSection):
         sctpParameters: Optional[SctpParameters] = None,
         offerRtpParameters: Optional[RtpParameters] = None,
         iceParameters: Optional[IceParameters] = None,
-        iceCandidates: List[IceCandidate] = [],
+        iceCandidates: Optional[List[IceCandidate]] = None,
         dtlsParameters: Optional[DtlsParameters] = None,
         plainRtpParameters: Optional[PlainRtpParameters] = None,
         planB: bool = False,
     ):
+        if iceCandidates is None:
+            iceCandidates = []
         super(OfferMediaSection, self).__init__(
             iceParameters, iceCandidates, dtlsParameters, planB
         )

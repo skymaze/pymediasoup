@@ -237,26 +237,33 @@ def generateConsumerRemoteParameters(codecMimeType: str, id: Optional[str] = Non
             "kind": "audio",
             "rtpParameters": RtpParameters.model_validate(
                 {
-                "codecs": [
-                    {
-                        "mimeType": "audio/opus",
-                        "payloadType": 100,
-                        "clockRate": 48000,
-                        "channels": 2,
-                        "rtcpFeedback": [{"type": "transport-cc"}],
-                        "parameters": {"useinbandfec": 1, "foo": "bar"},
-                    }
-                ],
-                "encodings": [{"ssrc": 46687003}],
-                "headerExtensions": [
-                    {"uri": "urn:ietf:params:rtp-hdrext:sdes:mid", "id": 1},
-                    {
-                        "uri": "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
-                        "id": 5,
+                    "codecs": [
+                        {
+                            "mimeType": "audio/opus",
+                            "payloadType": 100,
+                            "clockRate": 48000,
+                            "channels": 2,
+                            "rtcpFeedback": [{"type": "transport-cc"}],
+                            "parameters": {"useinbandfec": 1, "foo": "bar"},
+                        }
+                    ],
+                    "encodings": [{"ssrc": 46687003}],
+                    "headerExtensions": [
+                        {"uri": "urn:ietf:params:rtp-hdrext:sdes:mid", "id": 1},
+                        {
+                            "uri": "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
+                            "id": 5,
+                        },
+                        {
+                            "uri": "urn:ietf:params:rtp-hdrext:ssrc-audio-level",
+                            "id": 10,
+                        },
+                    ],
+                    "rtcp": {
+                        "cname": "wB4Ql4lrsxYLjzuN",
+                        "reducedSize": True,
+                        "mux": True,
                     },
-                    {"uri": "urn:ietf:params:rtp-hdrext:ssrc-audio-level", "id": 10},
-                ],
-                "rtcp": {"cname": "wB4Ql4lrsxYLjzuN", "reducedSize": True, "mux": True},
                 }
             ),
         }
@@ -267,25 +274,29 @@ def generateConsumerRemoteParameters(codecMimeType: str, id: Optional[str] = Non
             "kind": "audio",
             "rtpParameters": RtpParameters.model_validate(
                 {
-                "codecs": [
-                    {
-                        "mimeType": "audio/ISAC",
-                        "payloadType": 111,
-                        "clockRate": 16000,
-                        "channels": 1,
-                        "rtcpFeedback": [{"type": "transport-cc"}],
-                        "parameters": {},
-                    }
-                ],
-                "encodings": [{"ssrc": 46687004}],
-                "headerExtensions": [
-                    {"uri": "urn:ietf:params:rtp-hdrext:sdes:mid", "id": 1},
-                    {
-                        "uri": "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
-                        "id": 5,
+                    "codecs": [
+                        {
+                            "mimeType": "audio/ISAC",
+                            "payloadType": 111,
+                            "clockRate": 16000,
+                            "channels": 1,
+                            "rtcpFeedback": [{"type": "transport-cc"}],
+                            "parameters": {},
+                        }
+                    ],
+                    "encodings": [{"ssrc": 46687004}],
+                    "headerExtensions": [
+                        {"uri": "urn:ietf:params:rtp-hdrext:sdes:mid", "id": 1},
+                        {
+                            "uri": "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
+                            "id": 5,
+                        },
+                    ],
+                    "rtcp": {
+                        "cname": "wB4Ql4lrsxYLjzuN",
+                        "reducedSize": True,
+                        "mux": True,
                     },
-                ],
-                "rtcp": {"cname": "wB4Ql4lrsxYLjzuN", "reducedSize": True, "mux": True},
                 }
             ),
         }
@@ -296,43 +307,47 @@ def generateConsumerRemoteParameters(codecMimeType: str, id: Optional[str] = Non
             "kind": "video",
             "rtpParameters": RtpParameters.model_validate(
                 {
-                "codecs": [
-                    {
-                        "mimeType": "video/VP8",
-                        "payloadType": 101,
-                        "clockRate": 90000,
-                        "rtcpFeedback": [
-                            {"type": "nack"},
-                            {"type": "nack", "parameter": "pli"},
-                            {"type": "ccm", "parameter": "fir"},
-                            {"type": "goog-remb"},
-                            {"type": "transport-cc"},
-                        ],
-                        "parameters": {"x-google-start-bitrate": 1500},
+                    "codecs": [
+                        {
+                            "mimeType": "video/VP8",
+                            "payloadType": 101,
+                            "clockRate": 90000,
+                            "rtcpFeedback": [
+                                {"type": "nack"},
+                                {"type": "nack", "parameter": "pli"},
+                                {"type": "ccm", "parameter": "fir"},
+                                {"type": "goog-remb"},
+                                {"type": "transport-cc"},
+                            ],
+                            "parameters": {"x-google-start-bitrate": 1500},
+                        },
+                        {
+                            "mimeType": "video/rtx",
+                            "payloadType": 102,
+                            "clockRate": 90000,
+                            "rtcpFeedback": [],
+                            "parameters": {"apt": 101},
+                        },
+                    ],
+                    "encodings": [{"ssrc": 99991111, "rtx": {"ssrc": 99991112}}],
+                    "headerExtensions": [
+                        {"uri": "urn:ietf:params:rtp-hdrext:sdes:mid", "id": 1},
+                        {
+                            "uri": "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time",
+                            "id": 4,
+                        },
+                        {
+                            "uri": "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
+                            "id": 5,
+                        },
+                        {"uri": "urn:3gpp:video-orientation", "id": 11},
+                        {"uri": "urn:ietf:params:rtp-hdrext:toffset", "id": 12},
+                    ],
+                    "rtcp": {
+                        "cname": "wB4Ql4lrsxYLjzuN",
+                        "reducedSize": True,
+                        "mux": True,
                     },
-                    {
-                        "mimeType": "video/rtx",
-                        "payloadType": 102,
-                        "clockRate": 90000,
-                        "rtcpFeedback": [],
-                        "parameters": {"apt": 101},
-                    },
-                ],
-                "encodings": [{"ssrc": 99991111, "rtx": {"ssrc": 99991112}}],
-                "headerExtensions": [
-                    {"uri": "urn:ietf:params:rtp-hdrext:sdes:mid", "id": 1},
-                    {
-                        "uri": "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time",
-                        "id": 4,
-                    },
-                    {
-                        "uri": "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
-                        "id": 5,
-                    },
-                    {"uri": "urn:3gpp:video-orientation", "id": 11},
-                    {"uri": "urn:ietf:params:rtp-hdrext:toffset", "id": 12},
-                ],
-                "rtcp": {"cname": "wB4Ql4lrsxYLjzuN", "reducedSize": True, "mux": True},
                 }
             ),
         }

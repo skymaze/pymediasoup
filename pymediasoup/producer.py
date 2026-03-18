@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional, Any
 from pyee.asyncio import AsyncIOEventEmitter
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from aiortc import RTCRtpSender, MediaStreamTrack
 from .emitter import EnhancedEventEmitter
 from .errors import InvalidStateError, UnsupportedError
@@ -13,15 +13,15 @@ logger = logging.getLogger(__name__)
 
 # https://mediasoup.org/documentation/v3/mediasoup-client/api/#ProducerCodecOptions
 class ProducerCodecOptions(BaseModel):
-    opusStereo: Optional[bool]
-    opusFec: Optional[bool]
-    opusDtx: Optional[bool]
-    opusMaxPlaybackRate: Optional[int]
-    opusMaxAverageBitrate: Optional[int]
-    opusPtime: Optional[int]
-    videoGoogleStartBitrate: Optional[int]
-    videoGoogleMaxBitrate: Optional[int]
-    videoGoogleMinBitrate: Optional[int]
+    opusStereo: Optional[bool] = None
+    opusFec: Optional[bool] = None
+    opusDtx: Optional[bool] = None
+    opusMaxPlaybackRate: Optional[int] = None
+    opusMaxAverageBitrate: Optional[int] = None
+    opusPtime: Optional[int] = None
+    videoGoogleStartBitrate: Optional[int] = None
+    videoGoogleMaxBitrate: Optional[int] = None
+    videoGoogleMinBitrate: Optional[int] = None
 
 
 class ProducerOptions(BaseModel):
@@ -36,8 +36,7 @@ class ProducerOptions(BaseModel):
     zeroRtpOnPause: bool = False
     appData: Optional[Any] = Field(default_factory=dict)
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class Producer(EnhancedEventEmitter):

@@ -15,7 +15,14 @@ from pymediasoup.consumer import Consumer
 from pymediasoup.producer import Producer
 from pymediasoup.data_consumer import DataConsumer
 from pymediasoup.data_producer import DataProducer
+from pymediasoup.rtp_parameters import RtpCapabilities, RtpParameters
 from pymediasoup.sctp_parameters import SctpStreamParameters
+from pymediasoup.models.transport import (
+    IceParameters,
+    IceCandidate,
+    DtlsParameters,
+    SctpParameters,
+)
 
 # Import aiortc
 from aiortc import VideoStreamTrack
@@ -213,11 +220,16 @@ class Demo:
 
         # Load Router RtpCapabilities
         data = self._require_data(ans, "getRouterRtpCapabilities")
-        await self.device.load(data.get("routerRtpCapabilities", data))
+        await self.device.load(
+            RtpCapabilities.model_validate(data.get("routerRtpCapabilities", data))
+        )
 
     async def createSendTransport(self):
         if self._sendTransport is not None:
             return
+        sctp_capabilities = self.device.sctpCapabilities
+        if sctp_capabilities is None:
+            raise RuntimeError("Device SCTP capabilities are unavailable")
         # Send create sendTransport request
         reqId = self.generateRandomNumber()
         req = {
@@ -228,7 +240,7 @@ class Demo:
                 "forceTcp": False,
                 "producing": True,
                 "consuming": False,
-                "sctpCapabilities": self.device.sctpCapabilities.dict(),
+                "sctpCapabilities": sctp_capabilities.model_dump(),
                 "appData": {"direction": "producer"},
             },
         }
@@ -245,10 +257,17 @@ class Demo:
         # Create sendTransport
         self._sendTransport = self.device.createSendTransport(
             id=transport_id,
-            iceParameters=data["iceParameters"],
-            iceCandidates=data["iceCandidates"],
-            dtlsParameters=data["dtlsParameters"],
-            sctpParameters=data["sctpParameters"],
+            iceParameters=IceParameters.model_validate(data["iceParameters"]),
+            iceCandidates=[
+                IceCandidate.model_validate(candidate)
+                for candidate in data["iceCandidates"]
+            ],
+            dtlsParameters=DtlsParameters.model_validate(data["dtlsParameters"]),
+            sctpParameters=(
+                SctpParameters.model_validate(data["sctpParameters"])
+                if data.get("sctpParameters") is not None
+                else None
+            ),
         )
 
         @self.sendTransport.on("connect")
@@ -260,7 +279,7 @@ class Demo:
                 "method": "connectWebRtcTransport",
                 "data": {
                     "transportId": self.sendTransport.id,
-                    "dtlsParameters": dtlsParameters.dict(exclude_none=True),
+                    "dtlsParameters": dtlsParameters.model_dump(exclude_none=True),
                 },
             }
             await self._send_request(req)
@@ -277,7 +296,7 @@ class Demo:
                 "data": {
                     "transportId": self.sendTransport.id,
                     "kind": kind,
-                    "rtpParameters": rtpParameters.dict(exclude_none=True),
+                    "rtpParameters": rtpParameters.model_dump(exclude_none=True),
                     "appData": appData,
                 },
             }
@@ -303,7 +322,7 @@ class Demo:
                     "transportId": self.sendTransport.id,
                     "label": label,
                     "protocol": protocol,
-                    "sctpStreamParameters": sctpStreamParameters.dict(
+                    "sctpStreamParameters": sctpStreamParameters.model_dump(
                         exclude_none=True
                     ),
                     "appData": appData,
@@ -317,6 +336,12 @@ class Demo:
     async def produce(self):
         if self._sendTransport is None:
             await self.createSendTransport()
+        rtp_capabilities = self.device.rtpCapabilities
+        if rtp_capabilities is None:
+            raise RuntimeError("Device RTP capabilities are unavailable")
+        sctp_capabilities = self.device.sctpCapabilities
+        if sctp_capabilities is None:
+            raise RuntimeError("Device SCTP capabilities are unavailable")
 
         # Join room
         reqId = self.generateRandomNumber()
@@ -331,10 +356,8 @@ class Demo:
                     "name": "pymediasoup",
                     "version": pymediasoup.__version__,
                 },
-                "rtpCapabilities": self.device.rtpCapabilities.dict(exclude_none=True),
-                "sctpCapabilities": self.device.sctpCapabilities.dict(
-                    exclude_none=True
-                ),
+                "rtpCapabilities": rtp_capabilities.model_dump(exclude_none=True),
+                "sctpCapabilities": sctp_capabilities.model_dump(exclude_none=True),
             },
         }
         await self._send_request(req)
@@ -400,6 +423,9 @@ class Demo:
     async def createRecvTransport(self):
         if self._recvTransport is not None:
             return
+        sctp_capabilities = self.device.sctpCapabilities
+        if sctp_capabilities is None:
+            raise RuntimeError("Device SCTP capabilities are unavailable")
         # Send create recvTransport request
         reqId = self.generateRandomNumber()
         req = {
@@ -410,7 +436,7 @@ class Demo:
                 "forceTcp": False,
                 "producing": False,
                 "consuming": True,
-                "sctpCapabilities": self.device.sctpCapabilities.dict(),
+                "sctpCapabilities": sctp_capabilities.model_dump(),
                 "appData": {"direction": "consumer"},
             },
         }
@@ -427,10 +453,17 @@ class Demo:
         # Create recvTransport
         self._recvTransport = self.device.createRecvTransport(
             id=transport_id,
-            iceParameters=data["iceParameters"],
-            iceCandidates=data["iceCandidates"],
-            dtlsParameters=data["dtlsParameters"],
-            sctpParameters=data["sctpParameters"],
+            iceParameters=IceParameters.model_validate(data["iceParameters"]),
+            iceCandidates=[
+                IceCandidate.model_validate(candidate)
+                for candidate in data["iceCandidates"]
+            ],
+            dtlsParameters=DtlsParameters.model_validate(data["dtlsParameters"]),
+            sctpParameters=(
+                SctpParameters.model_validate(data["sctpParameters"])
+                if data.get("sctpParameters") is not None
+                else None
+            ),
         )
 
         @self.recvTransport.on("connect")
@@ -442,7 +475,7 @@ class Demo:
                 "method": "connectWebRtcTransport",
                 "data": {
                     "transportId": self.recvTransport.id,
-                    "dtlsParameters": dtlsParameters.dict(exclude_none=True),
+                    "dtlsParameters": dtlsParameters.model_dump(exclude_none=True),
                 },
             }
             await self._send_request(req)
@@ -453,7 +486,10 @@ class Demo:
         if self._recvTransport is None:
             await self.createRecvTransport()
         consumer: Consumer = await self.recvTransport.consume(
-            id=id, producerId=producerId, kind=kind, rtpParameters=rtpParameters
+            id=id,
+            producerId=producerId,
+            kind=kind,
+            rtpParameters=RtpParameters.model_validate(rtpParameters),
         )
         self._consumers.append(consumer)
         track = consumer.track

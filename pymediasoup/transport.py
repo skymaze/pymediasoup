@@ -1,4 +1,4 @@
-from typing import Optional, Literal, List, Any, Dict, Union
+from typing import Optional, Literal, List, Any, Dict
 
 import logging
 from copy import deepcopy
@@ -294,14 +294,10 @@ class Transport(EnhancedEventEmitter):
         id: str,
         producerId: str,
         kind: MediaKind,
-        rtpParameters: Union[RtpParameters, dict],
+        rtpParameters: RtpParameters,
         streamId: Optional[str] = None,
         appData: Optional[dict] = None,
     ) -> Consumer:
-
-        if isinstance(rtpParameters, dict):
-            rtpParameters = RtpParameters(**rtpParameters)
-
         options: ConsumerOptions = ConsumerOptions(
             id=id,
             producerId=producerId,
@@ -311,7 +307,7 @@ class Transport(EnhancedEventEmitter):
             appData=appData if appData is not None else {},
         )
         logger.debug("Transport consume()")
-        rtpParameters = deepcopy(options.rtpParameters)
+        rtpParameters = options.rtpParameters.model_copy(deep=True)
         if self._closed:
             raise InvalidStateError("closed")
         elif self._direction != "recv":

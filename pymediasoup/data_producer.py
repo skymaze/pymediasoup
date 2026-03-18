@@ -3,7 +3,7 @@ from typing import Optional, Any, Union, Literal, cast
 import logging
 from pyee.asyncio import AsyncIOEventEmitter
 from aiortc import RTCDataChannel
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from .errors import InvalidStateError
 from .emitter import EnhancedEventEmitter
 from .sctp_parameters import SctpStreamParameters
@@ -13,11 +13,11 @@ logger = logging.getLogger(__name__)
 
 
 class DataProducerOptions(BaseModel):
-    ordered: Optional[bool]
-    maxPacketLifeTime: Optional[int]
-    maxRetransmits: Optional[int]
-    label: Optional[str]
-    protocol: Optional[str]
+    ordered: Optional[bool] = None
+    maxPacketLifeTime: Optional[int] = None
+    maxRetransmits: Optional[int] = None
+    label: Optional[str] = None
+    protocol: Optional[str] = None
     appData: Optional[dict] = Field(default_factory=dict)
 
 

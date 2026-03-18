@@ -1,7 +1,7 @@
 from typing import Optional, Any, Literal, cast
 
 import logging
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from pyee.asyncio import AsyncIOEventEmitter
 from aiortc import RTCDataChannel
 from .emitter import EnhancedEventEmitter
@@ -15,8 +15,8 @@ class DataConsumerOptions(BaseModel):
     id: str
     dataProducerId: str
     sctpStreamParameters: SctpStreamParameters
-    label: Optional[str]
-    protocol: Optional[str]
+    label: Optional[str] = None
+    protocol: Optional[str] = None
     appData: Optional[dict] = Field(default_factory=dict)
 
 

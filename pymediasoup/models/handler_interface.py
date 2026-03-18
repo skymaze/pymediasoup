@@ -1,6 +1,6 @@
 from typing import Literal, List, Optional, Any
 
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from aiortc import (
     RTCIceServer,
     RTCRtpSender,
@@ -25,36 +25,33 @@ class HandlerRunOptions(BaseModel):
     iceParameters: IceParameters
     iceCandidates: List[IceCandidate]
     dtlsParameters: DtlsParameters
-    sctpParameters: Optional[SctpParameters]
+    sctpParameters: Optional[SctpParameters] = None
     iceServers: Optional[List[RTCIceServer]]
     iceTransportPolicy: Optional[Literal["all", "relay"]]
-    additionalSettings: Optional[Any]
-    proprietaryConstraints: Optional[Any]
+    additionalSettings: Optional[Any] = None
+    proprietaryConstraints: Optional[Any] = None
     extendedRtpCapabilities: ExtendedRtpCapabilities
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class HandlerSendOptions(BaseModel):
     track: MediaStreamTrack
     encodings: List[RtpEncodingParameters] = Field(default_factory=list)
-    codecOptions: Optional[ProducerCodecOptions]
-    codec: Optional[RtpCodecCapability]
+    codecOptions: Optional[ProducerCodecOptions] = None
+    codec: Optional[RtpCodecCapability] = None
     streamId: Optional[str] = None
     headerExtensionOptions: Optional[dict] = None
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class HandlerSendResult(BaseModel):
     localId: str
     rtpParameters: RtpParameters
-    rtpSender: Optional[RTCRtpSender]
+    rtpSender: Optional[RTCRtpSender] = None
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class HandlerReceiveOptions(BaseModel):
@@ -67,28 +64,25 @@ class HandlerReceiveOptions(BaseModel):
 class HandlerReceiveResult(BaseModel):
     localId: str
     track: MediaStreamTrack
-    rtpReceiver: Optional[RTCRtpReceiver]
+    rtpReceiver: Optional[RTCRtpReceiver] = None
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class HandlerSendDataChannelResult(BaseModel):
     dataChannel: RTCDataChannel
     sctpStreamParameters: SctpStreamParameters
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class HandlerReceiveDataChannelOptions(BaseModel):
     sctpStreamParameters: SctpStreamParameters
-    label: Optional[str]
-    protocol: Optional[str]
+    label: Optional[str] = None
+    protocol: Optional[str] = None
 
 
 class HandlerReceiveDataChannelResult(BaseModel):
     dataChannel: RTCDataChannel
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)

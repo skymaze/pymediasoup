@@ -638,7 +638,7 @@ dev = [
 requires-dist = [
     { name = "aiortc", specifier = ">=1.14.0,<2" },
     { name = "h264-profile-level-id", specifier = ">=1.0.0,<2" },
-    { name = "pydantic", specifier = ">=1.10.17,<3.0.0" },
+    { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
     { name = "pyee", specifier = ">=13,<14" },
     { name = "sdp-transform", specifier = ">=1.1.0,<2" },
 ]

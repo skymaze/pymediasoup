@@ -105,7 +105,7 @@ class Device:
         if isinstance(routerRtpCapabilities, dict):
             routerRtpCapabilities = RtpCapabilities(**routerRtpCapabilities)
         else:
-            routerRtpCapabilities = routerRtpCapabilities.copy(deep=True)
+            routerRtpCapabilities = routerRtpCapabilities.model_copy(deep=True)
 
         validateAndNormalizeRtpCapabilities(routerRtpCapabilities)
 

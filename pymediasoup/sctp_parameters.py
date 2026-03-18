@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic.v1 import BaseModel
+from pydantic import BaseModel
 
 
 class NumSctpStreams(BaseModel):
@@ -32,17 +32,17 @@ class SctpParameters(BaseModel):
 # can be True.
 class SctpStreamParameters(BaseModel):
     # SCTP stream id.
-    streamId: Optional[int]
+    streamId: Optional[int] = None
     # Whether data messages must be received in order. if True the messages will
     # be sent reliably. Default True.
     ordered: Optional[bool] = True
     # When ordered is False indicates the time (in milliseconds) after which a
     # SCTP packet will stop being retransmitted.
-    maxPacketLifeTime: Optional[int]
+    maxPacketLifeTime: Optional[int] = None
     # When ordered is False indicates the maximum number of times a packet will
     # be retransmitted.
-    maxRetransmits: Optional[int]
+    maxRetransmits: Optional[int] = None
     # A label which can be used to distinguish this DataChannel from others.
-    label: Optional[str]
+    label: Optional[str] = None
     # Name of the sub-protocol used by this DataChannel.
-    protocol: Optional[str]
+    protocol: Optional[str] = None

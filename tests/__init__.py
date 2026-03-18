@@ -207,7 +207,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
 
         codecs = audioProducer.rtpParameters.codecs
         self.assertDictEqual(
-            codecs[0].dict(),
+            codecs[0].model_dump(),
             {
                 "mimeType": "audio/opus",
                 "payloadType": 111,
@@ -220,7 +220,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
 
         headerExtensions = audioProducer.rtpParameters.headerExtensions
         self.assertDictEqual(
-            headerExtensions[0].dict(),
+            headerExtensions[0].model_dump(),
             {
                 "uri": "urn:ietf:params:rtp-hdrext:sdes:mid",
                 "id": 1,
@@ -229,7 +229,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             },
         )
         self.assertDictEqual(
-            headerExtensions[1].dict(),
+            headerExtensions[1].model_dump(),
             {
                 "uri": "urn:ietf:params:rtp-hdrext:ssrc-audio-level",
                 "id": 10,
@@ -269,7 +269,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         codecs = videoProducer.rtpParameters.codecs
 
         self.assertDictEqual(
-            codecs[0].dict(exclude_none=True),
+            codecs[0].model_dump(exclude_none=True),
             {
                 "mimeType": "video/VP8",
                 "payloadType": 96,
@@ -286,7 +286,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertDictEqual(
-            codecs[1].dict(exclude_none=True),
+            codecs[1].model_dump(exclude_none=True),
             {
                 "mimeType": "video/rtx",
                 "payloadType": 97,
@@ -296,7 +296,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             },
         )
 
-        headerExtensions = videoProducer.rtpParameters.dict()["headerExtensions"]
+        headerExtensions = videoProducer.rtpParameters.model_dump()["headerExtensions"]
 
         self.assertDictEqual(
             headerExtensions[0],
@@ -461,7 +461,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         codecs = audioConsumer.rtpParameters.codecs
 
         self.assertDictEqual(
-            codecs[0].dict(),
+            codecs[0].model_dump(),
             {
                 "mimeType": "audio/opus",
                 "payloadType": 100,
@@ -475,7 +475,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         headerExtensions = audioConsumer.rtpParameters.headerExtensions
 
         self.assertDictEqual(
-            headerExtensions[0].dict(),
+            headerExtensions[0].model_dump(),
             {
                 "uri": "urn:ietf:params:rtp-hdrext:sdes:mid",
                 "id": 1,
@@ -485,7 +485,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertDictEqual(
-            headerExtensions[1].dict(),
+            headerExtensions[1].model_dump(),
             {
                 "uri": "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
                 "id": 5,
@@ -495,7 +495,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertDictEqual(
-            headerExtensions[2].dict(),
+            headerExtensions[2].model_dump(),
             {
                 "uri": "urn:ietf:params:rtp-hdrext:ssrc-audio-level",
                 "id": 10,
@@ -531,7 +531,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         codecs = videoConsumer.rtpParameters.codecs
 
         self.assertDictEqual(
-            codecs[0].dict(exclude_none=True),
+            codecs[0].model_dump(exclude_none=True),
             {
                 "mimeType": "video/VP8",
                 "payloadType": 101,
@@ -548,7 +548,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertDictEqual(
-            codecs[1].dict(exclude_none=True),
+            codecs[1].model_dump(exclude_none=True),
             {
                 "mimeType": "video/rtx",
                 "payloadType": 102,
@@ -561,7 +561,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
         headerExtensions = videoConsumer.rtpParameters.headerExtensions
 
         self.assertDictEqual(
-            headerExtensions[0].dict(),
+            headerExtensions[0].model_dump(),
             {
                 "uri": "urn:ietf:params:rtp-hdrext:sdes:mid",
                 "id": 1,
@@ -570,7 +570,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             },
         )
         self.assertDictEqual(
-            headerExtensions[1].dict(),
+            headerExtensions[1].model_dump(),
             {
                 "uri": "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time",
                 "id": 4,
@@ -579,7 +579,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             },
         )
         self.assertDictEqual(
-            headerExtensions[2].dict(),
+            headerExtensions[2].model_dump(),
             {
                 "uri": "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
                 "id": 5,
@@ -588,7 +588,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             },
         )
         self.assertDictEqual(
-            headerExtensions[3].dict(),
+            headerExtensions[3].model_dump(),
             {
                 "uri": "urn:3gpp:video-orientation",
                 "id": 11,
@@ -597,7 +597,7 @@ class TestMethods(unittest.IsolatedAsyncioTestCase):
             },
         )
         self.assertDictEqual(
-            headerExtensions[4].dict(),
+            headerExtensions[4].model_dump(),
             {
                 "uri": "urn:ietf:params:rtp-hdrext:toffset",
                 "id": 12,

@@ -228,7 +228,7 @@ class Demo:
                 "forceTcp": False,
                 "producing": True,
                 "consuming": False,
-                "sctpCapabilities": self.device.sctpCapabilities.dict(),
+                "sctpCapabilities": self.device.sctpCapabilities.model_dump(),
                 "appData": {"direction": "producer"},
             },
         }
@@ -260,7 +260,7 @@ class Demo:
                 "method": "connectWebRtcTransport",
                 "data": {
                     "transportId": self.sendTransport.id,
-                    "dtlsParameters": dtlsParameters.dict(exclude_none=True),
+                    "dtlsParameters": dtlsParameters.model_dump(exclude_none=True),
                 },
             }
             await self._send_request(req)
@@ -277,7 +277,7 @@ class Demo:
                 "data": {
                     "transportId": self.sendTransport.id,
                     "kind": kind,
-                    "rtpParameters": rtpParameters.dict(exclude_none=True),
+                    "rtpParameters": rtpParameters.model_dump(exclude_none=True),
                     "appData": appData,
                 },
             }
@@ -303,7 +303,7 @@ class Demo:
                     "transportId": self.sendTransport.id,
                     "label": label,
                     "protocol": protocol,
-                    "sctpStreamParameters": sctpStreamParameters.dict(
+                    "sctpStreamParameters": sctpStreamParameters.model_dump(
                         exclude_none=True
                     ),
                     "appData": appData,
@@ -331,8 +331,8 @@ class Demo:
                     "name": "pymediasoup",
                     "version": pymediasoup.__version__,
                 },
-                "rtpCapabilities": self.device.rtpCapabilities.dict(exclude_none=True),
-                "sctpCapabilities": self.device.sctpCapabilities.dict(
+                "rtpCapabilities": self.device.rtpCapabilities.model_dump(exclude_none=True),
+                "sctpCapabilities": self.device.sctpCapabilities.model_dump(
                     exclude_none=True
                 ),
             },
@@ -410,7 +410,7 @@ class Demo:
                 "forceTcp": False,
                 "producing": False,
                 "consuming": True,
-                "sctpCapabilities": self.device.sctpCapabilities.dict(),
+                "sctpCapabilities": self.device.sctpCapabilities.model_dump(),
                 "appData": {"direction": "consumer"},
             },
         }
@@ -442,7 +442,7 @@ class Demo:
                 "method": "connectWebRtcTransport",
                 "data": {
                     "transportId": self.recvTransport.id,
-                    "dtlsParameters": dtlsParameters.dict(exclude_none=True),
+                    "dtlsParameters": dtlsParameters.model_dump(exclude_none=True),
                 },
             }
             await self._send_request(req)

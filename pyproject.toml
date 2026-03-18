@@ -15,7 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "pydantic>=1.10.17,<3.0.0",
+    "pydantic>=2.0.0,<3.0.0",
     "aiortc>=1.14.0,<2",
     "h264-profile-level-id>=1.0.0,<2",
     "sdp-transform>=1.1.0,<2",

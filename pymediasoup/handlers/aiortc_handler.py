@@ -119,7 +119,7 @@ class AiortcHandler(HandlerInterface):
 
     async def getNativeSctpCapabilities(self) -> SctpCapabilities:
         logger.debug("getNativeSctpCapabilities()")
-        return SctpCapabilities.parse_obj({"numStreams": SCTP_NUM_STREAMS})
+        return SctpCapabilities.model_validate({"numStreams": SCTP_NUM_STREAMS})
 
     def run(
         self,
@@ -251,13 +251,15 @@ class AiortcHandler(HandlerInterface):
 
         sendingRtpParameters: RtpParameters = self._sendingRtpParametersByKind[
             options.track.kind
-        ].copy(deep=True)
+        ].model_copy(deep=True)
         sendingRtpParameters.codecs = reduceCodecs(
             sendingRtpParameters.codecs, options.codec
         )
 
         sendingRemoteRtpParameters: RtpParameters = (
-            self._sendingRemoteRtpParametersByKind[options.track.kind].copy(deep=True)
+            self._sendingRemoteRtpParametersByKind[options.track.kind].model_copy(
+                deep=True
+            )
         )
         sendingRemoteRtpParameters.codecs = reduceCodecs(
             sendingRemoteRtpParameters.codecs, options.codec
@@ -331,8 +333,8 @@ class AiortcHandler(HandlerInterface):
         elif len(options.encodings) == 1:
             newEncodings = getRtpEncodings(offerMediaDict)
             if newEncodings and options.encodings[0]:
-                firstEncodingDict: dict = newEncodings[0].dict()
-                optionsEncodingDict: dict = options.encodings[0].dict()
+                firstEncodingDict: dict = newEncodings[0].model_dump()
+                optionsEncodingDict: dict = options.encodings[0].model_dump()
                 firstEncodingDict.update(optionsEncodingDict)
                 newEncodings[0] = RtpEncodingParameters(**firstEncodingDict)
                 if hackVp9Svc:

@@ -1,6 +1,6 @@
 from typing import Optional, List, Literal
 
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 
 
 # Media kind ('audio' or 'video').
@@ -38,9 +38,9 @@ class RtpCodec(Codec):
 class ExtendedCodec(Codec):
     kind: MediaKind
     localPayloadType: int
-    localRtxPayloadType: Optional[int]
+    localRtxPayloadType: Optional[int] = None
     remotePayloadType: int
-    remoteRtxPayloadType: Optional[int]
+    remoteRtxPayloadType: Optional[int] = None
     localParameters: dict = Field(default_factory=dict)
     remoteParameters: dict = Field(default_factory=dict)
 
@@ -64,7 +64,7 @@ class RtpCodecCapability(RtpCodec):
     # Media kind.
     kind: MediaKind
     # The preferred RTP payload type.
-    preferredPayloadType: Optional[int]
+    preferredPayloadType: Optional[int] = None
 
 
 # Provides information on codec settings within the RTP parameters. The list
@@ -133,15 +133,15 @@ class RTX(BaseModel):
 # stream and its associated RTX stream (if any).
 class RtpEncodingParameters(BaseModel):
     # The media SSRC.
-    ssrc: Optional[int]
+    ssrc: Optional[int] = None
     # The RID RTP extension value. Must be unique.
-    rid: Optional[str]
+    rid: Optional[str] = None
     # Codec payload type this encoding affects. If unset, first media codec is
     # chosen.
-    codecPayloadType: Optional[int]
+    codecPayloadType: Optional[int] = None
     # RTX stream information. It must contain a numeric ssrc field indicating
     # the RTX SSRC.
-    rtx: Optional[RTX]
+    rtx: Optional[RTX] = None
     # It indicates whether discontinuous RTP transmission will be used. Useful
     # for audio (if the codec supports it) and for video screen sharing (when
     # static content is being transmitted, this option disables the RTP
@@ -149,14 +149,14 @@ class RtpEncodingParameters(BaseModel):
     dtx: Optional[bool] = False
     # Number of spatial and temporal layers in the RTP stream (e.g. 'L1T3').
     # See webrtc-svc.
-    scalabilityMode: Optional[str]
+    scalabilityMode: Optional[str] = None
     # Others.
-    scaleResolutionDownBy: Optional[int]
-    maxBitrate: Optional[int]
-    maxFramerate: Optional[int]
-    adaptivePtime: Optional[bool]
-    priority: Optional[Literal["very-low", "low", "medium", "high"]]
-    networkPriority: Optional[Literal["very-low", "low", "medium", "high"]]
+    scaleResolutionDownBy: Optional[int] = None
+    maxBitrate: Optional[int] = None
+    maxFramerate: Optional[int] = None
+    adaptivePtime: Optional[bool] = None
+    priority: Optional[Literal["very-low", "low", "medium", "high"]] = None
+    networkPriority: Optional[Literal["very-low", "low", "medium", "high"]] = None
 
 
 # Defines a RTP header extension within the RTP parameters. The list of RTP
@@ -178,12 +178,12 @@ class RtpHeaderExtensionParameters(BaseModel):
 
 class RtcpParameters(BaseModel):
     # The Canonical Name (CNAME) used by RTCP (e.g. in SDES messages).
-    cname: Optional[str]
+    cname: Optional[str] = None
     # Whether reduced size RTCP RFC 5506 is configured (if True) or compound RTCP
     # as specified in RFC 3550 (if False). Default True.
     reducedSize: Optional[bool] = True
     # Whether RTCP-mux is used. Default True.
-    mux: Optional[bool]
+    mux: Optional[bool] = None
 
 
 # The RTP send parameters describe a media stream received by mediasoup from

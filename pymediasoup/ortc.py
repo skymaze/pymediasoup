@@ -426,7 +426,7 @@ def reduceCodecs(
 
 
 def generateProbatorRtpParameters(videoRtpParameters: RtpParameters) -> RtpParameters:
-    videoRtpParameters = videoRtpParameters.copy(deep=True)
+    videoRtpParameters = videoRtpParameters.model_copy(deep=True)
     validateAndNormalizeRtpParameters(videoRtpParameters)
 
     rtpParameters = RtpParameters(

@@ -2,7 +2,7 @@ from typing import Optional, Literal, List, Any, Callable, Dict
 
 from enum import IntEnum
 from aiortc import RTCIceServer
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from ..ortc import ExtendedRtpCapabilities
 from ..sctp_parameters import SctpParameters
 
@@ -13,7 +13,7 @@ class IceParameters(BaseModel):
     # ICE password.
     password: str
     # ICE Lite.
-    iceLite: Optional[bool]
+    iceLite: Optional[bool] = None
 
 
 class IceCandidate(BaseModel):
@@ -31,7 +31,7 @@ class IceCandidate(BaseModel):
     # The type of candidate..
     type: Literal["host", "srflx", "prflx", "relay"]
     # The type of TCP candidate.
-    tcpType: Optional[Literal["active", "passive", "so"]]
+    tcpType: Optional[Literal["active", "passive", "so"]] = None
 
 
 # The hash function algorithm (as defined in the "Hash function Textual Names"
@@ -73,15 +73,14 @@ class TransportOptions(BaseModel):
     iceParameters: IceParameters
     iceCandidates: List[IceCandidate]
     dtlsParameters: DtlsParameters
-    sctpParameters: Optional[SctpParameters]
+    sctpParameters: Optional[SctpParameters] = None
     iceServers: Optional[List[RTCIceServer]]
     iceTransportPolicy: Optional[Literal["all", "relay"]]
     additionalSettings: Optional[dict] = None
     proprietaryConstraints: Any = None
     appData: Optional[dict] = Field(default_factory=dict)
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class InternalTransportOptions(TransportOptions):

@@ -1,5 +1,5 @@
 import re
-from pydantic.v1 import BaseModel
+from pydantic import BaseModel
 
 
 class ScalabilityMode(BaseModel):

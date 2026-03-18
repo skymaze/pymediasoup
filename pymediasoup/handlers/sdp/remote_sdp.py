@@ -1,7 +1,7 @@
 from typing import List, Optional, Literal, Dict
 
 import logging
-from pydantic.v1 import BaseModel
+from pydantic import BaseModel
 import sdp_transform
 from .media_section import MediaSection, AnswerMediaSection, OfferMediaSection
 from ...models.transport import (

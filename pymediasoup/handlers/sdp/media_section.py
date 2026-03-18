@@ -37,7 +37,7 @@ class MediaSection:
         if iceCandidates:
             self._mediaDict["candidates"] = []
             for candidate in iceCandidates:
-                c_dict = candidate.dict()
+                c_dict = candidate.model_dump()
                 c_dict["component"] = 1
                 self._mediaDict["candidates"].append(c_dict)
             self._mediaDict["endOfCandidates"] = "end-of-candidates"

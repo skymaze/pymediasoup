@@ -307,7 +307,7 @@ class Transport(EnhancedEventEmitter):
             appData=appData if appData is not None else {},
         )
         logger.debug("Transport consume()")
-        rtpParameters = deepcopy(options.rtpParameters)
+        rtpParameters = options.rtpParameters.model_copy(deep=True)
         if self._closed:
             raise InvalidStateError("closed")
         elif self._direction != "recv":

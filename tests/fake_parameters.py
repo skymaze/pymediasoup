@@ -1,6 +1,6 @@
 from uuid import uuid4
 from typing import List, Optional
-from pymediasoup.rtp_parameters import RtpCapabilities
+from pymediasoup.rtp_parameters import RtpCapabilities, RtpParameters
 from pymediasoup.sctp_parameters import SctpStreamParameters
 from pymediasoup.models.transport import (
     IceParameters,
@@ -11,8 +11,8 @@ from pymediasoup.models.transport import (
 
 
 def generateRouterRtpCapabilities():
-    return RtpCapabilities(
-        **{
+    return RtpCapabilities.model_validate(
+        {
             "codecs": [
                 {
                     "mimeType": "audio/opus",
@@ -172,16 +172,16 @@ def generateRouterRtpCapabilities():
 
 def generateTransportRemoteParameters():
     id: str = str(uuid4())
-    iceParameters: IceParameters = IceParameters(
-        **{
+    iceParameters: IceParameters = IceParameters.model_validate(
+        {
             "iceLite": True,
             "password": "yku5ej8nvfaor28lvtrabcx0wkrpkztz",
             "usernameFragment": "h3hk1iz6qqlnqlne",
         }
     )
     iceCandidates: List[IceCandidate] = [
-        IceCandidate(
-            **{
+        IceCandidate.model_validate(
+            {
                 "family": "ipv4",
                 "foundation": "udpcandidate",
                 "ip": "9.9.9.9",
@@ -191,8 +191,8 @@ def generateTransportRemoteParameters():
                 "type": "host",
             }
         ),
-        IceCandidate(
-            **{
+        IceCandidate.model_validate(
+            {
                 "family": "ipv6",
                 "foundation": "udpcandidate",
                 "ip": "9.9.9.9",
@@ -203,8 +203,8 @@ def generateTransportRemoteParameters():
             }
         ),
     ]
-    dtlsParameters: DtlsParameters = DtlsParameters(
-        **{
+    dtlsParameters: DtlsParameters = DtlsParameters.model_validate(
+        {
             "fingerprints": [
                 {
                     "algorithm": "sha-256",
@@ -222,8 +222,8 @@ def generateTransportRemoteParameters():
             "role": "auto",
         }
     )
-    sctpParameters: SctpParameters = SctpParameters(
-        **{"port": 5000, "OS": 1024, "MIS": 1024, "maxMessageSize": 2000000}
+    sctpParameters: SctpParameters = SctpParameters.model_validate(
+        {"port": 5000, "OS": 1024, "MIS": 1024, "maxMessageSize": 2000000}
     )
 
     return id, iceParameters, iceCandidates, dtlsParameters, sctpParameters
@@ -235,7 +235,8 @@ def generateConsumerRemoteParameters(codecMimeType: str, id: Optional[str] = Non
             "id": id or str(uuid4()),
             "producerId": str(uuid4()),
             "kind": "audio",
-            "rtpParameters": {
+            "rtpParameters": RtpParameters.model_validate(
+                {
                 "codecs": [
                     {
                         "mimeType": "audio/opus",
@@ -256,14 +257,16 @@ def generateConsumerRemoteParameters(codecMimeType: str, id: Optional[str] = Non
                     {"uri": "urn:ietf:params:rtp-hdrext:ssrc-audio-level", "id": 10},
                 ],
                 "rtcp": {"cname": "wB4Ql4lrsxYLjzuN", "reducedSize": True, "mux": True},
-            },
+                }
+            ),
         }
     elif codecMimeType == "audio/ISAC":
         return {
             "id": id or str(uuid4()),
             "producerId": str(uuid4()),
             "kind": "audio",
-            "rtpParameters": {
+            "rtpParameters": RtpParameters.model_validate(
+                {
                 "codecs": [
                     {
                         "mimeType": "audio/ISAC",
@@ -276,21 +279,23 @@ def generateConsumerRemoteParameters(codecMimeType: str, id: Optional[str] = Non
                 ],
                 "encodings": [{"ssrc": 46687004}],
                 "headerExtensions": [
-                    {"uri": "urn:ietf:params:rtp-hdrext:sdes:mid", id: 1},
+                    {"uri": "urn:ietf:params:rtp-hdrext:sdes:mid", "id": 1},
                     {
                         "uri": "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
                         "id": 5,
                     },
                 ],
                 "rtcp": {"cname": "wB4Ql4lrsxYLjzuN", "reducedSize": True, "mux": True},
-            },
+                }
+            ),
         }
     elif codecMimeType == "video/VP8":
         return {
             "id": id or str(uuid4()),
             "producerId": str(uuid4()),
             "kind": "video",
-            "rtpParameters": {
+            "rtpParameters": RtpParameters.model_validate(
+                {
                 "codecs": [
                     {
                         "mimeType": "video/VP8",
@@ -328,7 +333,8 @@ def generateConsumerRemoteParameters(codecMimeType: str, id: Optional[str] = Non
                     {"uri": "urn:ietf:params:rtp-hdrext:toffset", "id": 12},
                 ],
                 "rtcp": {"cname": "wB4Ql4lrsxYLjzuN", "reducedSize": True, "mux": True},
-            },
+                }
+            ),
         }
     else:
         raise TypeError(f"unknown codecMimeType {codecMimeType}")
@@ -338,7 +344,7 @@ def generateDataProducerRemoteParameters():
     return str(uuid4())
 
 
-def generateDataConsumerRemoteParameters(id: str = None):
+def generateDataConsumerRemoteParameters(id: Optional[str] = None):
     id = id or str(uuid4())
     dataProducerId = str(uuid4())
     sctpStreamParameters = SctpStreamParameters(

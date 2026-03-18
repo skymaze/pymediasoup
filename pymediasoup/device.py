@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Callable, Literal, List, Any, Union
+from typing import Optional, Dict, Callable, Literal, List, Any
 
 import logging
 from pyee.asyncio import AsyncIOEventEmitter
@@ -98,14 +98,11 @@ class Device:
     # Initialize the Device.
     async def load(
         self,
-        routerRtpCapabilities: Union[RtpCapabilities, dict],
+        routerRtpCapabilities: RtpCapabilities,
         preferLocalCodecsOrder: bool = False,
     ):
         logger.debug(f"Device load() [routerRtpCapabilities:{routerRtpCapabilities}]")
-        if isinstance(routerRtpCapabilities, dict):
-            routerRtpCapabilities = RtpCapabilities(**routerRtpCapabilities)
-        else:
-            routerRtpCapabilities = routerRtpCapabilities.model_copy(deep=True)
+        routerRtpCapabilities = routerRtpCapabilities.model_copy(deep=True)
 
         validateAndNormalizeRtpCapabilities(routerRtpCapabilities)
 
@@ -174,10 +171,10 @@ class Device:
     def createSendTransport(
         self,
         id: str,
-        iceParameters: Union[IceParameters, dict],
-        iceCandidates: List[Union[IceCandidate, dict]],
-        dtlsParameters: Union[DtlsParameters, dict],
-        sctpParameters: Optional[Union[SctpParameters, dict]],
+        iceParameters: IceParameters,
+        iceCandidates: List[IceCandidate],
+        dtlsParameters: DtlsParameters,
+        sctpParameters: Optional[SctpParameters],
         iceServers: Optional[List[RTCIceServer]] = None,
         iceTransportPolicy: Optional[Literal["all", "relay"]] = None,
         additionalSettings: Optional[dict] = None,
@@ -185,25 +182,11 @@ class Device:
         appData: Optional[dict] = None,
     ) -> Transport:
         logger.debug("createSendTransport()")
-        if isinstance(iceParameters, dict):
-            iceParameters = IceParameters(**iceParameters)
-
-        normalizedIceCandidates: List[IceCandidate] = [
-            IceCandidate(**candidate) if isinstance(candidate, dict) else candidate
-            for candidate in iceCandidates
-        ]
-
-        if isinstance(dtlsParameters, dict):
-            dtlsParameters = DtlsParameters(**dtlsParameters)
-
-        if isinstance(sctpParameters, dict):
-            sctpParameters = SctpParameters(**sctpParameters)
-
         return self._createTransport(
             direction="send",
             id=id,
             iceParameters=iceParameters,
-            iceCandidates=normalizedIceCandidates,
+            iceCandidates=iceCandidates,
             dtlsParameters=dtlsParameters,
             sctpParameters=sctpParameters,
             iceServers=iceServers,
@@ -219,10 +202,10 @@ class Device:
     def createRecvTransport(
         self,
         id: str,
-        iceParameters: Union[IceParameters, dict],
-        iceCandidates: List[Union[IceCandidate, dict]],
-        dtlsParameters: Union[DtlsParameters, dict],
-        sctpParameters: Optional[Union[SctpParameters, dict]] = None,
+        iceParameters: IceParameters,
+        iceCandidates: List[IceCandidate],
+        dtlsParameters: DtlsParameters,
+        sctpParameters: Optional[SctpParameters] = None,
         iceServers: Optional[List[RTCIceServer]] = None,
         iceTransportPolicy: Optional[Literal["all", "relay"]] = None,
         additionalSettings: Optional[dict] = None,
@@ -230,25 +213,11 @@ class Device:
         appData: Optional[dict] = None,
     ) -> Transport:
         logger.debug("createRecvTransport()")
-        if isinstance(iceParameters, dict):
-            iceParameters = IceParameters(**iceParameters)
-
-        normalizedIceCandidates: List[IceCandidate] = [
-            IceCandidate(**candidate) if isinstance(candidate, dict) else candidate
-            for candidate in iceCandidates
-        ]
-
-        if isinstance(dtlsParameters, dict):
-            dtlsParameters = DtlsParameters(**dtlsParameters)
-
-        if isinstance(sctpParameters, dict):
-            sctpParameters = SctpParameters(**sctpParameters)
-
         return self._createTransport(
             direction="recv",
             id=id,
             iceParameters=iceParameters,
-            iceCandidates=normalizedIceCandidates,
+            iceCandidates=iceCandidates,
             dtlsParameters=dtlsParameters,
             sctpParameters=sctpParameters,
             iceServers=iceServers,
